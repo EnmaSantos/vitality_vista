@@ -28,6 +28,7 @@
 - Integration with Edamam Recipe Search API.
 - Filtering for low-calorie recipes, by health labels, etc.
 - Recipe cards with clear nutrition information.
+- Add capability to filter by allergies, maybe this could even grow to an app by itself. 
 
 ## Technology Stack
 
@@ -51,7 +52,7 @@
 - Jira, Trello, or GitHub Projects
 
 ### Design:
-- Figma or Adobe XD
+- Figma
 
 ## Structure
 
