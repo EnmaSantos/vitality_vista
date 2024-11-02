@@ -1,0 +1,76 @@
+/* navbar.css */
+
+/* Navbar Container */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    color: #ffffff;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Logo */
+  .navbar .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ffffff;
+  }
+  
+  /* Navigation Links */
+  .nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+  }
+  
+  .nav-links li a {
+    color: #ffffff;
+    text-decoration: none;
+    padding: 5px 10px;
+
+    border-bottom: 2px solid transparent; /* Initial transparent border */
+    transition: border-bottom .5s ease;  /* Smooth transition for border */
+  }
+  
+  .nav-links li a:hover {
+    border-bottom: 4px solid #ffffff; /* White underline on hover */
+  }
+  .nav-links li a.active {
+    border-bottom: 4px solid #ffffff; /* Keep underline for active link */
+  }
+  
+  
+  /* Profile Icon */
+  .profile-icon img {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+  }
+  
+  /* Optional: Style Active Link */
+  .nav-links li a.active {
+    font-weight: bold;
+    color: var(--sunglow);
+  }
+  
+  @media screen and (max-width: 768px) {
+   
+  .navbar{ 
+    flex-direction: column;
+    align-items: flex-start;
+  }
+   
+    .nav-links {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .nav-links li a {
+        padding: 10px 0;
+        width: 100%;            /* Full-width links */
+        border-bottom: none;    /* Optional: Remove underline for mobile */
+      }
+  
+}
