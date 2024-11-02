@@ -1,0 +1,6 @@
+{
+    "explorer.compactFolders": false,               // Cascade empty folders
+    "explorer.sortOrder": "type",                  // Sort files by type
+    "explorer.openEditors.visible": 0,             // Hide the Open Editors section
+    "explorer.autoReveal": false       
+}
