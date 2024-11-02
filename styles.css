@@ -9,14 +9,18 @@
   :root {
     --primary-color: #2D9CDB;
     --secondary-color: #56CCF2;
-    --background-color: #f9f9f9;
-    --text-color: #333;
-    --card-background: #ffffff;
-    --button-color: #2D9CDB;
-    --button-hover-color: #2A83C0;
+    --fandango: #a4036f;
+    --bittersweet: #ff595e;
+    --sunglow: #ffca3a;
+    --yellow-green: #8ac926;
+    --steel-blue: #1982c4;
+    --text-color-light: #ffffff;
+    --text-color-dark: #333333;
     --font-family: 'Arial', sans-serif;
   }
   
+
+
   /* Body and General Styles */
   body {
     font-family: var(--font-family);
