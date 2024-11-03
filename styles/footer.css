@@ -6,6 +6,7 @@
     text-align: center;
     transition: background-color 0.3s ease; /* Smooth transition for dynamic color change */
     height: 16%;
+    border: 15px solid red;
 }
 
 .social-icons a img {
