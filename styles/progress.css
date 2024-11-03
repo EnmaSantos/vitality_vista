@@ -1,0 +1,128 @@
+
+
+/* Container for all progress content */
+.progress-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 0;
+}
+
+/* Weight Progress Chart Section */
+.weight-progress {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.weight-progress h2 {
+    color: var(--fandango);
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+#weightChart {
+    width: 100%;
+    height: 15rem; /* Set height for chart canvas */
+}
+
+/* Body Measurements Section */
+.body-measurements {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.body-measurements h2 {
+    color: var(--fandango);
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.measurements-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 1rem;
+}
+
+.measurement-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border: 1px solid #eee;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    color: #333;
+}
+
+.log-measurement-button {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--bittersweet);
+    color: #ffffff;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.log-measurement-button:hover {
+    background-color: var(--sunglow);
+}
+
+/* Achievements and Milestones Section */
+.achievements {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.achievements h2 {
+    color: var(--fandango);
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.milestones-list {
+    list-style: none;
+    padding: 0;
+}
+
+.milestone-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.milestone-item:last-child {
+    border-bottom: none;
+}
+
+/* Progress Summary Section */
+.progress-summary {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.progress-summary h2 {
+    color: var(--fandango);
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.progress-summary p {
+    font-size: 1rem;
+    color: #333;
+}

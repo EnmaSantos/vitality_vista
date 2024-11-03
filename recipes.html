@@ -5,12 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles/global.css">    <!-- Base/global styles -->
     <link rel="stylesheet" href="styles/navbar.css">    <!-- Navbar-specific styles -->
+    <link rel="stylesheet" href="styles/recipes.css">  <!-- Recipes-specific styles -->
     <title>Recipes - Fitness App</title>
 </head>
 <body id="recipes">
     <div id="navbar-placeholder"></div>
-    <main>
-        <!-- Page content goes here -->
+    <main class="recipes-container">
+        
+        <!-- Recipe Filters Section -->
+        <section class="recipe-filters">
+            <h2>Discover Recipes</h2>
+            <label for="calorie-limit">Calorie Limit:</label>
+            <input type="number" id="calorie-limit" placeholder="e.g., 500" min="0">
+
+            <label for="dietary-preference">Dietary Preference:</label>
+            <select id="dietary-preference">
+                <option value="all">All</option>
+                <option value="vegetarian">Vegetarian</option>
+                <option value="vegan">Vegan</option>
+                <option value="gluten-free">Gluten-Free</option>
+                <option value="keto">Keto</option>
+            </select>
+
+            <button class="filter-button">Apply Filters</button>
+        </section>
+
+        <!-- Recipe Cards Section -->
+        <section class="recipe-cards">
+            <div class="recipe-card">
+                <h3>Grilled Chicken Salad</h3>
+                <p>Calories: 350 kcal | Protein: 30g | Carbs: 20g | Fats: 15g</p>
+                <button class="view-recipe-button">View Recipe</button>
+            </div>
+            
+            <div class="recipe-card">
+                <h3>Quinoa & Veggie Stir-Fry</h3>
+                <p>Calories: 400 kcal | Protein: 15g | Carbs: 60g | Fats: 10g</p>
+                <button class="view-recipe-button">View Recipe</button>
+            </div>
+            
+            <div class="recipe-card">
+                <h3>Avocado Toast with Egg</h3>
+                <p>Calories: 250 kcal | Protein: 12g | Carbs: 20g | Fats: 14g</p>
+                <button class="view-recipe-button">View Recipe</button>
+            </div>
+            
+            <!-- Add more recipe cards as needed -->
+        </section>
     </main>
     <script src="scripts/load-navbar.js"></script>
 </body>

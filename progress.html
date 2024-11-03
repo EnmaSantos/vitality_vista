@@ -5,12 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles/global.css">    <!-- Base/global styles -->
     <link rel="stylesheet" href="styles/navbar.css">    <!-- Navbar-specific styles -->
+    <link rel="stylesheet" href="styles/progress.css">  <!-- Progress-specific styles -->
     <title>Progress - Fitness App</title>
 </head>
 <body id="progress">
     <div id="navbar-placeholder"></div>
-    <main>
-        <!-- Page content goes here -->
+    <main class="progress-container">
+        
+        <!-- Weight Progress Chart -->
+        <section class="weight-progress">
+            <h2>Weight Progress</h2>
+            <canvas id="weightChart"></canvas> <!-- Chart.js Canvas for weight chart -->
+        </section>
+
+        <!-- Body Measurements Section -->
+        <section class="body-measurements">
+            <h2>Body Measurements</h2>
+            <div class="measurements-list">
+                <div class="measurement-item">
+                    <span>Waist</span>
+                    <span>30 in</span>
+                </div>
+                <div class="measurement-item">
+                    <span>Hips</span>
+                    <span>36 in</span>
+                </div>
+                <div class="measurement-item">
+                    <span>Chest</span>
+                    <span>38 in</span>
+                </div>
+                <!-- Add more measurements as needed -->
+                <button class="log-measurement-button">Log New Measurement</button>
+            </div>
+        </section>
+
+        <!-- Achievements and Milestones Section -->
+        <section class="achievements">
+            <h2>Milestones</h2>
+            <ul class="milestones-list">
+                <li class="milestone-item">
+                    <span>🏅 First 5 lbs Lost</span>
+                    <span>Achieved on: 2023-04-01</span>
+                </li>
+                <li class="milestone-item">
+                    <span>🏅 10 lbs Lost</span>
+                    <span>Achieved on: 2023-05-15</span>
+                </li>
+                <!-- Add more milestones as needed -->
+            </ul>
+        </section>
+
+        <!-- Progress Summary -->
+        <section class="progress-summary">
+            <h2>Progress Summary</h2>
+            <p>Total Weight Lost: <span>10 lbs</span></p>
+            <p>Average Weekly Change: <span>1 lb</span></p>
+        </section>
     </main>
     <script src="scripts/load-navbar.js"></script> 
 </body>
