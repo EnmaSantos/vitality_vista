@@ -37,9 +37,18 @@
     border-bottom: 4px solid #ffffff; /* White underline on hover */
   }
   .nav-links li a.active {
-    border-bottom: 4px solid #ffffff; /* Keep underline for active link */
+    background-color: #ffffff; /* White background for active link */
+    padding: 15px 20px; /* Adjust padding to make it a square shape */
+    border-radius: 5px; /* Optional: add rounded corners */
+    color: var(--fandango); /* Default color; change per page */
   }
-  
+  /* Specific active color for each page */
+#dashboard .nav-links li a[href="index.html"].active { color: var(--fandango); }
+#food-log .nav-links li a[href="food-log.html"].active { color: var(--bittersweet); }
+#exercise-log .nav-links li a[href="exercise-log.html"].active { color: var(--sunglow); }
+#progress .nav-links li a[href="progress.html"].active { color: var(--yellow-green); }
+#recipes .nav-links li a[href="recipes.html"].active { color: var(--steel-blue); }
+
   
   /* Profile Icon */
   .profile-icon img {
@@ -48,11 +57,6 @@
     border-radius: 50%;
   }
   
-  /* Optional: Style Active Link */
-  .nav-links li a.active {
-    font-weight: bold;
-    color: var(--sunglow);
-  }
   
   @media screen and (max-width: 768px) {
    
@@ -72,5 +76,7 @@
         width: 100%;            /* Full-width links */
         border-bottom: none;    /* Optional: Remove underline for mobile */
       }
+
+
   
 }
