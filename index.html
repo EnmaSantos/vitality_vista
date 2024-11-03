@@ -1,20 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Fitness App</title>
-  <link rel="stylesheet" href="styles/global.css">    <!-- Base/global styles -->
-  <link rel="stylesheet" href="styles/navbar.css">    <!-- Navbar-specific styles -->
+  <link rel="stylesheet" href="styles/global.css"> <!-- Base/global styles -->
+  <link rel="stylesheet" href="styles/navbar.css"> <!-- Navbar-specific styles -->
   <script defer src="navbar-color.js"></script>
 </head>
+
 <body id="dashboard">
   <div id="navbar-placeholder">
 
   </div>
   <main>
-      <!-- Page content goes here -->
+    <div class="dashboard-container">
+
+      <!-- Calorie Count Summary Card -->
+      <div class="dashboard-card calorie-summary">
+        <h3>Calorie Count</h3>
+        <p>Total Calories: 1200 / 2000 kcal</p>
+        <p>Protein: 80g | Carbs: 150g | Fats: 50g</p>
+        <button onclick="window.location.href='food-log.html'">Log Meal</button>
+      </div>
+
+      <!-- Exercise Summary Card -->
+      <div class="dashboard-card exercise-summary">
+        <h3>Exercise</h3>
+        <p>Total Calories Burned: 400 kcal</p>
+        <p>Duration: 45 mins</p>
+        <button onclick="window.location.href='exercise-log.html'">Log Exercise</button>
+      </div>
+
+      <!-- Progress Summary Card -->
+      <div class="dashboard-card progress-summary">
+        <h3>Progress</h3>
+        <p>Weight Change: -5 lbs</p>
+        <canvas id="progress-chart"></canvas> <!-- Mini-chart for quick progress view -->
+        <button onclick="window.location.href='progress.html'">View Full Progress</button>
+      </div>
+
+      <!-- Recipe Suggestions Card -->
+      <div class="dashboard-card recipe-suggestions">
+        <h3>Recipe Ideas</h3>
+        <p>Suggested Recipes:</p>
+        <ul>
+          <li>Grilled Chicken Salad</li>
+          <li>Vegetable Stir-Fry</li>
+          <li>Quinoa Bowl</li>
+        </ul>
+        <button onclick="window.location.href='recipes.html'">Explore Recipes</button>
+      </div>
+
+    </div>
   </main>
   <script src="scripts/load-navbar.js"></script>
 </body>
+
 </html>
