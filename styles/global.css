@@ -1,5 +1,11 @@
 /* global.css */
-
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 /* Root Variables for Color Palette and Fonts */
 :root {
   --fandango: #a4036f;
@@ -14,7 +20,7 @@
 }
 
 /* General Reset */
-html, body {
+body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -146,3 +152,6 @@ button:hover {
   background-color: var(--sunglow);
 }
 
+body, main {
+  overflow-x: hidden;
+}
