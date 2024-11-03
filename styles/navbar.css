@@ -5,7 +5,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 20px;
+    padding: 1rem  2rem;
     color: #ffffff;
     transition: background-color 0.3s ease;
   }
@@ -21,26 +21,24 @@
   .nav-links {
     list-style: none;
     display: flex;
-    gap: 20px;
+    gap: 1.5rem;
   }
   
   .nav-links li a {
     color: #ffffff;
     text-decoration: none;
-    padding: 5px 10px;
-
-    border-bottom: 2px solid transparent; /* Initial transparent border */
-    transition: border-bottom .5s ease;  /* Smooth transition for border */
+    padding: 0.5rem 1rem; /* Using rem units for padding */
+    border-bottom: 2px solid transparent;
+    transition: background-color 0.3s ease, color 0.3s ease, border-bottom 0.3s ease;
   }
-  
   .nav-links li a:hover {
     border-bottom: 4px solid #ffffff; /* White underline on hover */
   }
   .nav-links li a.active {
-    background-color: #ffffff; /* White background for active link */
-    padding: 15px 20px; /* Adjust padding to make it a square shape */
-    border-radius: 5px; /* Optional: add rounded corners */
-    color: var(--fandango); /* Default color; change per page */
+    background-color: #ffffff;
+    color: var(--fandango);
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
   }
   /* Specific active color for each page */
 #dashboard .nav-links li a[href="index.html"].active { color: var(--fandango); }
