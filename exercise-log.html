@@ -1,17 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles/global.css">    <!-- Base/global styles -->
-    <link rel="stylesheet" href="styles/navbar.css">    <!-- Navbar-specific styles -->
+    <link rel="stylesheet" href="styles/global.css"> <!-- Base/global styles -->
+    <link rel="stylesheet" href="styles/navbar.css"> <!-- Navbar-specific styles -->
+    <link rel="stylesheet" href="styles/exercise-log.css"> <!-- Exercise log-specific styles -->
     <title>Exercise-log - Fitness App</title>
 </head>
+
 <body id="exercise-log">
     <div id="navbar-placeholder"></div>
-    <main>
-        <!-- Page content goes here -->
+    <main class="exercise-log-container">
+
+        <!-- Exercise Entry Form -->
+        <section class="exercise-entry-form">
+            <h2>Log Exercise</h2>
+            <form id="exercise-form">
+                <label for="exercise-type">Exercise Type:</label>
+                <select id="exercise-type" name="exercise-type" required>
+                    <option value="running">Running</option>
+                    <option value="cycling">Cycling</option>
+                    <option value="strength-training">Strength Training</option>
+                    <option value="yoga">Yoga</option>
+                    <option value="swimming">Swimming</option>
+                </select>
+
+                <label for="duration">Duration (minutes):</label>
+                <input type="number" id="duration" name="duration" placeholder="30" min="1" required>
+
+                <label for="intensity">Intensity:</label>
+                <select id="intensity" name="intensity">
+                    <option value="easy">Easy</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="hard">Hard</option>
+                </select>
+
+                <button type="submit" class="log-exercise-button">Add Exercise</button>
+            </form>
+        </section>
+
+        <!-- Daily Exercise Summary -->
+        <section class="exercise-summary">
+            <h2>Daily Summary</h2>
+            <p>Total Calories Burned: <span>450 kcal</span></p>
+            <p>Total Duration: <span>60 mins</span></p>
+        </section>
+
+        <!-- Exercise Log Entries -->
+        <section class="exercise-log">
+            <h3>Exercise Log</h3>
+            <ul class="exercise-list">
+                <li class="exercise-item">
+                    <span>Running</span>
+                    <span>Duration: 30 mins | Intensity: Moderate | Calories: 300 kcal</span>
+                </li>
+                <li class="exercise-item">
+                    <span>Strength Training</span>
+                    <span>Duration: 30 mins | Intensity: Hard | Calories: 150 kcal</span>
+                </li>
+                <!-- Additional exercise entries go here -->
+            </ul>
+        </section>
     </main>
     <script src="scripts/load-navbar.js"></script>
 </body>
+
 </html>

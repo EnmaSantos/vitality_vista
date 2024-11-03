@@ -1,0 +1,107 @@
+/* exercise-log.css */
+
+/* Container for all exercise log content */
+.exercise-log-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 0;
+}
+
+/* Exercise Entry Form Section */
+.exercise-entry-form {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.exercise-entry-form h2 {
+    color: var(--fandango);
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.exercise-entry-form label {
+    display: block;
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.exercise-entry-form input,
+.exercise-entry-form select {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 0.5rem;
+}
+
+.log-exercise-button {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--bittersweet);
+    color: #ffffff;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.log-exercise-button:hover {
+    background-color: var(--sunglow);
+}
+
+/* Daily Summary Section */
+.exercise-summary {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.exercise-summary h2 {
+    color: var(--fandango);
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.exercise-summary p {
+    font-size: 1rem;
+    color: #333;
+}
+
+/* Exercise Log Entries Section */
+.exercise-log {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.exercise-log h3 {
+    color: var(--fandango);
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.exercise-list {
+    list-style: none;
+    padding: 0;
+}
+
+.exercise-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.exercise-item:last-child {
+    border-bottom: none;
+}
