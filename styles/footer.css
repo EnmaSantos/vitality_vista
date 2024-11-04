@@ -9,18 +9,21 @@
     border: 15px solid red;
 }
 
+/* Styling for the Social Media Icons */
+.social-icons {
+    display: flex;
+    gap: 1rem; /* Space between icons */
+    justify-content: center; /* Center icons horizontally */
+    padding: 1rem 0; /* Padding around the icons */
+}
+
 .social-icons a img {
-    width: 24px;
-    height: 24px;
-    transition: transform 0.3s ease, fill 0.3s ease; /* Smooth color and scale transition */
+    width: 24px; /* Set a consistent width for icons */
+    height: 24px; /* Set a consistent height for icons */
+    transition: transform 0.3s ease, opacity 0.3s ease; /* Smooth transition for hover effects */
 }
 
 .social-icons a img:hover {
-    transform: scale(1.1);
-}
-
-.footer-bottom p {
-    font-size: 0.875rem;
-    margin: 0;
-    color: #f1f1f1;
+    transform: scale(1.1); /* Slightly enlarge icon on hover */
+    opacity: 0.8; /* Reduce opacity on hover */
 }

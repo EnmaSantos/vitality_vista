@@ -155,3 +155,6 @@ button:hover {
 body, main {
   overflow-x: hidden;
 }
+
+html,body {height:100%;}
+main {height: 100%;}
