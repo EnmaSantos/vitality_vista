@@ -18,12 +18,20 @@
 }
 
 .social-icons a img {
-    width: 24px; /* Set desired width */
-    height: 24px; /* Set desired height */
-   
+    width: 24px; 
+    height: 24px; 
     transition: transform 0.3s ease; /* Optional: Adds a smooth hover effect */
 }
+
+
 
 .social-icons a img:hover {
     transform: scale(1.1); /* Optional: Slightly enlarge on hover for effect */
 }
+
+.social-icon-img {
+    width: 10px;
+    height: 10px;
+    transition: transform 0.3s ease;
+}
+
