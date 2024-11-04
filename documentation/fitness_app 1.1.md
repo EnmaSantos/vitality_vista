@@ -42,7 +42,7 @@
 - Chart.js
 
 ### Backend
-- Node.js with Express
+- Deno.js with Express
 - Middleware layer for API management, deciding which API to call based on the data requested (e.g., USDA for raw ingredients, Nutritionix for branded foods, Spoonacular for recipes)
 
 ### Database
