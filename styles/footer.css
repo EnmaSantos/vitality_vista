@@ -6,7 +6,11 @@
     text-align: center;
     transition: background-color 0.3s ease; /* Smooth transition for dynamic color change */
     height: 16%;
-    border: 15px solid red;
+}
+
+footer p{ 
+    font-size: 1.3rem;
+    color: #ffffff;
 }
 
 /* Styling for the Social Media Icons */
@@ -18,8 +22,8 @@
 }
 
 .social-icons a img {
-    width: 24px; 
-    height: 24px; 
+    width: 3.5rem; /* Set the width of the icons */
+    height: 3.5rem;
     transition: transform 0.3s ease; /* Optional: Adds a smooth hover effect */
 }
 
@@ -29,9 +33,4 @@
     transform: scale(1.1); /* Optional: Slightly enlarge on hover for effect */
 }
 
-.social-icon-img {
-    width: 10px;
-    height: 10px;
-    transition: transform 0.3s ease;
-}
 
