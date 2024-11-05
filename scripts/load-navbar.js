@@ -40,5 +40,6 @@ function setActiveNavLink() {
     });
 }
 
+
 // Call the function to load the navbar
 loadNavbar();

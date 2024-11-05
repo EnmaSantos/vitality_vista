@@ -2,79 +2,122 @@
 
 /* Navbar Container */
 .navbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem  2rem;
-    color: #ffffff;
-    transition: background-color 0.3s ease;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  color: #ffffff;
+  transition: background-color 0.3s ease;
+  position: relative; /* Ensures the menu and hamburger position correctly */
+}
+
+/* Logo */
+.navbar .brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffffff;
   
-  /* Logo */
-  .navbar .logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #ffffff;
-  }
-  
-  /* Navigation Links */
-  .nav-links {
-    list-style: none;
-    display: flex;
-    gap: 1.5rem;
-  }
-  
-  .nav-links li a {
-    color: #ffffff;
-    text-decoration: none;
-    padding: 0.5rem 1rem; /* Using rem units for padding */
-    border-bottom: 2px solid transparent;
-    transition: background-color 0.3s ease, color 0.3s ease, border-bottom 0.3s ease;
-  }
-  .nav-links li a:hover {
-    border-bottom: 4px solid #ffffff; /* White underline on hover */
-  }
-  .nav-links li a.active {
-    background-color: #ffffff;
-    color: var(--fandango);
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-  }
-  /* Specific active color for each page */
+}
+
+a {
+  text-decoration: none;
+  color: #ffffff;
+  font-size: large;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Navigation Links */
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-links li a {
+  color: #ffffff;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-bottom: 2px solid transparent;
+  transition: background-color 0.3s ease, color 0.3s ease, border-bottom 0.3s ease;
+}
+
+.nav-links li a:hover {
+  border-bottom: 4px solid #ffffff;
+}
+
+.nav-links li a.active {
+  background-color: #ffffff;
+  color: var(--fandango);
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+}
+
+/* Specific active color for each page */
 #dashboard .nav-links li a[href="index.html"].active { color: var(--fandango); }
 #food-log .nav-links li a[href="food-log.html"].active { color: var(--bittersweet); }
 #exercise-log .nav-links li a[href="exercise-log.html"].active { color: var(--sunglow); }
 #progress .nav-links li a[href="progress.html"].active { color: var(--yellow-green); }
 #recipes .nav-links li a[href="recipes.html"].active { color: var(--steel-blue); }
 
-  
-  /* Profile Icon */
-  .profile-icon img {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
+/* Profile Icon */
+.profile-icon img {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+}
+
+/* Hamburger Icon Styling */
+.hamburger {
+  display: none; /* Hidden by default; shown on mobile */
+  cursor: pointer;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.hamburger span {
+  display: block;
+  width: 24px;
+  height: 3px;
+  background-color: #ffffff;
+  transition: transform 0.3s ease;
+}
+
+/* Responsive Styles for Mobile */
+@media screen and (max-width: 768px) {
+  .navbar { 
+      flex-direction: row; /* Align items in a row on mobile for brand and hamburger */
+      justify-content: space-between;
+      align-items: center;
   }
-  
-  
-  @media screen and (max-width: 768px) {
-   
-  .navbar{ 
-    flex-direction: column;
-    align-items: flex-start;
+
+  .hamburger {
+      display: flex; /* Show hamburger on mobile */
   }
-   
-    .nav-links {
-        flex-direction: column;
-        width: 100%;
-        gap: 10px;
-    }
 
-    .nav-links li a {
-        padding: 10px 0;
-        width: 100%;            /* Full-width links */
-        border-bottom: none;    /* Optional: Remove underline for mobile */
-      }
+  /* Hide navbar links and profile icon by default on mobile */
+  .nav-links, .profile-icon {
+      display: none; /* Hidden by default */
+      flex-direction: column;
+      width: 100%;
+      gap: 10px;
+      position: absolute;
+      top: 60px;
+      right: 0;
+      background-color: var(--fandango);
+      padding: 1rem;
+  }
 
+  .nav-links.active, .profile-icon.active {
+      display: flex; /* Show navbar links and profile icon when active */
+  }
 
-  
+  .nav-links li a {
+      padding: 10px 0;
+      width: 100%; /* Full-width links */
+      text-align: center; /* Center links */
+      border-bottom: none; /* Optional: Remove underline for mobile */
+  }
 }
