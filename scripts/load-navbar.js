@@ -7,7 +7,7 @@ function loadNavbar() {
         .then(data => {
             document.getElementById("navbar-placeholder").innerHTML = data;
 
-            // After loading, adjust navbar color based on page ID
+            // 1. Set the navbar background color based on page ID
             const navbar = document.querySelector(".navbar");
             const bodyID = document.body.id;
             const colors = {
@@ -18,30 +18,25 @@ function loadNavbar() {
                 recipes: "#1982c4"
             };
             navbar.style.backgroundColor = colors[bodyID] || "#a4036f"; // Default color if ID not found
-             // After loading, add the active class based on the current page
-             setActiveNavLink();
-        });
-        function loadNavbar() {
-            fetch("components/navbar.html")
-                .then(response => response.text())
-                .then(data => {
-                    document.getElementById("navbar-placeholder").innerHTML = data;
-        
-                    // Now that the navbar is loaded, add the event listener
-                    const hamburger = document.getElementById("hamburger");
-                    const navLinks = document.getElementById("nav-links");
-                    const profileIcon = document.querySelector(".profile-icon");
-        
-                    hamburger.addEventListener("click", () => {
-                        navLinks.classList.toggle("active");
-                        profileIcon.classList.toggle("active");
-                    });
-                })
-                .catch(error => console.error("Error loading navbar:", error));
-        }
+
+            // 2. Set the active class for the current page link
+            setActiveNavLink();
+
+            // 3. Initialize the hamburger menu functionality
+            const hamburger = document.getElementById("hamburger");
+            const navLinks = document.getElementById("nav-links");
+            const profileIcon = document.querySelector(".profile-icon");
+
+            // Add event listener for hamburger menu toggle
+            hamburger.addEventListener("click", () => {
+                navLinks.classList.toggle("active");
+                profileIcon.classList.toggle("active");
+            });
+        })
+        .catch(error => console.error("Error loading navbar:", error));
 }
 
-
+// Function to add the active class to the current page link
 function setActiveNavLink() {
     // Get the current page's path (e.g., "food-log.html")
     const currentPage = window.location.pathname.split("/").pop();
@@ -57,7 +52,6 @@ function setActiveNavLink() {
         }
     });
 }
-
 
 // Call the function to load the navbar
 loadNavbar();
