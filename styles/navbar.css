@@ -114,6 +114,16 @@ a:hover {
       display: flex; /* Show navbar links and profile icon when active */
   }
 
+  .nav-links li {
+    margin-bottom: 0.5rem;
+}
+
+.profile-icon {
+  padding: 0.5rem;
+  margin-bottom: 1rem; /* Adds space between profile icon and menu items */
+  text-align: center;
+}
+
   .nav-links li a {
       padding: 10px 0;
       width: 100%; /* Full-width links */
