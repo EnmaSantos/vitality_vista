@@ -18,6 +18,7 @@ function loadNavbar() {
             const currentColor = colors[bodyID] || "#a4036f"; // Default color if ID not found
             navbar.style.backgroundColor = currentColor;
             navLinks.style.backgroundColor = currentColor;
+            profileIcon.style.backgroundColor = currentColor;
 
             // 2. Set the active class for the current page link
             setActiveNavLink();
@@ -34,3 +35,24 @@ function loadNavbar() {
         })
         .catch(error => console.error("Error loading navbar:", error));
 }
+
+
+// Function to add the active class to the current page link
+function setActiveNavLink() {
+    // Get the current page's path (e.g., "food-log.html")
+    const currentPage = window.location.pathname.split("/").pop();
+
+    // Select all navbar links
+    const navLinks = document.querySelectorAll(".nav-links a");
+
+    // Loop through each link to find a match
+    navLinks.forEach(link => {
+        // If the link's href matches the current page, add the active class
+        if (link.getAttribute("href") === currentPage) {
+            link.classList.add("active");
+        }
+    });
+}
+
+// Call the function to load the navbar
+loadNavbar();
