@@ -7,6 +7,7 @@ function loadNavbar() {
             // 1. Set the navbar and nav-links background color based on page ID
             const navbar = document.querySelector(".navbar");
             const navLinks = document.querySelector(".nav-links");
+            const profileIcon = document.querySelector(".profile-icon");
             const bodyID = document.body.id;
             const colors = {
                 dashboard: "#a4036f",
@@ -25,7 +26,7 @@ function loadNavbar() {
 
             // 3. Initialize the hamburger menu functionality
             const hamburger = document.getElementById("hamburger");
-            const profileIcon = document.querySelector(".profile-icon");
+           
 
             // Add event listener for hamburger menu toggle
             hamburger.addEventListener("click", () => {
