@@ -125,12 +125,6 @@ a:hover {
 
 
 
-  .nav-links li a {
-      padding: 10px 0;
-      width: 100%; /* Full-width links */
-     
-      border-bottom: none; /* Optional: Remove underline for mobile */
-  }
 
   .profile-icon img {
       width: 50px;
