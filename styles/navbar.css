@@ -128,7 +128,7 @@ a:hover {
   .nav-links li a {
       padding: 10px 0;
       width: 100%; /* Full-width links */
-      text-align: center; /* Center links */
+     
       border-bottom: none; /* Optional: Remove underline for mobile */
   }
 
