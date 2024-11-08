@@ -119,7 +119,7 @@ a:hover {
     margin-bottom: 0.5rem;
 }
 #nav-links li:first-child {
-  margin-top: 10%; /* Adds space between the user icon and the menu elements */
+  margin-top: 15%; /* Adds space between the user icon and the menu elements */
 }
 
 
