@@ -3,7 +3,7 @@
 /* Navbar Container */
 .navbar {
   display: flex;
-  align-items: center;
+  
   justify-content: space-between;
   padding: 1rem 2rem;
   color: #ffffff;
@@ -136,13 +136,13 @@ a:hover {
 .profile-icon {
   padding: 0.5rem;
   margin-bottom: 1rem; /* Adds space between profile icon and menu items */
-  text-align: center;
+  
 }
 
   .nav-links li a {
       padding: 10px 0;
       width: 100%; /* Full-width links */
-      text-align: center; /* Center links */
+      
       border-bottom: none; /* Optional: Remove underline for mobile */
   }
 
