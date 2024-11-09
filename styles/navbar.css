@@ -90,7 +90,7 @@ a:hover {
   .navbar { 
       flex-direction: row; /* Align items in a row on mobile for brand and hamburger */
       justify-content: space-between;
-      align-items: center;
+     align-items: flex-start;
   }
 
   .hamburger {
