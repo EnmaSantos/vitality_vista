@@ -6,7 +6,7 @@
 - User-friendly interface for logging food items.
 - **Multi-API Integration for Enhanced Flexibility**:
   - **USDA FoodData Central API**: Primary source for raw ingredient data, including detailed nutritional information (calories, macros, vitamins, and minerals).
-  - **Nutritionix API**: For branded and restaurant foods to allow users to quickly log popular and packaged foods.
+  - **FastSecret Platform**: For branded and restaurant foods to allow users to quickly log popular and packaged foods.
 - Detailed nutritional information, including calories, macros, vitamins, minerals, and satiety level.
 - Ability to save custom foods and meals.
 
