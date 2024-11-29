@@ -22,7 +22,7 @@ body {
 }
 
 .hero {
-    background: url('../images/hero-background.jpg') no-repeat center center/cover;
+    background: url(/assets/images/dan-gold-4_jhDO54BYg-unsplash.jpg) no-repeat center center/cover;
     height: 100vh;
     display: flex;
     justify-content: center;
