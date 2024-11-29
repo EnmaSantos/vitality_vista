@@ -1,0 +1,94 @@
+/* FILE: styles/pages/landing.css */
+
+:root {
+    --fandango: #a4036f;
+    --bittersweet: #ff595e;
+    --sunglow: #ffca3a;
+    --yellow-green: #8ac926;
+    --steel-blue: #1982c4;
+    --text-color: #333;
+    --background-color: #f9f9f9;
+    --font-family: 'Arial', sans-serif;
+    --font-size-base: 16px;
+}
+
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.hero {
+    background: url('../images/hero-background.jpg') no-repeat center center/cover;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+    padding: 100px 20px;
+}
+
+.hero-content {
+    max-width: 600px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+}
+
+.hero h1 {
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+}
+
+.cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.cta-buttons .btn {
+    background-color: var(--bittersweet);
+    color: white;
+    padding: 15px 30px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1em;
+    transition: background-color 0.3s;
+}
+
+.cta-buttons .btn:hover {
+    background-color: var(--fandango);
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: var(--text-color);
+    color: white;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}
