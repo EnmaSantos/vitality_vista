@@ -1,0 +1,52 @@
+/* FILE: styles/pages/profile.css */
+
+.profile-container {
+    max-width: 600px;
+    margin: 60px auto;
+    padding: 40px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.profile-container h2 {
+    margin-bottom: 30px;
+    color: var(--text-color);
+}
+
+.profile-info {
+    text-align: left;
+    margin-bottom: 30px;
+}
+
+.profile-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.profile-label {
+    font-weight: bold;
+    color: #555555;
+}
+
+.profile-value {
+    color: #777777;
+}
+
+.back-btn {
+    background-color: var(--steel-blue);
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.back-btn:hover {
+    background-color: var(--yellow-green);
+}

@@ -1,0 +1,43 @@
+<!-- FILE: pages/profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Fitness App</title>
+    <link rel="stylesheet" href="../styles/base/global.css"> <!-- Base/global styles -->
+    <link rel="stylesheet" href="../styles/pages/profile.css"> <!-- Profile page-specific styles -->
+</head>
+
+<body id="profile">
+    <main>
+        <div class="profile-container">
+            <h2>Your Profile</h2>
+            <div class="profile-info">
+                <!-- Username -->
+                <div class="profile-item">
+                    <span class="profile-label">Username:</span>
+                    <span class="profile-value">JohnDoe</span>
+                </div>
+
+                <!-- Email -->
+                <div class="profile-item">
+                    <span class="profile-label">Email:</span>
+                    <span class="profile-value">johndoe@example.com</span>
+                </div>
+
+                <!-- Additional Information (Future Use) -->
+                <div class="profile-item">
+                    <span class="profile-label">Member Since:</span>
+                    <span class="profile-value">January 2023</span>
+                </div>
+            </div>
+
+            <!-- Back to Dashboard Button -->
+            <button class="btn back-btn" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+        </div>
+    </main>
+</body>
+
+</html>

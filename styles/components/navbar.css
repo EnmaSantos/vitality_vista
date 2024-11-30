@@ -85,6 +85,18 @@ a:hover {
   transition: transform 0.3s ease;
 }
 
+.hamburger.active span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
 /* Responsive Styles for Mobile */
 @media screen and (max-width: 768px) {
   .navbar { 
@@ -108,11 +120,18 @@ a:hover {
       right: 0;
       background-color: var(--fandango);
       padding: 1rem;
+      transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: scaleY(0);
   }
 
   .nav-links.active, .profile-icon.active {
       display: flex; /* Show navbar links and profile icon when active */
-      
+      max-height: 500px; /* Adjust as needed */
+      opacity: 1;
+      transform: scaleY(1);
   }
 
   .nav-links li {
@@ -122,9 +141,6 @@ a:hover {
   margin-top: 15%; /* Adds space between the user icon and the menu elements */
   
 }
-
-
-
 
   .profile-icon img {
       width: 50px;
@@ -145,4 +161,10 @@ a:hover {
       
       border-bottom: none; /* Optional: Remove underline for mobile */
   }
+
+/* Form Field Focus Highlight */
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid var(--fandango);
+  outline-offset: 2px;
+}
 

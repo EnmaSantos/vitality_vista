@@ -12,7 +12,7 @@
     <main>
         <section class="signup-form">
             <h2>Create Your Account</h2>
-            <form action="dashboard.html" method="post">
+            <form id="signupForm" action="../pages/dashboard.html" method="post">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required>
 
@@ -25,11 +25,37 @@
                 <label for="confirm-password">Confirm Password:</label>
                 <input type="password" id="confirm-password" name="confirm-password" required>
 
+                <div id="error-message" style="color: red;"></div>
                 <button type="submit" class="btn">Sign Up</button>
             </form>
             <p>Already have an account? <a href="login.html">Login</a></p>
         </section>
     </main>
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', function(event) {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const errorMessage = document.getElementById('error-message');
+
+            errorMessage.textContent = '';
+
+            if (username.length < 3) {
+                errorMessage.textContent = 'Username must be at least 3 characters long.';
+                event.preventDefault();
+            } else if (!email.includes('@')) {
+                errorMessage.textContent = 'Invalid email address.';
+                event.preventDefault();
+            } else if (password.length < 6) {
+                errorMessage.textContent = 'Password must be at least 6 characters long.';
+                event.preventDefault();
+            } else if (password !== confirmPassword) {
+                errorMessage.textContent = 'Passwords do not match.';
+                event.preventDefault();
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -13,19 +13,37 @@
     <main>
         <section class="login-form">
             <h2>Login to Your Account</h2>
-            <form action="dashboard.html" method="post">
+            <form id="loginForm" action="../pages/dashboard.html" method="post">
                 <label for="email">Email:</label>
                 <input type="email" id="email" name="email" required>
             
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
             
+                <div id="error-message" style="color: red;"></div>
                 <button type="submit" class="btn">Login</button>
             </form>
             <p>Don't have an account? <a href="sign-up.html">Sign Up</a></p>
             <p><a href="forgot-password.html">Forgot Password?</a></p>
         </section>
     </main>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+
+            errorMessage.textContent = '';
+
+            if (!email.includes('@')) {
+                errorMessage.textContent = 'Invalid email address.';
+                event.preventDefault();
+            } else if (password.length < 6) {
+                errorMessage.textContent = 'Password must be at least 6 characters long.';
+                event.preventDefault();
+            }
+        });
+    </script>
 </body>
 
 </html>
