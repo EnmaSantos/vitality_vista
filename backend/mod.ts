@@ -1,20 +1,22 @@
 // FILE: mod.ts
 
 import { Application } from "./deps.ts";
-import router from "./routes/routes.ts"; // We'll create this next
-import { config } from "./deps.ts";
+import router from "./routes/routes.ts";
+import { load } from "./deps.ts";
 
 // Load environment variables
-config({ export: true });
+await load({ export: true });
 
-// Create a new Oak application
+// Create router
 const app = new Application();
 
-// Use the router
+// Use router
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-// Start listening on port 8000
-const PORT = 8000;
-console.log(`Server is running on http://localhost:${PORT}`);
-await app.listen({ port: PORT });
+// Start server
+const port = 8000;
+console.log(`Server running on http://localhost:${port}`);
+console.log(`Connection successful ✌️✨`);
+console.log(`Press Ctrl+C to stop the server`);
+await app.listen({ port });

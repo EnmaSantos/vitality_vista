@@ -1,25 +1,39 @@
 // FILE: services/db.ts
 
-import { MongoClient, config } from "../deps.ts";
+import { MongoClient, Database, load } from "../deps.ts";
 
 // Load environment variables
-config({ export: true });
+const env = await load();
 
-// Get the MongoDB URI from environment variables
-const MONGODB_URI = Deno.env.get("MONGODB_URI");
+// Get MongoDB URI from the `env` object
+const MONGODB_URI = env["MONGODB_URI"];
 
+// Handle missing URI
 if (!MONGODB_URI) {
   throw new Error("MONGODB_URI is not defined in the environment variables");
 }
 
-// Create a new MongoClient
+// Create MongoDB client
 const client = new MongoClient();
 
-// Connect to the MongoDB server
-await client.connect(MONGODB_URI);
+// Declare `db` with the correct type
+let db: Database;
 
-// Select the database (will be created if it doesn't exist)
-const db = client.database("vitalityVista");
+try {
+  // Connect to MongoDB
+  await client.connect(MONGODB_URI);
+  console.log("Connected to MongoDB successfully ✨");
 
-// Export the database object for use in other modules
+  // Get database instance
+  db = client.database("vitalityVista");
+
+  // Test operation: List collections
+  const collections = await db.listCollectionNames();
+  console.log("Collections in the database:", collections);
+} catch (err) {
+  console.error("Error connecting to MongoDB:", err);
+  throw err; // Re-throw the error after logging
+}
+
+// Export the `db` instance
 export default db;
