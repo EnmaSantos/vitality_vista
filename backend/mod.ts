@@ -3,12 +3,18 @@
 import { Application } from "./deps.ts";
 import router from "./routes/routes.ts";
 import { load } from "./deps.ts";
+import { middleware, errorHandler } from "./deps.ts";
+import "./config/supertokens.ts"; // Import SuperTokens configuration
 
 // Load environment variables
 await load({ export: true });
 
 // Create router
 const app = new Application();
+
+// Use SuperTokens middleware
+app.use(middleware());
+app.use(errorHandler());
 
 // Use router
 app.use(router.routes());

@@ -1,3 +1,5 @@
+// FILE: deps.ts
+
 // Oak framework for creating the server and handling requests
 export { Application, Router, Context } from "https://deno.land/x/oak@v12.6.1/mod.ts";
 
@@ -9,3 +11,8 @@ export { load } from "https://deno.land/std@0.217.0/dotenv/mod.ts";
 
 // For handling JWT creation and verification
 export { create, verify, getNumericDate } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
+
+// SuperTokens for authentication
+import SuperTokens from "npm:supertokens-node";
+import { init, middleware, errorHandler } from "npm:supertokens-node";
+export { SuperTokens, init, middleware, errorHandler };
