@@ -7,5 +7,5 @@ export {
 
 // Dotenv
 
-export {load} from "https://deno.land/std@0.217.0/dotenv/mod.ts";
+export { load } from "https://deno.land/std@0.224.0/dotenv/mod.ts";
   
