@@ -17,22 +17,7 @@ export async function getDatabase(): Promise<Database> {
 
       console.log("Attempting to connect to MongoDB...");
 
-      // Connect with explicit options
-      await client.connect({
-        db: "vitalityVista",
-        tls: true,
-        servers: [{
-          host: "cluster0.89dxp.mongodb.net",
-          port: 27017
-        }],
-        credential: {
-          username: "del20047",
-          password: "Eldor488",
-          db: "admin",
-          mechanism: "SCRAM-SHA-1"
-        }
-      });
-      
+      await client.connect(mongoUri);
       console.log("Successfully connected to MongoDB");
       db = client.database("vitalityVista");
     } catch (error) {
