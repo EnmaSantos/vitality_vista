@@ -1,8 +1,0 @@
-{
-    "explorer.compactFolders": false,             
-    "explorer.sortOrder": "type",                  
-    "explorer.openEditors.visible": 0,             
-    "explorer.autoReveal": false, 
-    "editor.fontFamily": "Fira Code", 
-    "editor.fontLigatures": true
-}
