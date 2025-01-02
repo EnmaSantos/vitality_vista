@@ -5,9 +5,17 @@ const { connectToDb } = require('../src/db');
 
 router.post('/signup', async (req, res) => {
     try {
+        console.log('📝 Attempting to create new user:', req.body.email);
         const client = await connectToDb();
         const db = client.db();
         const users = db.collection('users');
+        
+        // Check if user already exists
+        const existingUser = await users.findOne({ email: req.body.email });
+        if (existingUser) {
+            console.log('❌ User already exists:', req.body.email);
+            return res.status(400).json({ error: 'User already exists' });
+        }
 
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         const user = { 
@@ -17,14 +25,17 @@ router.post('/signup', async (req, res) => {
         };
         
         await users.insertOne(user);
+        console.log('✅ User created successfully:', req.body.email);
         res.status(201).json({ message: 'User created' });
     } catch (err) {
+        console.error('❌ Error creating user:', err);
         res.status(400).json({ error: 'Error creating user' });
     }
 });
 
 router.post('/login', async (req, res) => {
     try {
+        console.log('🔐 Login attempt for:', req.body.email);
         const client = await connectToDb();
         const db = client.db();
         const users = db.collection('users');
@@ -37,6 +48,7 @@ router.post('/login', async (req, res) => {
         
         res.json({ message: 'Login successful' });
     } catch (err) {
+        console.error('❌ Login error:', err);
         res.status(400).json({ error: 'Error logging in' });
     }
 });
