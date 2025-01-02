@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const { connectToDb } = require('../src/db');
+const { connectToDb } = require('../../db');
 
 router.post('/signup', async (req, res) => {
     try {

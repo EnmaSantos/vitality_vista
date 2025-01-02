@@ -1,8 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const { connectToDb } = require('./backend/src/db');
-require('dotenv').config();
+const { connectToDb } = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,12 +36,10 @@ async function startServer() {
 
         // Start listening
         app.listen(PORT, () => {
-            console.log(`
-🌟 Server is running!
+            console.log(`🌟 Server is running!
 🔗 URL: http://localhost:${PORT}
 📊 Database: ${db.databaseName}
-⏰ Time: ${new Date().toLocaleString()}
-            `);
+⏰ Time: ${new Date().toLocaleString()}`);
         });
 
     } catch (error) {
