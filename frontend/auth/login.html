@@ -13,7 +13,7 @@
     <main>
         <section class="login-form">
             <h2>Login to Your Account</h2>
-            <form id="loginForm" action="../pages/dashboard.html" method="post">
+            <form id="loginForm">
                 <label for="email">Email:</label>
                 <input type="email" id="email" name="email" required>
             
@@ -28,7 +28,8 @@
         </section>
     </main>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function(event) {
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('error-message');
@@ -37,10 +38,23 @@
 
             if (!email.includes('@')) {
                 errorMessage.textContent = 'Invalid email address.';
-                event.preventDefault();
             } else if (password.length < 6) {
                 errorMessage.textContent = 'Password must be at least 6 characters long.';
-                event.preventDefault();
+            } else {
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    if (response.ok) {
+                        // ...handle success (redirect or message)...
+                    } else {
+                        errorMessage.textContent = 'Login failed.';
+                    }
+                } catch (err) {
+                    errorMessage.textContent = 'Error occurred.';
+                }
             }
         });
     </script>
