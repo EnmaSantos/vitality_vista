@@ -1,43 +1,48 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const { connectToDb } = require('../../db');
 
 router.post('/signup', async (req, res) => {
     try {
         console.log('📝 Attempting to create new user:', req.body.email);
-        const client = await connectToDb();
-        const db = client.db();
+        const db = req.app.locals.db;
         const users = db.collection('users');
-        
+
         // Check if user already exists
         const existingUser = await users.findOne({ email: req.body.email });
         if (existingUser) {
-            console.log('❌ User already exists:', req.body.email);
-            return res.status(400).json({ error: 'User already exists' });
+            return res.status(400).json({ message: '❌ User already exists' });
         }
 
+        // Hash the password
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
-        const user = { 
-            username: req.body.username, 
-            email: req.body.email, 
-            password: hashedPassword 
+
+        // Create new user object
+        const newUser = {
+            email: req.body.email,
+            password: hashedPassword,
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            age: req.body.age,
+            gender: req.body.gender,
+            phoneNumber: req.body.phoneNumber,
+            createdAt: new Date()
         };
-        
-        await users.insertOne(user);
-        console.log('✅ User created successfully:', req.body.email);
-        res.status(201).json({ message: 'User created' });
-    } catch (err) {
-        console.error('❌ Error creating user:', err);
-        res.status(400).json({ error: 'Error creating user' });
+
+        // Insert new user into the database
+        await users.insertOne(newUser);
+
+        res.status(201).json({ message: '✅ User created successfully' });
+    } catch (error) {
+        console.error('❌ Error creating new user:', error);
+        res.status(500).json({ message: '❌ Internal server error' });
     }
 });
 
 router.post('/login', async (req, res) => {
     try {
         console.log('🔐 Login attempt for:', req.body.email);
-        const client = await connectToDb();
-        const db = client.db();
+        const db = req.app.locals.db;
         const users = db.collection('users');
 
         const user = await users.findOne({ email: req.body.email });

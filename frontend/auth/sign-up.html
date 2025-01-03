@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - Fitness App</title>
     <link rel="stylesheet" href="../styles/base/global.css"> <!-- Base/global styles -->
     <link rel="stylesheet" href="../styles/pages/sign-up.css"> <!-- Sign-up page-specific styles -->
@@ -12,7 +13,7 @@
     <main>
         <section class="signup-form">
             <h2>Create Your Account</h2>
-            <form id="signupForm">
+            <form id="signupForm" action="/signup" method="POST">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required>
 
@@ -24,6 +25,21 @@
 
                 <label for="confirm-password">Confirm Password:</label>
                 <input type="password" id="confirm-password" name="confirm-password" required>
+
+                <label for="firstName">First Name:</label>
+                <input type="text" id="firstName" name="firstName" required><br>
+
+                <label for="lastName">Last Name:</label>
+                <input type="text" id="lastName" name="lastName" required><br>
+
+                <label for="age">Age:</label>
+                <input type="number" id="age" name="age" required><br>
+
+                <label for="gender">Gender:</label>
+                <input type="text" id="gender" name="gender" required><br>
+
+                <label for="phoneNumber">Phone Number:</label>
+                <input type="text" id="phoneNumber" name="phoneNumber" required><br>
 
                 <div id="error-message" style="color: red;"></div>
                 <button type="submit" class="btn">Sign Up</button>
@@ -38,6 +54,11 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const age = document.getElementById('age').value;
+            const gender = document.getElementById('gender').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
             const errorMessage = document.getElementById('error-message');
 
             errorMessage.textContent = '';
@@ -58,7 +79,12 @@
                         body: JSON.stringify({ 
                             username, 
                             email, 
-                            password 
+                            password,
+                            firstName,
+                            lastName,
+                            age,
+                            gender,
+                            phoneNumber
                         })
                     });
                     if (response.ok) {
