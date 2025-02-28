@@ -188,9 +188,9 @@ Distributed under the MIT License. See `LICENSE` for more information.
 📞 Contact
 ----------
 
-Your Name - [@your_twitter](https://twitter.com/your_twitter) - your.email@example.com
+Your Name - [@EnmanueldelosS3](https://x.com/EnmanueldelosS3) 
 
-Project Link: <https://github.com/yourusername/fitness-tracker>
+Project Link: <https://github.com/EnmaSantos/vitality_vista>
 
 * * * * *
 
