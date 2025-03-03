@@ -7,6 +7,12 @@ const Landing: React.FC = () => {
     <Box
       className="h-screen w-full relative flex items-center justify-center"
       sx={{
+        overflow: 'hidden', // Add this to prevent scrolling
+        position: 'fixed', // Add this to fix the page in place
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         "&::before": {
           content: '""',
           position: 'absolute',
@@ -14,11 +20,13 @@ const Landing: React.FC = () => {
           left: 0,
           width: '100%',
           height: '100%',
-          backgroundImage: "url('/api/placeholder/1920/1080')", // Replace with your actual image
+          backgroundImage: 'url("/assets/images/background-1.jpg")',
+          backgroundRepeat: 'no-repeat',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'blur(4px) brightness(0.7)',
-          zIndex: -1
+          filter: 'blur(0.2em) brightness(0.7)',
+          transform: 'scale(1.02)', // Using transform instead of scale for better browser support
+          zIndex: 1
         }
       }}
     >
