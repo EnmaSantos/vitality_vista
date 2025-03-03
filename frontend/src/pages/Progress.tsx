@@ -1,5 +1,5 @@
 // frontend/src/pages/Progress.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Typography, 
   Box, 
@@ -16,6 +16,7 @@ import {
   Button
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
+import { useThemeContext, themeColors } from '../context/ThemeContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -46,6 +47,11 @@ const TabPanel = (props: TabPanelProps) => {
 const ProgressPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [timeRange, setTimeRange] = useState('week');
+  const { setCurrentThemeColor } = useThemeContext();
+  
+  useEffect(() => {
+    setCurrentThemeColor(themeColors.pakistanGreen);
+  }, [setCurrentThemeColor]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -88,71 +94,71 @@ const ProgressPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ padding: 3 }}>
-      <Typography variant="h4" gutterBottom>
+    <Box sx={{ padding: 3, backgroundColor: '#edf0e4', minHeight: '100vh' }}>
+      <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}>
         Progress Tracking
       </Typography>
-      <Typography variant="subtitle1" sx={{ mb: 4 }}>
+      <Typography variant="subtitle1" sx={{ mb: 4, color: '#606c38ff' }}>
         Track your fitness journey and see your improvements over time.
       </Typography>
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {/* Metrics Summary Cards */}
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ borderTop: '4px solid #283618ff' }}>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+              <Typography color="#606c38ff" gutterBottom>
                 Current Weight
               </Typography>
-              <Typography variant="h4" component="div">
+              <Typography variant="h4" component="div" sx={{ color: '#283618ff' }}>
                 173 lbs
               </Typography>
-              <Typography color="primary" variant="body2">
+              <Typography color="primary" variant="body2" sx={{ color: '#606c38ff' }}>
                 -7 lbs overall
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ borderTop: '4px solid #283618ff' }}>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+              <Typography color="#606c38ff" gutterBottom>
                 Body Fat %
               </Typography>
-              <Typography variant="h4" component="div">
+              <Typography variant="h4" component="div" sx={{ color: '#283618ff' }}>
                 20.5%
               </Typography>
-              <Typography color="primary" variant="body2">
+              <Typography color="primary" variant="body2" sx={{ color: '#606c38ff' }}>
                 -1.5% overall
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ borderTop: '4px solid #283618ff' }}>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+              <Typography color="#606c38ff" gutterBottom>
                 Avg. Daily Calories
               </Typography>
-              <Typography variant="h4" component="div">
+              <Typography variant="h4" component="div" sx={{ color: '#283618ff' }}>
                 2,250
               </Typography>
-              <Typography color="primary" variant="body2">
+              <Typography color="primary" variant="body2" sx={{ color: '#606c38ff' }}>
                 Last 7 days
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ borderTop: '4px solid #283618ff' }}>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+              <Typography color="#606c38ff" gutterBottom>
                 Workout Frequency
               </Typography>
-              <Typography variant="h4" component="div">
+              <Typography variant="h4" component="div" sx={{ color: '#283618ff' }}>
                 4
               </Typography>
-              <Typography color="primary" variant="body2">
+              <Typography color="primary" variant="body2" sx={{ color: '#606c38ff' }}>
                 Sessions this week
               </Typography>
             </CardContent>

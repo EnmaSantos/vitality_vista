@@ -1,5 +1,5 @@
 // frontend/src/pages/FoodLog.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Typography, 
   Box, 
@@ -26,6 +26,7 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import { SelectChangeEvent } from '@mui/material/Select';
+import { useThemeContext, themeColors } from '../context/ThemeContext';
 
 interface FoodEntry {
   id: number;
@@ -52,6 +53,11 @@ const FoodLogPage: React.FC = () => {
     mealType: 'breakfast',
     time: '08:00'
   });
+  const { setCurrentThemeColor } = useThemeContext();
+  
+  useEffect(() => {
+    setCurrentThemeColor(themeColors.earthYellow);
+  }, [setCurrentThemeColor]);
 
   // Mock food log data
   const [foodEntries, setFoodEntries] = useState<FoodEntry[]>([
@@ -152,11 +158,11 @@ const FoodLogPage: React.FC = () => {
   }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
   return (
-    <Box sx={{ padding: 3 }}>
-      <Typography variant="h4" gutterBottom>
+    <Box sx={{ padding: 3, backgroundColor: '#fff9e6', minHeight: '100vh' }}>
+      <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}>
         Food Log
       </Typography>
-      <Typography variant="subtitle1" sx={{ mb: 4 }}>
+      <Typography variant="subtitle1" sx={{ mb: 4, color: '#606c38ff' }}>
         Track your daily food intake and nutrition.
       </Typography>
       
@@ -172,6 +178,22 @@ const FoodLogPage: React.FC = () => {
             InputLabelProps={{
               shrink: true,
             }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#dda15eff',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#bc6c25ff',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#bc6c25ff',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#606c38ff',
+              }
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={8} sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
@@ -179,6 +201,12 @@ const FoodLogPage: React.FC = () => {
             variant="contained" 
             startIcon={<AddIcon />}
             onClick={handleClickOpen}
+            sx={{ 
+              bgcolor: '#dda15eff', 
+              '&:hover': { 
+                bgcolor: '#bc6c25ff' 
+              } 
+            }}
           >
             Add Food
           </Button>

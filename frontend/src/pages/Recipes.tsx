@@ -1,5 +1,5 @@
 // frontend/src/pages/Recipes.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Typography, 
   Box, 
@@ -35,6 +35,7 @@ import {
   Bookmark as BookmarkIcon,
   BookmarkBorder as BookmarkBorderIcon
 } from '@mui/icons-material';
+import { useThemeContext, themeColors } from '../context/ThemeContext';
 
 interface Recipe {
   id: number;
@@ -55,6 +56,11 @@ const RecipesPage: React.FC = () => {
   const [dietType, setDietType] = useState('all');
   const [openRecipeDialog, setOpenRecipeDialog] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const { setCurrentThemeColor } = useThemeContext();
+  
+  useEffect(() => {
+    setCurrentThemeColor(themeColors.tigersEye);
+  }, [setCurrentThemeColor]);
 
   // Mock recipe data - will be replaced with API data later
   const mockRecipes: Recipe[] = [
@@ -178,16 +184,16 @@ const RecipesPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ padding: 3 }}>
-      <Typography variant="h4" gutterBottom>
+    <Box sx={{ padding: 3, backgroundColor: '#fff8f0', minHeight: '100vh' }}>
+      <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}>
         Healthy Recipes
       </Typography>
-      <Typography variant="subtitle1" sx={{ mb: 4 }}>
+      <Typography variant="subtitle1" sx={{ mb: 4, color: '#606c38ff' }}>
         Discover delicious and nutritious recipes for your fitness journey.
       </Typography>
 
       {/* Search and Filters */}
-      <Paper elevation={1} sx={{ p: 2, mb: 3 }}>
+      <Paper elevation={1} sx={{ p: 2, mb: 3, bgcolor: '#fefae0ff', borderLeft: '4px solid #bc6c25ff' }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={6}>
             <TextField
@@ -199,19 +205,44 @@ const RecipesPage: React.FC = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon />
+                    <SearchIcon sx={{ color: '#606c38ff' }} />
                   </InputAdornment>
                 ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#dda15eff',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#bc6c25ff',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#bc6c25ff',
+                  },
+                }
               }}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <FormControl fullWidth variant="outlined">
-              <InputLabel>Meal Type</InputLabel>
+              <InputLabel sx={{ color: '#606c38ff' }}>Meal Type</InputLabel>
               <Select
                 value={mealType}
                 onChange={(e) => setMealType(e.target.value as string)}
                 label="Meal Type"
+                sx={{
+                  color: '#283618ff',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#dda15eff',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#bc6c25ff',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#bc6c25ff',
+                  },
+                }}
               >
                 <MenuItem value="all">All Meals</MenuItem>
                 <MenuItem value="breakfast">Breakfast</MenuItem>
@@ -223,11 +254,23 @@ const RecipesPage: React.FC = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <FormControl fullWidth variant="outlined">
-              <InputLabel>Diet Type</InputLabel>
+              <InputLabel sx={{ color: '#606c38ff' }}>Diet Type</InputLabel>
               <Select
                 value={dietType}
                 onChange={(e) => setDietType(e.target.value as string)}
                 label="Diet Type"
+                sx={{
+                  color: '#283618ff',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#dda15eff',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#bc6c25ff',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#bc6c25ff',
+                  },
+                }}
               >
                 <MenuItem value="all">All Diets</MenuItem>
                 <MenuItem value="vegetarian">Vegetarian</MenuItem>
@@ -243,14 +286,21 @@ const RecipesPage: React.FC = () => {
       </Paper>
 
       {/* Recipe Cards */}
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
         {filteredRecipes.length} Recipes Found
       </Typography>
       
       <Grid container spacing={3}>
         {filteredRecipes.map((recipe) => (
           <Grid item xs={12} sm={6} md={4} key={recipe.id}>
-            <Card>
+            <Card sx={{ 
+              transition: 'transform 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-5px)',
+                boxShadow: 3
+              },
+              borderTop: '4px solid #bc6c25ff'
+            }}>
               <CardMedia
                 component="img"
                 height="180"
@@ -259,13 +309,13 @@ const RecipesPage: React.FC = () => {
               />
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <Typography variant="h6" component="div" gutterBottom>
+                  <Typography variant="h6" component="div" gutterBottom sx={{ color: '#283618ff' }}>
                     {recipe.title}
                   </Typography>
                   <IconButton 
                     onClick={() => toggleFavorite(recipe.id)}
-                    color="primary"
                     size="small"
+                    sx={{ color: recipe.isFavorite ? '#bc6c25ff' : '#dda15eff' }}
                   >
                     {recipe.isFavorite ? <BookmarkIcon /> : <BookmarkBorderIcon />}
                   </IconButton>
@@ -273,20 +323,20 @@ const RecipesPage: React.FC = () => {
 
                 <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <TimeIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary">
+                    <TimeIcon fontSize="small" sx={{ mr: 0.5, color: '#606c38ff' }} />
+                    <Typography variant="body2" color="#606c38ff">
                       {recipe.prepTime} min
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <CalorieIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary">
+                    <CalorieIcon fontSize="small" sx={{ mr: 0.5, color: '#606c38ff' }} />
+                    <Typography variant="body2" color="#606c38ff">
                       {recipe.calories} kcal
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <MealTypeIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
+                    <MealTypeIcon fontSize="small" sx={{ mr: 0.5, color: '#606c38ff' }} />
+                    <Typography variant="body2" color="#606c38ff" sx={{ textTransform: 'capitalize' }}>
                       {recipe.mealType}
                     </Typography>
                   </Box>
@@ -298,7 +348,15 @@ const RecipesPage: React.FC = () => {
                       key={diet} 
                       label={diet} 
                       size="small" 
-                      sx={{ textTransform: 'capitalize' }}
+                      sx={{ 
+                        textTransform: 'capitalize',
+                        bgcolor: '#fefae0ff',
+                        color: '#606c38ff',
+                        borderColor: '#dda15eff',
+                        '&:hover': {
+                          bgcolor: '#fefae0dd'
+                        }
+                      }}
                     />
                   ))}
                 </Box>
@@ -309,6 +367,12 @@ const RecipesPage: React.FC = () => {
                   variant="contained" 
                   onClick={() => handleOpenRecipe(recipe)}
                   fullWidth
+                  sx={{ 
+                    bgcolor: '#bc6c25ff', 
+                    '&:hover': { 
+                      bgcolor: '#a55b20' 
+                    } 
+                  }}
                 >
                   View Recipe
                 </Button>
@@ -324,12 +388,12 @@ const RecipesPage: React.FC = () => {
           sx={{ 
             p: 3, 
             textAlign: 'center',
-            bgcolor: '#f5f5f5',
-            border: '1px dashed #ccc' 
+            bgcolor: '#fefae0ff',
+            border: '1px dashed #bc6c25ff' 
           }}
         >
-          <Typography variant="h6">No recipes found</Typography>
-          <Typography color="textSecondary">
+          <Typography variant="h6" sx={{ color: '#283618ff' }}>No recipes found</Typography>
+          <Typography sx={{ color: '#606c38ff' }}>
             Try adjusting your search criteria or clear filters
           </Typography>
         </Paper>
@@ -341,21 +405,26 @@ const RecipesPage: React.FC = () => {
         onClose={handleCloseRecipe}
         maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#fff8f0',
+          }
+        }}
       >
         {selectedRecipe && (
           <>
-            <DialogTitle>
+            <DialogTitle sx={{ color: '#283618ff', borderBottom: '1px solid #dda15eff' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 {selectedRecipe.title}
                 <IconButton 
                   onClick={() => toggleFavorite(selectedRecipe.id)}
-                  color="primary"
+                  sx={{ color: selectedRecipe.isFavorite ? '#bc6c25ff' : '#dda15eff' }}
                 >
                   {selectedRecipe.isFavorite ? <BookmarkIcon /> : <BookmarkBorderIcon />}
                 </IconButton>
               </Box>
             </DialogTitle>
-            <DialogContent dividers>
+            <DialogContent dividers sx={{ borderColor: '#dda15eff' }}>
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
                   <CardMedia
@@ -366,26 +435,26 @@ const RecipesPage: React.FC = () => {
                   />
 
                   <Box sx={{ mb: 2 }}>
-                    <Typography variant="h6" gutterBottom>
+                    <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
                       Recipe Details
                     </Typography>
                     <Grid container spacing={2}>
                       <Grid item xs={4}>
-                        <Paper sx={{ p: 1, textAlign: 'center' }}>
-                          <Typography variant="body2" color="text.secondary">Prep Time</Typography>
-                          <Typography variant="body1">{selectedRecipe.prepTime} min</Typography>
+                        <Paper sx={{ p: 1, textAlign: 'center', bgcolor: '#fefae0ff' }}>
+                          <Typography variant="body2" color="#606c38ff">Prep Time</Typography>
+                          <Typography variant="body1" sx={{ color: '#283618ff' }}>{selectedRecipe.prepTime} min</Typography>
                         </Paper>
                       </Grid>
                       <Grid item xs={4}>
-                        <Paper sx={{ p: 1, textAlign: 'center' }}>
-                          <Typography variant="body2" color="text.secondary">Calories</Typography>
-                          <Typography variant="body1">{selectedRecipe.calories} kcal</Typography>
+                        <Paper sx={{ p: 1, textAlign: 'center', bgcolor: '#fefae0ff' }}>
+                          <Typography variant="body2" color="#606c38ff">Calories</Typography>
+                          <Typography variant="body1" sx={{ color: '#283618ff' }}>{selectedRecipe.calories} kcal</Typography>
                         </Paper>
                       </Grid>
                       <Grid item xs={4}>
-                        <Paper sx={{ p: 1, textAlign: 'center' }}>
-                          <Typography variant="body2" color="text.secondary">Meal Type</Typography>
-                          <Typography variant="body1" sx={{ textTransform: 'capitalize' }}>
+                        <Paper sx={{ p: 1, textAlign: 'center', bgcolor: '#fefae0ff' }}>
+                          <Typography variant="body2" color="#606c38ff">Meal Type</Typography>
+                          <Typography variant="body1" sx={{ color: '#283618ff', textTransform: 'capitalize' }}>
                             {selectedRecipe.mealType}
                           </Typography>
                         </Paper>
@@ -394,7 +463,7 @@ const RecipesPage: React.FC = () => {
                   </Box>
 
                   <Box sx={{ mb: 2 }}>
-                    <Typography variant="h6" gutterBottom>
+                    <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
                       Diet Types
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -402,7 +471,11 @@ const RecipesPage: React.FC = () => {
                         <Chip 
                           key={diet} 
                           label={diet} 
-                          sx={{ textTransform: 'capitalize' }}
+                          sx={{ 
+                            textTransform: 'capitalize',
+                            bgcolor: '#fefae0ff',
+                            color: '#606c38ff',
+                          }}
                         />
                       ))}
                     </Box>
@@ -410,27 +483,30 @@ const RecipesPage: React.FC = () => {
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
                     Ingredients
                   </Typography>
                   <List>
                     {selectedRecipe.ingredients.map((ingredient, index) => (
-                      <ListItem key={index} divider={index < selectedRecipe.ingredients.length - 1}>
-                        <ListItemText primary={ingredient} />
+                      <ListItem key={index} divider={index < selectedRecipe.ingredients.length - 1}
+                       sx={{ borderColor: '#dda15eff' }}>
+                        <ListItemText primary={ingredient} sx={{ color: '#283618ff' }}/>
                       </ListItem>
                     ))}
                   </List>
 
-                  <Divider sx={{ my: 2 }} />
+                  <Divider sx={{ my: 2, bgcolor: '#dda15eff' }} />
 
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
                     Instructions
                   </Typography>
                   <List>
                     {selectedRecipe.instructions.map((instruction, index) => (
-                      <ListItem key={index} divider={index < selectedRecipe.instructions.length - 1}>
+                      <ListItem key={index} divider={index < selectedRecipe.instructions.length - 1}
+                       sx={{ borderColor: '#dda15eff' }}>
                         <ListItemText 
-                          primary={`${index + 1}. ${instruction}`} 
+                          primary={`${index + 1}. ${instruction}`}
+                          sx={{ color: '#283618ff' }} 
                         />
                       </ListItem>
                     ))}
@@ -438,9 +514,15 @@ const RecipesPage: React.FC = () => {
                 </Grid>
               </Grid>
             </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseRecipe}>Close</Button>
-              <Button variant="contained" color="primary">
+            <DialogActions sx={{ borderTop: '1px solid #dda15eff' }}>
+              <Button onClick={handleCloseRecipe} sx={{ color: '#606c38ff' }}>Close</Button>
+              <Button 
+                variant="contained" 
+                sx={{ 
+                  bgcolor: '#bc6c25ff', 
+                  '&:hover': { bgcolor: '#a55b20' }
+                }}
+              >
                 Add to Meal Plan
               </Button>
             </DialogActions>
@@ -449,7 +531,7 @@ const RecipesPage: React.FC = () => {
       </Dialog>
 
       <Box sx={{ mt: 4, textAlign: 'center' }}>
-        <Typography variant="body2" color="textSecondary">
+        <Typography variant="body2" sx={{ color: '#606c38ff' }}>
           This page will be connected to TheMealDB API to display real recipe data.
         </Typography>
       </Box>

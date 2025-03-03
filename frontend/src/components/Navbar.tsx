@@ -16,14 +16,15 @@ import {
 } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
 import { Link, useLocation } from 'react-router-dom';
+import { useThemeContext, themeColors } from '../context/ThemeContext';
 
 // Navigation items - path and label pairs
 const navItems = [
-  { path: '/', label: 'Dashboard' },
-  { path: '/exercises', label: 'Exercises' },
-  { path: '/food-log', label: 'Food Log' },
-  { path: '/progress', label: 'Progress' },
-  { path: '/recipes', label: 'Recipes' },
+  { path: '/', label: 'Dashboard', color: themeColors.cornsilk },
+  { path: '/exercises', label: 'Exercises', color: themeColors.darkMossGreen },
+  { path: '/food-log', label: 'Food Log', color: themeColors.earthYellow },
+  { path: '/progress', label: 'Progress', color: themeColors.pakistanGreen },
+  { path: '/recipes', label: 'Recipes', color: themeColors.tigersEye },
 ];
 
 const Navbar: React.FC = () => {
@@ -31,6 +32,7 @@ const Navbar: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
+  const { currentThemeColor } = useThemeContext();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -41,8 +43,16 @@ const Navbar: React.FC = () => {
     return location.pathname === path;
   };
 
+  // Determine text color based on the current theme color
+  const getTextColor = (color: string) => {
+    // Use darker text when navbar background is light (cornsilk)
+    return color === themeColors.cornsilk ? '#283618ff' : '#fefae0ff';
+  };
+
+  const textColor = getTextColor(currentThemeColor);
+
   const drawer = (
-    <Box sx={{ width: 250 }} role="presentation" onClick={handleDrawerToggle}>
+    <Box sx={{ width: 250, backgroundColor: '#fefae0ff' }} role="presentation" onClick={handleDrawerToggle}>
       <List>
         {navItems.map((item) => (
           <ListItem 
@@ -51,16 +61,17 @@ const Navbar: React.FC = () => {
             to={item.path} 
             key={item.label}
             sx={{ 
-              backgroundColor: isActive(item.path) ? 'rgba(0, 0, 0, 0.08)' : 'transparent',
+              backgroundColor: isActive(item.path) ? 'rgba(188, 108, 37, 0.15)' : 'transparent',
               '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                backgroundColor: 'rgba(188, 108, 37, 0.08)',
               }
             }}
           >
             <ListItemText 
               primary={item.label} 
               primaryTypographyProps={{ 
-                fontWeight: isActive(item.path) ? 'bold' : 'normal' 
+                fontWeight: isActive(item.path) ? 'bold' : 'normal',
+                color: isActive(item.path) ? item.color : '#283618ff'
               }}
             />
           </ListItem>
@@ -71,7 +82,7 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <AppBar position="static" sx={{ backgroundColor: '#3c6e71' }}>
+      <AppBar position="static" sx={{ backgroundColor: currentThemeColor }}>
         <Toolbar>
           {isMobile && (
             <IconButton
@@ -79,7 +90,7 @@ const Navbar: React.FC = () => {
               aria-label="open drawer"
               edge="start"
               onClick={handleDrawerToggle}
-              sx={{ mr: 2 }}
+              sx={{ mr: 2, color: textColor }}
             >
               <MenuIcon />
             </IconButton>
@@ -91,7 +102,7 @@ const Navbar: React.FC = () => {
             to="/" 
             sx={{ 
               flexGrow: 1, 
-              color: 'white', 
+              color: textColor, 
               textDecoration: 'none',
               fontWeight: 'bold'
             }}
@@ -107,13 +118,13 @@ const Navbar: React.FC = () => {
                   to={item.path}
                   key={item.label}
                   sx={{ 
-                    color: 'white', 
+                    color: textColor, 
                     mx: 1,
                     fontWeight: isActive(item.path) ? 'bold' : 'normal',
-                    borderBottom: isActive(item.path) ? '2px solid white' : 'none',
+                    borderBottom: isActive(item.path) ? `2px solid ${currentThemeColor === themeColors.cornsilk ? '#bc6c25ff' : '#dda15eff'}` : 'none',
                     borderRadius: 0,
                     '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      backgroundColor: currentThemeColor === themeColors.cornsilk ? 'rgba(188, 108, 37, 0.1)' : 'rgba(221, 161, 94, 0.2)',
                     }
                   }}
                 >
