@@ -1,4 +1,3 @@
-// frontend/src/components/Navbar.tsx
 import React, { useState } from 'react';
 import { 
   AppBar, 
@@ -12,30 +11,56 @@ import {
   ListItemText, 
   Box,
   useMediaQuery,
-  useTheme
+  useTheme,
+  Avatar,
+  Menu,
+  MenuItem,
+  Divider
 } from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
-import { Link, useLocation } from 'react-router-dom';
-import { useThemeContext, themeColors } from '../context/ThemeContext';
+import { 
+  Menu as MenuIcon,
+  AccountCircle as AccountCircleIcon,
+  Logout as LogoutIcon
+} from '@mui/icons-material';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 // Navigation items - path and label pairs
 const navItems = [
-  { path: '/', label: 'Dashboard', color: themeColors.cornsilk },
-  { path: '/exercises', label: 'Exercises', color: themeColors.darkMossGreen },
-  { path: '/food-log', label: 'Food Log', color: themeColors.earthYellow },
-  { path: '/progress', label: 'Progress', color: themeColors.pakistanGreen },
-  { path: '/recipes', label: 'Recipes', color: themeColors.tigersEye },
+  { path: '/', label: 'Dashboard' },
+  { path: '/exercises', label: 'Exercises' },
+  { path: '/food-log', label: 'Food Log' },
+  { path: '/progress', label: 'Progress' },
+  { path: '/recipes', label: 'Recipes' },
 ];
 
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
-  const { currentThemeColor } = useThemeContext();
+  const navigate = useNavigate();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  // Add a prop for setIsAuthenticated
+  const handleLogout = () => {
+    // In a real app, you would handle logout here
+    console.log('Logging out');
+    // This would need to be passed as a prop in a real implementation
+    // For now, we'll rely on the App.tsx redirect logic
+    handleProfileMenuClose();
+    navigate('/landing');
   };
 
   // Active route styling
@@ -43,16 +68,8 @@ const Navbar: React.FC = () => {
     return location.pathname === path;
   };
 
-  // Determine text color based on the current theme color
-  const getTextColor = (color: string) => {
-    // Use darker text when navbar background is light (cornsilk)
-    return color === themeColors.cornsilk ? '#283618ff' : '#fefae0ff';
-  };
-
-  const textColor = getTextColor(currentThemeColor);
-
   const drawer = (
-    <Box sx={{ width: 250, backgroundColor: '#fefae0ff' }} role="presentation" onClick={handleDrawerToggle}>
+    <Box sx={{ width: 250 }} role="presentation" onClick={handleDrawerToggle}>
       <List>
         {navItems.map((item) => (
           <ListItem 
@@ -61,28 +78,31 @@ const Navbar: React.FC = () => {
             to={item.path} 
             key={item.label}
             sx={{ 
-              backgroundColor: isActive(item.path) ? 'rgba(188, 108, 37, 0.15)' : 'transparent',
+              backgroundColor: isActive(item.path) ? 'rgba(0, 0, 0, 0.08)' : 'transparent',
               '&:hover': {
-                backgroundColor: 'rgba(188, 108, 37, 0.08)',
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
               }
             }}
           >
             <ListItemText 
               primary={item.label} 
               primaryTypographyProps={{ 
-                fontWeight: isActive(item.path) ? 'bold' : 'normal',
-                color: isActive(item.path) ? item.color : '#283618ff'
+                fontWeight: isActive(item.path) ? 'bold' : 'normal' 
               }}
             />
           </ListItem>
         ))}
+        <Divider sx={{ my: 1 }} />
+        <ListItem button onClick={handleLogout}>
+          <ListItemText primary="Logout" />
+        </ListItem>
       </List>
     </Box>
   );
 
   return (
     <>
-      <AppBar position="static" sx={{ backgroundColor: currentThemeColor }}>
+      <AppBar position="static" sx={{ backgroundColor: '#3c6e71' }}>
         <Toolbar>
           {isMobile && (
             <IconButton
@@ -90,7 +110,7 @@ const Navbar: React.FC = () => {
               aria-label="open drawer"
               edge="start"
               onClick={handleDrawerToggle}
-              sx={{ mr: 2, color: textColor }}
+              sx={{ mr: 2 }}
             >
               <MenuIcon />
             </IconButton>
@@ -102,7 +122,7 @@ const Navbar: React.FC = () => {
             to="/" 
             sx={{ 
               flexGrow: 1, 
-              color: textColor, 
+              color: 'white', 
               textDecoration: 'none',
               fontWeight: 'bold'
             }}
@@ -118,13 +138,13 @@ const Navbar: React.FC = () => {
                   to={item.path}
                   key={item.label}
                   sx={{ 
-                    color: textColor, 
+                    color: 'white', 
                     mx: 1,
                     fontWeight: isActive(item.path) ? 'bold' : 'normal',
-                    borderBottom: isActive(item.path) ? `2px solid ${currentThemeColor === themeColors.cornsilk ? '#bc6c25ff' : '#dda15eff'}` : 'none',
+                    borderBottom: isActive(item.path) ? '2px solid white' : 'none',
                     borderRadius: 0,
                     '&:hover': {
-                      backgroundColor: currentThemeColor === themeColors.cornsilk ? 'rgba(188, 108, 37, 0.1)' : 'rgba(221, 161, 94, 0.2)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     }
                   }}
                 >
@@ -133,6 +153,49 @@ const Navbar: React.FC = () => {
               ))}
             </Box>
           )}
+
+          {/* User profile menu */}
+          <Box sx={{ ml: 2 }}>
+            <IconButton
+              edge="end"
+              aria-label="account of current user"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleProfileMenuOpen}
+              color="inherit"
+            >
+              <Avatar sx={{ width: 32, height: 32, bgcolor: '#1d3e40' }}>
+                <AccountCircleIcon />
+              </Avatar>
+            </IconButton>
+            <Menu
+              id="menu-appbar"
+              anchorEl={anchorEl}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              open={Boolean(anchorEl)}
+              onClose={handleProfileMenuClose}
+            >
+              <MenuItem component={Link} to="/profile" onClick={handleProfileMenuClose}>
+                My Profile
+              </MenuItem>
+              <MenuItem component={Link} to="/settings" onClick={handleProfileMenuClose}>
+                Settings
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={handleLogout}>
+                <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
+                Logout
+              </MenuItem>
+            </Menu>
+          </Box>
         </Toolbar>
       </AppBar>
       
