@@ -28,7 +28,7 @@ const Landing: React.FC = () => {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           filter: 'blur(0.2em) brightness(0.7)',
-          transform: 'scale(1.1)', // Increased scale to remove white borders
+          scale: 1.05,
           zIndex: 1
         }
       }}
