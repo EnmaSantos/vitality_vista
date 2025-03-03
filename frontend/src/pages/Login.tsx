@@ -1,4 +1,4 @@
-import React, { useState, Dispatch, SetStateAction } from 'react';
+import React, { useState } from 'react';
 import { 
   Typography, 
   Box, 
@@ -13,11 +13,7 @@ import {
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
-interface LoginProps {
-  setIsAuthenticated: Dispatch<SetStateAction<boolean>>;
-}
-
-const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
+const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,8 +25,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
     console.log('Login attempt with:', { email, password });
     // In a real app, you would verify credentials with your API
     
-    // Mock successful login
-    setIsAuthenticated(true);
+    // Simple navigation without authentication
     navigate('/');
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, Dispatch, SetStateAction } from 'react';
+import React, { useState } from 'react';
 import { 
   Typography, 
   Box, 
@@ -15,11 +15,7 @@ import {
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
-interface SignupProps {
-  setIsAuthenticated: Dispatch<SetStateAction<boolean>>;
-}
-
-const Signup: React.FC<SignupProps> = ({ setIsAuthenticated }) => {
+const Signup: React.FC = () => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -45,8 +41,7 @@ const Signup: React.FC<SignupProps> = ({ setIsAuthenticated }) => {
     console.log('Signup attempt with:', formData);
     // In a real app, you would register the user with your API
     
-    // Mock successful registration and login
-    setIsAuthenticated(true);
+    // Simple navigation without authentication
     navigate('/');
   };
 
