@@ -2,6 +2,8 @@ import React from 'react';
 import { Typography, Box, Button, Container } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 
+import backgroundImage from '../assets/images/background-1.jpg';
+
 const Landing: React.FC = () => {
   return (
     <Box
@@ -20,12 +22,13 @@ const Landing: React.FC = () => {
           left: 0,
           width: '100%',
           height: '100%',
-          backgroundImage: 'url("/assets/images/background-1.jpg")',
+          // Use the imported image
+          backgroundImage: `url(${backgroundImage})`,
           backgroundRepeat: 'no-repeat',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           filter: 'blur(0.2em) brightness(0.7)',
-          transform: 'scale(1.02)', // Using transform instead of scale for better browser support
+          transform: 'scale(1.1)', // Increased scale to remove white borders
           zIndex: 1
         }
       }}
