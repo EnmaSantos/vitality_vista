@@ -1,4 +1,3 @@
-// Updated version of src/components/Navbar.tsx
 import React, { useState } from 'react';
 import { 
   AppBar, 
@@ -23,9 +22,8 @@ import {
   AccountCircle as AccountCircleIcon,
   Logout as LogoutIcon
 } from '@mui/icons-material';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useThemeContext } from '../context/ThemeContext';
-import { useAuth } from '../App'; // Import the auth hook
 
 // Navigation items - path and label pairs
 const navItems = [
@@ -42,8 +40,8 @@ const Navbar: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
-  const { currentThemeColor, setCurrentThemeColor } = useThemeContext();
-  const { logout } = useAuth(); // Use the auth context
+  const navigate = useNavigate();
+  const { currentThemeColor } = useThemeContext();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -58,9 +56,9 @@ const Navbar: React.FC = () => {
   };
 
   const handleLogout = () => {
-    logout(); // Use the logout function from auth context
+    // Simple redirection to landing page
     handleProfileMenuClose();
-    // No need to navigate - ProtectedRoute will handle the redirect
+    navigate('/landing');
   };
 
   // Active route styling

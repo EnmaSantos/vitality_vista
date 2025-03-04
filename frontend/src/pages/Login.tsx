@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useAuth } from '../App'; // Import the auth hook
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -20,17 +19,13 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   
   const navigate = useNavigate();
-  const { login } = useAuth(); // Use the auth context
   
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     console.log('Login attempt with:', { email, password });
     
-    // In a real app, you would verify credentials with your API
-    // For now, just simulate a successful login with a dummy token
-    login('dummy_token_' + Date.now());
-    
-    // No need to navigate - the PublicRoute component will automatically redirect
+    // Simply navigate to dashboard
+    navigate('/');
   };
 
   return (
