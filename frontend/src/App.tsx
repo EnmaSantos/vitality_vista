@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import ExercisesPage from "./pages/Exercises";
@@ -15,13 +15,13 @@ import "./App.css";
 
 // Create a layout component that will handle the navbar logic
 const AppLayout = () => {
-  const location = window.location.pathname;
+  const location = useLocation(); // Use useLocation hook from react-router
   
   // List of routes where navbar should be hidden
-  const noNavbarRoutes = ['/login', '/signup', '/forgot-password', '/'];
+  const noNavbarRoutes = ['/login', '/signup', '/forgot-password', '/landing'];
   
   // Check if current path is in the noNavbarRoutes list
-  const hideNavbar = noNavbarRoutes.includes(location);
+  const hideNavbar = noNavbarRoutes.includes(location.pathname);
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -31,13 +31,13 @@ const AppLayout = () => {
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <Routes>
           {/* Public routes - no authentication checks */}
-          <Route path="/" element={<Landing />} />
+          <Route path="/landing" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           
           {/* Routes without authentication requirements */}
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/" element={<Dashboard />} />
           <Route path="/exercises" element={<ExercisesPage />} />
           <Route path="/food-log" element={<FoodLogPage />} />
           <Route path="/progress" element={<ProgressPage />} />
