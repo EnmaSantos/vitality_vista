@@ -23,6 +23,7 @@ import {
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useThemeContext as useCustomTheme } from '../context/ThemeContext'; // Import the theme hook
 
 // Navigation items - path and label pairs
 const navItems = [
@@ -40,6 +41,7 @@ const Navbar: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
   const navigate = useNavigate();
+  const { darkMode, toggleDarkMode: toggleTheme } = useCustomTheme(); // Get theme state and toggle function
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -102,7 +104,13 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <AppBar position="static" sx={{ backgroundColor: '#3c6e71' }}>
+      <AppBar 
+        position="static" 
+        sx={{ 
+          backgroundColor: darkMode ? '#1e1e1e' : '#3c6e71',
+          transition: 'background-color 0.3s ease'
+        }}
+      >
         <Toolbar>
           {isMobile && (
             <IconButton
@@ -155,7 +163,7 @@ const Navbar: React.FC = () => {
           )}
 
           {/* User profile menu */}
-          <Box sx={{ ml: 2 }}>
+          <Box sx={{ ml: 2, display: 'flex', gap: 2 }}>
             <IconButton
               edge="end"
               aria-label="account of current user"
@@ -195,6 +203,15 @@ const Navbar: React.FC = () => {
                 Logout
               </MenuItem>
             </Menu>
+            {/* Theme Toggle Button */}
+            <IconButton 
+              color="inherit" 
+              onClick={toggleTheme}
+              aria-label="toggle theme"
+            >
+              {darkMode ? '🌙' : '☀️'} 
+              {/* You can use MUI icons instead if preferred */}
+            </IconButton>
           </Box>
         </Toolbar>
       </AppBar>

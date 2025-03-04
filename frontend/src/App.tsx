@@ -10,36 +10,54 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
+import { ThemeProvider } from './context/ThemeContext';
 import "./App.css";
+
+// Create a layout component that will handle the navbar logic
+const AppLayout = () => {
+  const location = window.location.pathname;
+  
+  // List of routes where navbar should be hidden
+  const noNavbarRoutes = ['/login', '/signup', '/forgot-password', '/', '/landing'];
+  
+  // Check if current path is in the noNavbarRoutes list
+  const hideNavbar = noNavbarRoutes.includes(location);
+  
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Only render Navbar when not on authentication pages */}
+      {!hideNavbar && <Navbar />}
+      
+      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <Routes>
+          {/* Public routes - no authentication checks */}
+          <Route path="/landing" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          
+          {/* Routes without authentication requirements */}
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/exercises" element={<ExercisesPage />} />
+          <Route path="/food-log" element={<FoodLogPage />} />
+          <Route path="/progress" element={<ProgressPage />} />
+          <Route path="/recipes" element={<RecipesPage />} />
+          
+          {/* Fallback redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </div>
+  );
+};
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        {/* Navbar is now always visible */}
-        <Navbar />
-        
-        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <Routes>
-            {/* Public routes - no authentication checks */}
-            <Route path="/landing" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            
-            {/* Routes without authentication requirements */}
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/exercises" element={<ExercisesPage />} />
-            <Route path="/food-log" element={<FoodLogPage />} />
-            <Route path="/progress" element={<ProgressPage />} />
-            <Route path="/recipes" element={<RecipesPage />} />
-            
-            {/* Fallback redirect */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <AppLayout />
+      </Router>
+    </ThemeProvider>
   );
 }
 

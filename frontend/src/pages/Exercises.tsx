@@ -35,7 +35,7 @@ const ExercisesPage: React.FC = () => {
     { id: 4, name: 'Jumping Jacks', category: 'cardio', muscles: ['full body'], level: 'beginner' },
   ];
 
-  // Filter exercises based on search and category
+  
   const filteredExercises = mockExercises.filter(exercise => {
     const matchesSearch = exercise.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = category === 'all' || exercise.category === category;

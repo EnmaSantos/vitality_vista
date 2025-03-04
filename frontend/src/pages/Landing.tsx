@@ -9,8 +9,8 @@ const Landing: React.FC = () => {
     <Box
       className="h-screen w-full relative flex items-center justify-center"
       sx={{
-        overflow: 'hidden', // Add this to prevent scrolling
-        position: 'fixed', // Add this to fix the page in place
+        overflow: 'hidden',
+        position: 'fixed',
         top: 0,
         left: 0,
         right: 0,

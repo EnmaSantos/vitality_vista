@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { Typography, Box, Paper, Grid, Card, CardContent } from '@mui/material';
 import { useThemeContext, themeColors } from '../context/ThemeContext';
+import { ThemeProvider } from  '../context/ThemeContext';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
   const { setCurrentThemeColor } = useThemeContext();
@@ -122,5 +124,18 @@ const Dashboard: React.FC = () => {
     </Box>
   );
 };
+
+function App() {
+  return (
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          {/* Other routes */}
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
+  );
+}
 
 export default Dashboard;
