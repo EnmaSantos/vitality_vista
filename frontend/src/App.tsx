@@ -38,6 +38,7 @@ const AppLayout = () => {
           
           {/* App routes - no authentication required for testing */}
           <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} /> {/* Added explicit dashboard route */}
           <Route path="/exercises" element={<ExercisesPage />} />
           <Route path="/food-log" element={<FoodLogPage />} />
           <Route path="/progress" element={<ProgressPage />} />
