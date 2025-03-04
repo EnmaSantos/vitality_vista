@@ -23,7 +23,7 @@ import {
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useThemeContext } from '../context/ThemeContext';
+import { useThemeContext, themeColors } from '../context/ThemeContext';
 
 // Navigation items - path and label pairs
 const navItems = [
@@ -42,6 +42,12 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentThemeColor } = useThemeContext();
+
+  // Check if we're on the dashboard page
+  const isDashboard = location.pathname === '/' || location.pathname === '/dashboard';
+  
+  // Set text color based on current page
+  const textColor = isDashboard ? '#283618' : 'white';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -63,6 +69,7 @@ const Navbar: React.FC = () => {
 
   // Active route styling
   const isActive = (path: string) => {
+    if (path === '/' && location.pathname === '/dashboard') return true;
     return location.pathname === path;
   };
 
@@ -114,7 +121,7 @@ const Navbar: React.FC = () => {
               aria-label="open drawer"
               edge="start"
               onClick={handleDrawerToggle}
-              sx={{ mr: 2 }}
+              sx={{ mr: 2, color: textColor }}
             >
               <MenuIcon />
             </IconButton>
@@ -126,7 +133,7 @@ const Navbar: React.FC = () => {
             to="/" 
             sx={{ 
               flexGrow: 1, 
-              color: 'white', 
+              color: textColor, 
               textDecoration: 'none',
               fontWeight: 'bold'
             }}
@@ -142,13 +149,13 @@ const Navbar: React.FC = () => {
                   to={item.path}
                   key={item.label}
                   sx={{ 
-                    color: 'white', 
+                    color: textColor, 
                     mx: 1,
                     fontWeight: isActive(item.path) ? 'bold' : 'normal',
-                    borderBottom: isActive(item.path) ? '2px solid white' : 'none',
+                    borderBottom: isActive(item.path) ? `2px solid ${textColor}` : 'none',
                     borderRadius: 0,
                     '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      backgroundColor: isDashboard ? 'rgba(40, 54, 24, 0.1)' : 'rgba(255, 255, 255, 0.1)',
                     }
                   }}
                 >
@@ -166,9 +173,9 @@ const Navbar: React.FC = () => {
               aria-controls="menu-appbar"
               aria-haspopup="true"
               onClick={handleProfileMenuOpen}
-              color="inherit"
+              sx={{ color: textColor }}
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: '#1d3e40' }}>
+              <Avatar sx={{ width: 32, height: 32, bgcolor: isDashboard ? '#283618' : '#1d3e40' }}>
                 <AccountCircleIcon />
               </Avatar>
             </IconButton>
