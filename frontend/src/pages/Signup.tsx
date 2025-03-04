@@ -219,7 +219,7 @@ const Signup: React.FC = () => {
                 Already have an account?{' '}
                 <Link 
                   component={RouterLink} 
-                  to="/login" 
+                  to="/Progress" 
                   sx={{ 
                     fontWeight: 'bold',
                     color: '#3c6e71',
