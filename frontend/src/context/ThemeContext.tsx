@@ -12,15 +12,27 @@ export const themeColors = {
 interface ThemeContextType {
   currentThemeColor: string;
   setCurrentThemeColor: (color: string) => void;
+  darkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentThemeColor, setCurrentThemeColor] = useState(themeColors.pakistanGreen);
+  const [darkMode, setDarkMode] = useState(false);
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
 
   return (
-    <ThemeContext.Provider value={{ currentThemeColor, setCurrentThemeColor }}>
+    <ThemeContext.Provider value={{ 
+      currentThemeColor, 
+      setCurrentThemeColor, 
+      darkMode, 
+      toggleDarkMode 
+    }}>
       {children}
     </ThemeContext.Provider>
   );

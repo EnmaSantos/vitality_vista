@@ -18,7 +18,7 @@ const AppLayout = () => {
   const location = window.location.pathname;
   
   // List of routes where navbar should be hidden
-  const noNavbarRoutes = ['/login', '/signup', '/forgot-password', '/', '/landing'];
+  const noNavbarRoutes = ['/login', '/signup', '/forgot-password', '/'];
   
   // Check if current path is in the noNavbarRoutes list
   const hideNavbar = noNavbarRoutes.includes(location);
@@ -31,13 +31,13 @@ const AppLayout = () => {
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <Routes>
           {/* Public routes - no authentication checks */}
-          <Route path="/landing" element={<Landing />} />
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           
           {/* Routes without authentication requirements */}
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/exercises" element={<ExercisesPage />} />
           <Route path="/food-log" element={<FoodLogPage />} />
           <Route path="/progress" element={<ProgressPage />} />

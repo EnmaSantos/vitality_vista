@@ -23,11 +23,11 @@ import {
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useThemeContext as useCustomTheme } from '../context/ThemeContext'; // Import the theme hook
+import { useThemeContext } from '../context/ThemeContext'; // Import the theme hook
 
 // Navigation items - path and label pairs
 const navItems = [
-  { path: '/', label: 'Dashboard' },
+  { path: '/dashboard', label: 'Dashboard' },
   { path: '/exercises', label: 'Exercises' },
   { path: '/food-log', label: 'Food Log' },
   { path: '/progress', label: 'Progress' },
@@ -41,7 +41,7 @@ const Navbar: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
   const navigate = useNavigate();
-  const { darkMode, toggleDarkMode: toggleTheme } = useCustomTheme(); // Get theme state and toggle function
+  const { darkMode, toggleDarkMode, currentThemeColor } = useThemeContext();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -55,14 +55,10 @@ const Navbar: React.FC = () => {
     setAnchorEl(null);
   };
 
-  // Add a prop for setIsAuthenticated
   const handleLogout = () => {
-    // In a real app, you would handle logout here
     console.log('Logging out');
-    // This would need to be passed as a prop in a real implementation
-    // For now, we'll rely on the App.tsx redirect logic
     handleProfileMenuClose();
-    navigate('/landing');
+    navigate('/');
   };
 
   // Active route styling
@@ -107,7 +103,7 @@ const Navbar: React.FC = () => {
       <AppBar 
         position="static" 
         sx={{ 
-          backgroundColor: darkMode ? '#1e1e1e' : '#3c6e71',
+          backgroundColor: darkMode ? '#1e1e1e' : currentThemeColor,
           transition: 'background-color 0.3s ease'
         }}
       >
@@ -127,7 +123,7 @@ const Navbar: React.FC = () => {
           <Typography 
             variant="h6" 
             component={Link} 
-            to="/" 
+            to="/dashboard" 
             sx={{ 
               flexGrow: 1, 
               color: 'white', 
@@ -172,7 +168,7 @@ const Navbar: React.FC = () => {
               onClick={handleProfileMenuOpen}
               color="inherit"
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: '#1d3e40' }}>
+              <Avatar sx={{ width: 32, height: 32, bgcolor: 'rgba(0, 0, 0, 0.2)' }}>
                 <AccountCircleIcon />
               </Avatar>
             </IconButton>
@@ -206,11 +202,10 @@ const Navbar: React.FC = () => {
             {/* Theme Toggle Button */}
             <IconButton 
               color="inherit" 
-              onClick={toggleTheme}
+              onClick={toggleDarkMode}
               aria-label="toggle theme"
             >
               {darkMode ? '🌙' : '☀️'} 
-              {/* You can use MUI icons instead if preferred */}
             </IconButton>
           </Box>
         </Toolbar>
