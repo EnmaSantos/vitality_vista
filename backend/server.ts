@@ -1,5 +1,5 @@
 // server.ts
-import { Application, oakCors, loadEnv, Router } from "./deps.ts";
+import { Application, oakCors, loadEnv, Router as _Router } from "./deps.ts";
 
 // Load environment variables
 await loadEnv({ export: true });

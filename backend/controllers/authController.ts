@@ -212,7 +212,7 @@ export async function login(ctx: Context) {
 }
 
 // Get current user profile
-export async function getCurrentUser(ctx: Context) {
+export function getCurrentUser(ctx: Context) {
   try {
     // The user ID will be set by the authMiddleware
     const userId = ctx.state.userId;
