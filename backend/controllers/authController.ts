@@ -1,7 +1,7 @@
 // controllers/authController.ts
-import { Context, bcrypt, createJwt, getNumericDate} from "../deps.ts";
+import { Context, bcrypt, createJwt, getNumericDate } from "../deps.ts";
 
-// User interfaces - normally these would be in models/user.ts
+// User interfaces
 interface User {
   id: string;
   email: string;
@@ -32,10 +32,9 @@ interface LoginDTO {
 }
 
 // Temporary in-memory storage for users
-// In a real application, this would be replaced with a database
 const users: User[] = [];
 
-// Helper functions - normally these would be in models/user.ts
+// Helper functions
 function sanitizeUser(user: User): UserResponse {
   const { id, email, firstName, lastName } = user;
   return { id, email, firstName, lastName };
@@ -64,34 +63,31 @@ function createUser(data: RegisterDTO, passwordHash: string): User {
   return newUser;
 }
 
-// Generate JWT token
-// Add this helper function to convert string → CryptoKey
-function generateKey(secret: string): Promise<CryptoKey> {
+// JWT helper function
+async function generateJwtKey(secret: string): Promise<CryptoKey> {
   const encoder = new TextEncoder();
-  return crypto.subtle.importKey(
+  return await crypto.subtle.importKey(
     "raw",
     encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-512" }, // HS512 requires SHA-512 [[3]][[9]]
+    { name: "HMAC", hash: "SHA-512" },
     false,
     ["sign", "verify"]
   );
 }
 
-// Modified generateToken function
+// Token generation function
 async function generateToken(userId: string): Promise<string> {
-  const jwtSecret = Deno.env.get("JWT_SECRET") 
-    || "your-default-secret-change-this"; // Security warning [[5]]
-
-  const key = await generateKey(jwtSecret); // ✅ Convert to CryptoKey
+  const jwtSecret = Deno.env.get("JWT_SECRET") || "";
+  const key = await generateJwtKey(jwtSecret);
   
-  return createJwt(
+  return await createJwt(
     { alg: "HS512", typ: "JWT" },
     { 
       sub: userId,
-      exp: getNumericDate(60 * 60 * 24),
+      exp: getNumericDate(60 * 60 * 24), // 24 hours
       iat: getNumericDate(0)
     },
-    key // ✅ Now passes CryptoKey instead of string [[3]][[8]]
+    key
   );
 }
 
@@ -222,7 +218,7 @@ export async function getCurrentUser(ctx: Context) {
     const userId = ctx.state.userId;
     
     // Find the user by ID
-    const user = await findUserById(userId);
+    const user = findUserById(userId);
     
     if (!user) {
       ctx.response.status = 404;
