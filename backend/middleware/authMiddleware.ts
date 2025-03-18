@@ -34,7 +34,7 @@ export async function authMiddleware(ctx: Context, next: () => Promise<unknown>)
     const key = await crypto.subtle.importKey(
       "raw",
       new TextEncoder().encode(jwtSecret),
-      { name: "HMAC", hash: "SHA-256" },
+      { name: "HMAC", hash: "SHA-512" },
       false,
       ["sign", "verify"],
     );
