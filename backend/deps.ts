@@ -64,6 +64,8 @@ export {
     setup as setupLogger,
     LogLevels,
   } from "https://deno.land/std@0.208.0/log/mod.ts";
+
+  export { Client as PostgresClient } from "https://deno.land/x/postgres/mod.ts";
   
   // Note: fetch, Response, Request, and Headers are globally available in Deno
   // and don't need to be imported
