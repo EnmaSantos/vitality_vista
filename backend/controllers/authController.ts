@@ -1,5 +1,5 @@
 // backend/controllers/authController.ts
-import { Context, bcrypt, createJwt, getNumericDate } from "../deps.ts"; [cite: vitality_vista.zip/backend/deps.ts]
+import { Context, bcrypt, createJwt, getNumericDate } from "../deps.ts"; 
 import dbClient from "../services/db.ts"; // Import the database client [cite: vitality_vista.zip/backend/services/db.ts]
 import { UserSchema, USER_TABLE_NAME } from "../models/user.model.ts"; // Import the schema and table name [cite: backend/models/user.model.ts]
 
