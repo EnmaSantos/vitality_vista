@@ -1,12 +1,19 @@
 // server.ts
 import { Application, oakCors, loadEnv, Router as _Router } from "./deps.ts";
 
-// Load environment variables
+// Load environment variables for the server itself (e.g., PORT)
 await loadEnv({ export: true });
+
+// Remove the temporary import for db.ts - it's no longer needed here
+// import "./services/db.ts"; // <-- REMOVE OR COMMENT OUT THIS LINE
+import "./services/db.ts"; 
+// Import routers
+import authRouter from "./routes/auth.ts";
 
 // Initialize the app
 const app = new Application();
-const port = parseInt(Deno.env.get("PORT") || "8000");
+const port = parseInt(Deno.env.get("PORT") || "8000"); // Uses env var loaded above
+
 
 // Basic middleware
 app.use(oakCors({
@@ -22,8 +29,7 @@ app.use(async (ctx, next) => {
   console.log(`${ctx.request.method} ${ctx.request.url.pathname} - ${ctx.response.status} - ${ms}ms`);
 });
 
-// Import routers (we'll create these next)
-import authRouter from "./routes/auth.ts";
+// Use the imported authRouter
 app.use(authRouter.routes());
 app.use(authRouter.allowedMethods());
 
