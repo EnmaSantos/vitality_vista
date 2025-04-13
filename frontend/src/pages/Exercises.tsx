@@ -20,9 +20,9 @@ import {
   Alert, // Import error display component
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
-import { useThemeContext, themeColors } from '../context/ThemeContext.tsx';
+import { useThemeContext, themeColors } from '../context/ThemeContext';
 // Import the API service function and the Exercise type
-import { getAllExercises, Exercise } from '../services/exerciseApi.ts';
+import { getAllExercises, Exercise } from '../services/exerciseApi';
 
 const ExercisesPage: React.FC = () => {
   // --- State Variables ---
