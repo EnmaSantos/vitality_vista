@@ -6,9 +6,10 @@ await loadEnv({ export: true });
 
 // Remove the temporary import for db.ts - it's no longer needed here
 // import "./services/db.ts"; // <-- REMOVE OR COMMENT OUT THIS LINE
-import "./services/db.ts"; 
+import "./services/db.ts";
 // Import routers
 import authRouter from "./routes/auth.ts";
+import recipeRouter from "./routes/recipes.ts"; // <-- ADD THIS IMPORT
 
 // Initialize the app
 const app = new Application();
@@ -32,6 +33,10 @@ app.use(async (ctx, next) => {
 // Use the imported authRouter
 app.use(authRouter.routes());
 app.use(authRouter.allowedMethods());
+
+// Use the recipe routes <-- ADD THESE LINES
+app.use(recipeRouter.routes());
+app.use(recipeRouter.allowedMethods());
 
 // Default route
 app.use((ctx) => {
