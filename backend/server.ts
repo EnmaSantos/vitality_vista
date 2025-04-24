@@ -10,6 +10,7 @@ import "./services/db.ts";
 // Import routers
 import authRouter from "./routes/auth.ts";
 import recipeRouter from "./routes/recipes.ts"; // <-- ADD THIS IMPORT
+import foodRouter from "./routes/food.ts"; // <-- ADD THIS IMPORT
 
 // Initialize the app
 const app = new Application();
@@ -37,6 +38,10 @@ app.use(authRouter.allowedMethods());
 // Use the recipe routes <-- ADD THESE LINES
 app.use(recipeRouter.routes());
 app.use(recipeRouter.allowedMethods());
+
+// Use the food routes <-- ADD THESE LINES
+app.use(foodRouter.routes());
+app.use(foodRouter.allowedMethods());
 
 // Default route
 app.use((ctx) => {
