@@ -81,8 +81,57 @@ export async function createWorkoutPlanHandler(ctx: Context) {
   }
 }
 
+// --- NEW Handler Function ---
+
+/**
+ * Handles requests to get all workout plans for the authenticated user.
+ */
+export async function getUserWorkoutPlansHandler(ctx: Context) {
+  try {
+    // 1. Get Authenticated User ID
+    const userId = ctx.state.userId as string | undefined;
+
+    if (!userId) {
+      ctx.response.status = 401; // Unauthorized
+      ctx.response.body = { success: false, message: "User not authenticated" };
+      console.error("Error: userId missing from context state in getUserWorkoutPlansHandler");
+      return;
+    }
+
+    // 2. Fetch plans from Database
+    const selectQuery = `
+      SELECT plan_id, user_id, name, description, created_at, updated_at
+      FROM workout_plans
+      WHERE user_id = $1
+      ORDER BY updated_at DESC; -- Order by most recently updated
+    `;
+
+    const result = await dbClient.queryObject<WorkoutPlanSchema>(
+        selectQuery,
+        [userId]
+    );
+
+    const userPlans = result.rows; // Get the array of plans
+
+    // 3. Send Response
+    ctx.response.status = 200; // OK
+    ctx.response.body = {
+      success: true,
+      data: userPlans, // Return the array of plans (will be empty if none found)
+    };
+
+  } catch (error) {
+    console.error("Error in getUserWorkoutPlansHandler:", error);
+    ctx.response.status = 500; // Internal Server Error
+    ctx.response.body = {
+      success: false,
+      message: "Server error retrieving workout plans",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
 // --- TODO: Add handlers for other workout management actions ---
-// export async function getUserWorkoutPlansHandler(ctx: Context) { ... }
 // export async function getWorkoutPlanByIdHandler(ctx: Context) { ... }
 // export async function updateWorkoutPlanHandler(ctx: Context) { ... }
 // export async function deleteWorkoutPlanHandler(ctx: Context) { ... }

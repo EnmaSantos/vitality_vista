@@ -1,0 +1,98 @@
+Vitality Vista Roadmap (As of April 29, 2025)
+
+I. Current Status (Completed Milestones)
+
+Backend Foundation:
+Deno/Oak server is running.
+PostgreSQL database (vitality_vista) is set up.
+Database connection service (db.ts) is implemented and working.
+JWT-based authentication (Register, Login, Protected Routes via Middleware) is fully implemented using bcrypt and djwt, storing user data (id, email, password_hash, etc.) persistently in the users PostgreSQL table. Tested successfully.
+Exercise Feature:
+Separate Python/FastAPI Exercise API is deployed (https://excersice-api.fly.dev/) and assumed functional with endpoints for /exercises, /exercises/search/{name}, /exercises/{id}.
+React Frontend (ExercisesPage.tsx) successfully fetches data from the deployed Exercise API.
+Frontend includes working server-side search, dynamic client-side category filtering, and client-side pagination.
+CORS issues between Vercel/localhost frontend and Fly.io backend resolved.
+Frontend environment variables (VITE_EXERCISE_API_URL) and TypeScript types (vite-env.d.ts) configured correctly.
+Recipe Feature (TheMealDB):
+Backend service (theMealDbApi.ts) created with functions (searchMealsByName, getMealById) and refined interfaces using the free API key (1).
+Backend controller (recipeController.ts) created with handlers for search/lookup.
+Backend routes (recipes.ts) created defining GET /api/recipes/search and GET /api/recipes/:id.
+Recipe router integrated into server.ts and backend endpoints tested successfully.
+No frontend integration implemented yet.
+Food/Nutrition Feature (USDA):
+Backend service (usdaApi.ts) created with functions (searchFoods, getFoodDetails) and refined interfaces using the user's API key from .env.
+Backend controller (foodController.ts) created with handlers for search/details.
+Backend routes (food.ts) created defining GET /api/food/search and GET /api/food/:fdcId.
+Food router integrated into server.ts and backend endpoints tested successfully.
+No frontend integration implemented yet.
+Workout Management:
+Database tables (workout_plans, plan_exercises, workout_logs, log_exercise_details) created in PostgreSQL with correct foreign keys (REFERENCES users(id)) and exercise ID types (INTEGER).
+Backend model interfaces (*.model.ts) created in backend/models/.
+Backend controller (workoutController.ts) created with initial handlers for createWorkoutPlanHandler and getUserWorkoutPlansHandler.
+Backend router (workout.ts) created defining protected POST /api/workout-plans and GET /api/workout-plans routes.
+Workout router integrated into server.ts and basic endpoints tested successfully.
+Significant backend logic (plan details, logging) and all frontend integration are pending.
+II. Next Phase: Food/Recipe Integration & Calorie Calculation (Your Proposed Focus)
+
+This involves connecting the frontend to the MealDB and USDA backend endpoints and tackling the recipe calorie estimation.
+
+Step 1: Frontend Food Search UI & Integration
+Task: Build/update the UI component for searching foods (e.g., part of FoodLogPage.tsx).
+Sub-steps:
+Create a frontend service function (e.g., in frontend/src/services/foodApi.ts) to call the backend GET /api/food/search?query=... endpoint.
+Add state (useState) in the component for search input, results list, loading, and error.
+Implement an input field and trigger the API call (via the service function) when the user searches (potentially using debouncing).
+Display the list of food results (description, brandOwner, fdcId) returned from the backend.
+Allow the user to select a food item from the results.
+Step 2: Frontend Food Details Display
+Task: When a user selects a food item (either from search or potentially from a log later), display its nutritional details.
+Sub-steps:
+Create a frontend service function to call the backend GET /api/food/:fdcId endpoint.
+Call this function with the selected fdcId.
+Display the detailed response, focusing on the foodNutrients array (e.g., showing calories, protein, fat, carbs per 100g or per serving size if available).
+Step 3: Frontend Recipe Search/Browse UI & Integration
+Task: Build/update the UI component for searching/browsing recipes (e.g., RecipesPage.tsx).
+Sub-steps:
+Create a frontend service function (e.g., in frontend/src/services/recipeApi.ts) to call the backend GET /api/recipes/search?name=... endpoint.
+Implement search input and trigger the API call.
+Display the recipe results (summaries: strMeal, strMealThumb, idMeal).
+Allow the user to select a recipe.
+(Future) Implement calls to list/filter by category/area using new backend endpoints (if added later).
+Step 4: Frontend Recipe Details Display
+Task: When a user selects a recipe, display its full details.
+Sub-steps:
+Create a frontend service function to call the backend GET /api/recipes/:id endpoint.
+Call this function with the selected idMeal.
+Display the full details: name, category, area, instructions, thumbnail, and critically, the list of ingredients (strIngredient1...strIngredient20) and measures (strMeasure1...strMeasure20).
+Step 5: Recipe Calorie Calculation (Backend Logic - The Challenge)
+Task: Implement the logic to estimate total calories for a given MealDB recipe ID. This will likely be a new backend endpoint.
+Sub-steps:
+Define a new backend route (e.g., GET /api/recipes/:id/estimate-calories).
+Create a new controller function (estimateRecipeCaloriesHandler).
+This handler will:
+Call getMealById (from theMealDbApi.ts) to fetch the recipe details.
+Iterate through the ingredients (strIngredient1 to strIngredient20) and measures (strMeasure1 to strMeasure20).
+For each valid ingredient/measure pair:
+Parse Measure: Convert the measure string (e.g., "1 cup", "100g", "1 tsp") into a standardized unit (preferably grams or ml). This requires complex parsing and a database/logic for conversion factors (e.g., how many grams are in a cup of flour vs. a cup of sugar?).
+Match Ingredient: Use the ingredient name string (e.g., "flour", "sugar") to search the USDA database via searchFoods (from usdaApi.ts). This needs to intelligently select the best match (e.g., which type of flour? all-purpose?). This is the most ambiguous step.
+Fetch Nutrition: If a likely match (fdcId) is found, call getFoodDetails(fdcId) to get nutritional info (calories per 100g).
+Calculate: Combine the parsed/converted quantity (in grams) and the calories per gram (from USDA data) to estimate calories for that ingredient.
+Sum the calories for all successfully processed ingredients.
+Return the estimated total calories (and perhaps a list of matched/unmatched ingredients) in the API response.
+Step 6: Frontend Display of Estimated Calories
+Task: Call the new backend endpoint (/api/recipes/:id/estimate-calories) from the recipe detail view.
+Sub-steps: Display the estimated calorie total returned by the backend, potentially with caveats about the estimation accuracy.
+Step 7: Food Logging Implementation
+Task: Allow users to log consumed food items (from USDA) and recipes (from MealDB).
+Sub-steps:
+Design database tables for food logs (e.g., food_log_entries, food_log_items).
+Implement backend CRUD endpoints (POST /api/food-logs, GET /api/food-logs, etc.).
+Build frontend UI for selecting foods/recipes, entering quantities/servings, and saving log entries.
+Display logged food and daily summaries (total calories, macros) on the dashboard or a dedicated food log page.
+III. Subsequent Major Steps (Post Food/Recipe)
+
+Complete Workout Management: Finish backend (plan details CRUD, workout logging CRUD) and build corresponding frontend UI.
+Progress Metrics & Profile: Implement backend for storing user profile details (age, sex, height, weight) and basic progress metrics (weight logs). Implement frontend profile/settings page. Implement Progress page charts using Recharts, connecting to backend data.
+Calculated Metrics: Implement BMR/TDEE calculations once profile data is stored.
+Testing: Add unit and potentially end-to-end tests.
+Deployment & Monitoring: Set up staging/production environments, monitoring, logging.
