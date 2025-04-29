@@ -1,0 +1,40 @@
+// backend/routes/workout.ts
+
+import { Router } from "../deps.ts"; // Import Router from Oak/deps
+// Import the handler functions from workoutController.ts
+import {
+  createWorkoutPlanHandler,
+  getUserWorkoutPlansHandler,
+  // Import other handlers here later as needed
+} from "../controllers/workoutController.ts";
+// Import the authentication middleware to protect these routes
+import { authMiddleware } from "../middleware/authMiddleware.ts";
+
+// Create a new router instance with a prefix for workout plan routes
+const workoutRouter = new Router({
+  prefix: "/api/workout-plans", // Using '/api/workout-plans' as the base path
+});
+
+// --- Define Workout Plan Routes ---
+
+// POST /api/workout-plans
+// Creates a new workout plan for the authenticated user.
+// Runs authMiddleware first, then the createWorkoutPlanHandler.
+workoutRouter.post("/", authMiddleware, createWorkoutPlanHandler);
+
+// GET /api/workout-plans
+// Gets all workout plans belonging to the authenticated user.
+// Runs authMiddleware first, then the getUserWorkoutPlansHandler.
+workoutRouter.get("/", authMiddleware, getUserWorkoutPlansHandler);
+
+// --- TODO: Add routes for other workout plan/log actions ---
+// e.g., GET /api/workout-plans/:planId -> getWorkoutPlanByIdHandler
+// e.g., PUT /api/workout-plans/:planId -> updateWorkoutPlanHandler
+// e.g., DELETE /api/workout-plans/:planId -> deleteWorkoutPlanHandler
+// e.g., POST /api/workout-plans/:planId/exercises -> addExerciseToPlanHandler
+// e.g., POST /api/workout-logs -> createWorkoutLogHandler
+// e.g., GET /api/workout-logs -> getUserWorkoutLogsHandler
+
+
+// Export the configured router
+export default workoutRouter;
