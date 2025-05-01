@@ -98,15 +98,14 @@ export async function getRecipeByIdHandler(ctx: Context) {
 /**
  * Handles requests to estimate calories for a specific recipe ID.
  * Expects the ID as a route parameter (e.g., /recipes/52771/estimate-calories)
- * PROTECTED route - requires authentication.
- */
+ * PROTECTED route - requires authentication. */
 export async function estimateRecipeCaloriesHandler(ctx: Context<AppState>) {
-  const recipeId = ctx.params.id; // Define recipeId outside try block to access in catch
+  const recipeId = ctx.params.id; // Define recipeId outside try block
   try {
-    // const recipeId = ctx.params.id; // Get recipe ID from route param - Moved outside
-    const userId = ctx.state.userId; // Get user ID from authMiddleware (type is now known)
+    const userId = ctx.state.userId; // Get user ID from authMiddleware
 
     if (!recipeId) {
+      // (recipeId check remains the same)
       console.error("Error: recipeId parameter missing in route context for calorie estimation");
       ctx.response.status = 400;
       ctx.response.body = { success: false, message: "Recipe ID is required." };
@@ -118,56 +117,88 @@ export async function estimateRecipeCaloriesHandler(ctx: Context<AppState>) {
     // --- Step 3a: Fetch Recipe Details ---
     const meal: MealDbMeal | null = await getMealById(recipeId);
 
-    // ---> Handle recipe not found <---
     if (!meal) {
+      // (not found check remains the same)
       console.log(`Recipe with ID ${recipeId} not found in TheMealDB.`);
-      ctx.response.status = 404; // Not Found
+      ctx.response.status = 404;
       ctx.response.body = { success: false, message: `Recipe with ID ${recipeId} not found.` };
       return;
     }
-    // ---> END Handle recipe not found <---
 
-    console.log(`Found recipe: ${meal.strMeal}`); // <-- *** ADDED THIS LINE ***
+    console.log(`Found recipe: ${meal.strMeal}`);
 
     // --- Initialize variables for calculation ---
-    // Using const for now as it's not reassigned yet. Will change back to let when calculation is added.
-    const estimatedTotalCalories = 0; // Will update later // <-- *** MODIFIED let to const ***
-    // Changed placeholder report to an array to hold details per ingredient later
-    const ingredientProcessingDetails: { ingredient: string; measure: string; status: string; calories?: number }[] = []; // <-- *** MODIFIED THIS LINE ***
+    let estimatedTotalCalories = 0;
+    // Define the type more explicitly for clarity
+    type IngredientDetail = { ingredient: string; measure: string; status: string; calories?: number };
+    const ingredientProcessingDetails: IngredientDetail[] = [];
 
-    // --- TODO: Step 3b: Extract Ingredients and Measures ---
-    // --- TODO: Step 3c: Process Each Ingredient (Loop) ---
+    // ---> *** ADDED: Step 3b: Extract Ingredients and Measures *** <---
+    console.log("Extracting ingredients and measures...");
+    for (let i = 1; i <= 20; i++) {
+      // Dynamically access properties like strIngredient1, strMeasure1, etc.
+      // Use 'as keyof MealDbMeal' for type safety or 'any' if less strictness is needed
+      const ingredientKey = `strIngredient${i}` as keyof MealDbMeal;
+      const measureKey = `strMeasure${i}` as keyof MealDbMeal;
+
+      const ingredientName = meal[ingredientKey] as string | null;
+      const measureText = meal[measureKey] as string | null;
+
+      // Only add if both ingredient and measure are valid, non-empty strings
+      if (ingredientName && ingredientName.trim() !== "" && measureText && measureText.trim() !== "") {
+        ingredientProcessingDetails.push({
+          ingredient: ingredientName.trim(),
+          measure: measureText.trim(),
+          status: "pending", // Mark as pending for processing
+        });
+      } else {
+        // Optional: Stop processing if we hit a null/empty ingredient,
+        // as TheMealDB lists them consecutively.
+        if (ingredientName === null || ingredientName.trim() === "") {
+             break; // Exit the loop early
+        }
+      }
+    }
+    console.log(`Extracted ${ingredientProcessingDetails.length} ingredient pairs.`);
+    // ---> *** END ADDED: Step 3b *** <---
+
+    // --- TODO: Step 3c: Process Each Ingredient (Loop through ingredientProcessingDetails) ---
+        // a. Parse Measure -> Grams (HARD)
+        // b. Match Ingredient -> USDA FDC ID (HARD)
+        // c. Fetch Nutrition -> Calories/100g (USDA)
+        // d. Calculate Ingredient Calories
     // --- TODO: Step 3d: Sum Total Calories ---
 
 
     // --- Step 3e: Prepare Response ---
     ctx.response.status = 200; // OK
-    ctx.response.body = { // <-- *** MODIFIED RESPONSE STRUCTURE ***
+    ctx.response.body = {
       success: true,
       data: {
         recipeId: recipeId,
-        recipeName: meal.strMeal, // Added recipe name
-        estimatedTotalCalories: estimatedTotalCalories,
-        ingredients: ingredientProcessingDetails, // Changed from 'notes'
+        recipeName: meal.strMeal,
+        estimatedTotalCalories: estimatedTotalCalories, // Still 0 for now
+        // Now includes the extracted ingredients list (still pending processing)
+        ingredients: ingredientProcessingDetails,
       },
-    }; // <-- *** END MODIFIED RESPONSE STRUCTURE ***
+    };
 
-  } catch (error) { // <-- *** MODIFIED CATCH BLOCK ***
-    // Use recipeId variable defined outside the try block
-    console.error(`Error in estimateRecipeCaloriesHandler for ID ${recipeId}:`, error); // <-- *** MODIFIED ctx.params.id to recipeId ***
-    // Distinguish between a Fetch error from getMealById and other errors
-    if (error instanceof Error && error.message.includes("TheMealDB request failed")) {
-         ctx.response.status = 502; // Bad Gateway might be appropriate
-         ctx.response.body = { success: false, message: "Failed to fetch recipe details from external service."};
-    } else {
-        ctx.response.status = 500; // Internal Server Error
-        ctx.response.body = {
-          success: false,
-          message: "Server error estimating recipe calories",
-          error: error instanceof Error ? error.message : "Unknown error",
-        };
-    }
-  } // <-- *** END MODIFIED CATCH BLOCK ***
+  } catch (error) {
+    // ... (catch block remains the same)
+     console.error(`Error in estimateRecipeCaloriesHandler for ID ${recipeId}:`, error);
+     // Distinguish between a Fetch error from getMealById and other errors
+     if (error instanceof Error && error.message.includes("TheMealDB request failed")) {
+          ctx.response.status = 502; // Bad Gateway might be appropriate
+          ctx.response.body = { success: false, message: "Failed to fetch recipe details from external service."};
+     } else {
+         ctx.response.status = 500; // Internal Server Error
+         ctx.response.body = {
+           success: false,
+           message: "Server error estimating recipe calories",
+           error: error instanceof Error ? error.message : "Unknown error",
+         };
+     }
+  }
 }
 
 // Add more handlers here later for listCategories, filterByCategory etc.
