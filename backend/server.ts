@@ -11,6 +11,7 @@ import "./services/db.ts";
 import authRouter from "./routes/auth.ts";
 import recipeRouter from "./routes/recipes.ts"; // <-- ADD THIS IMPORT
 import foodRouter from "./routes/food.ts"; // <-- ADD THIS IMPORT
+import workoutRouter from "./routes/workout.ts"; // <-- ADD THIS IMPORT
 
 // Initialize the app
 const app = new Application();
@@ -42,6 +43,10 @@ app.use(recipeRouter.allowedMethods());
 // Use the food routes <-- ADD THESE LINES
 app.use(foodRouter.routes());
 app.use(foodRouter.allowedMethods());
+
+// Use the workout routes <-- ADD THESE LINES
+app.use(workoutRouter.routes());
+app.use(workoutRouter.allowedMethods());
 
 // Default route
 app.use((ctx) => {
