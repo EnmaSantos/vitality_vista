@@ -98,15 +98,15 @@ export async function getRecipeByIdHandler(ctx: Context) {
 /**
  * Handles requests to estimate calories for a specific recipe ID.
  * Expects the ID as a route parameter (e.g., /recipes/52771/estimate-calories)
- * PROTECTED route - requires authentication. */
+ * PROTECTED route - requires authentication.
+ */
 export async function estimateRecipeCaloriesHandler(ctx: Context<AppState>) {
   const recipeId = ctx.params.id; // Define recipeId outside try block
   try {
     const userId = ctx.state.userId; // Get user ID from authMiddleware
 
     if (!recipeId) {
-      // (recipeId check remains the same)
-      console.error("Error: recipeId parameter missing in route context for calorie estimation");
+      console.error("Error: recipeId parameter missing...");
       ctx.response.status = 400;
       ctx.response.body = { success: false, message: "Recipe ID is required." };
       return;
@@ -118,73 +118,135 @@ export async function estimateRecipeCaloriesHandler(ctx: Context<AppState>) {
     const meal: MealDbMeal | null = await getMealById(recipeId);
 
     if (!meal) {
-      // (not found check remains the same)
-      console.log(`Recipe with ID ${recipeId} not found in TheMealDB.`);
-      ctx.response.status = 404;
-      ctx.response.body = { success: false, message: `Recipe with ID ${recipeId} not found.` };
-      return;
+       console.log(`Recipe with ID ${recipeId} not found...`);
+       ctx.response.status = 404;
+       ctx.response.body = { success: false, message: `Recipe with ID ${recipeId} not found.` };
+       return;
     }
 
     console.log(`Found recipe: ${meal.strMeal}`);
 
     // --- Initialize variables for calculation ---
     let estimatedTotalCalories = 0;
-    // Define the type more explicitly for clarity
-    type IngredientDetail = { ingredient: string; measure: string; status: string; calories?: number };
+    // Added fdcId, caloriesPer100g, error fields to the type
+    type IngredientDetail = { ingredient: string; measure: string; status: string; fdcId?: number, caloriesPer100g?: number, error?: string };
     const ingredientProcessingDetails: IngredientDetail[] = [];
 
-    // ---> *** ADDED: Step 3b: Extract Ingredients and Measures *** <---
+    // --- Step 3b: Extract Ingredients and Measures ---
     console.log("Extracting ingredients and measures...");
     for (let i = 1; i <= 20; i++) {
-      // Dynamically access properties like strIngredient1, strMeasure1, etc.
-      // Use 'as keyof MealDbMeal' for type safety or 'any' if less strictness is needed
       const ingredientKey = `strIngredient${i}` as keyof MealDbMeal;
       const measureKey = `strMeasure${i}` as keyof MealDbMeal;
-
       const ingredientName = meal[ingredientKey] as string | null;
       const measureText = meal[measureKey] as string | null;
 
-      // Only add if both ingredient and measure are valid, non-empty strings
       if (ingredientName && ingredientName.trim() !== "" && measureText && measureText.trim() !== "") {
         ingredientProcessingDetails.push({
           ingredient: ingredientName.trim(),
           measure: measureText.trim(),
-          status: "pending", // Mark as pending for processing
+          status: "pending",
         });
-      } else {
-        // Optional: Stop processing if we hit a null/empty ingredient,
-        // as TheMealDB lists them consecutively.
-        if (ingredientName === null || ingredientName.trim() === "") {
-             break; // Exit the loop early
-        }
+      } else if (ingredientName === null || ingredientName.trim() === "") {
+         break;
       }
     }
     console.log(`Extracted ${ingredientProcessingDetails.length} ingredient pairs.`);
-    // ---> *** END ADDED: Step 3b *** <---
 
-    // --- TODO: Step 3c: Process Each Ingredient (Loop through ingredientProcessingDetails) ---
-        // a. Parse Measure -> Grams (HARD)
-        // b. Match Ingredient -> USDA FDC ID (HARD)
-        // c. Fetch Nutrition -> Calories/100g (USDA)
-        // d. Calculate Ingredient Calories
+
+    // ---> *** ADDED: Step 3c: Process Each Ingredient (USDA Lookup Loop) *** <---
+    console.log("Processing ingredients via USDA API...");
+    // Use Promise.all to run lookups concurrently for better performance
+    await Promise.all(ingredientProcessingDetails.map(async (item) => {
+        try {
+            item.status = "processing";
+            // Match Ingredient -> USDA FDC ID (Basic "first result" matching)
+            // console.log(`Searching USDA for: ${item.ingredient}`); // Optional: less console noise
+            const searchResult = await searchFoods(item.ingredient, 1, 1); // Search for top 1 result
+
+            if (!searchResult || searchResult.foods.length === 0) {
+                // console.log(` -> No USDA match found for ${item.ingredient}`); // Optional log
+                item.status = "usda_not_found";
+                return; // Stop processing this item
+            }
+
+            // Take the first result's FDC ID
+            const fdcId = searchResult.foods[0].fdcId;
+            item.fdcId = fdcId; // Store the matched ID
+            const matchedDesc = searchResult.foods[0].description; // Get description for logging
+            item.status = "usda_matched";
+            // console.log(` -> Matched ${item.ingredient} to FDC ID: ${fdcId} (${matchedDesc})`); // Optional log
+
+            // Fetch Nutrition -> Calories/100g (USDA)
+            const foodDetails = await getFoodDetails(fdcId);
+            if (!foodDetails || !foodDetails.foodNutrients) {
+                console.warn(` -> Could not fetch details or nutrients for FDC ID: ${fdcId} (${item.ingredient} / ${matchedDesc})`); // Warning log
+                item.status = "usda_details_error";
+                return; // Stop processing this item
+            }
+
+            // Find the calorie information (Nutrient "Energy" in kcal per 100g)
+            // Common nutrient numbers for Energy: 1008 (old), 208 (new). Also check name. Unit MUST be kcal.
+            const calorieNutrient = foodDetails.foodNutrients.find(n =>
+                ( n.nutrient?.number === '1008' || // Standard Reference Legacy, FNDDS, Survey
+                  n.nutrient?.number === '208' ||  // Foundation, Branded
+                  n.nutrient?.name?.toLowerCase().includes('energy') // General fallback name check
+                 ) && n.nutrient?.unitName?.toLowerCase() === 'kcal'
+            );
+
+            // Check amount exists (sometimes labelNutrients might be used)
+            let kcalValue: number | undefined = undefined;
+            if (calorieNutrient?.amount !== undefined) {
+                kcalValue = calorieNutrient.amount;
+            } else if (calorieNutrient?.nutrient?.id !== undefined && foodDetails.labelNutrients) {
+                 // Fallback for some Branded foods using labelNutrients structure
+                 const labelNutrient = foodDetails.labelNutrients[`${calorieNutrient.nutrient.id}`];
+                 if (labelNutrient?.value !== undefined) {
+                    kcalValue = labelNutrient.value;
+                 }
+            }
+
+
+            if (typeof kcalValue !== 'number') {
+                 console.warn(` -> Calories (kcal) not found or invalid for FDC ID: ${fdcId} (${item.ingredient} / ${matchedDesc})`); // Warning log
+                 item.status = "calories_not_found";
+                 return; // Stop processing this item
+            }
+
+            item.caloriesPer100g = kcalValue; // Store calories per 100g
+            item.status = "nutrition_found"; // Ready for calculation (once parsing is done)
+            // console.log(` -> Found ${item.caloriesPer100g} kcal per 100g for ${item.ingredient}`); // Optional log
+
+            // a. Parse Measure -> Grams (HARD - TODO)
+            // d. Calculate Ingredient Calories (Depends on parsing - TODO)
+
+
+        } catch (ingredientError) {
+            console.error(`Error processing ingredient "${item.ingredient}":`, ingredientError);
+            item.status = "processing_error";
+            item.error = ingredientError instanceof Error ? ingredientError.message : "Unknown processing error";
+        }
+    })); // End of Promise.all / map loop
+    console.log("Finished processing ingredients.");
+    // ---> *** END ADDED: Step 3c (Initial USDA Lookup Part) *** <---
+
+
     // --- TODO: Step 3d: Sum Total Calories ---
 
 
     // --- Step 3e: Prepare Response ---
-    ctx.response.status = 200; // OK
+    ctx.response.status = 200;
     ctx.response.body = {
       success: true,
       data: {
         recipeId: recipeId,
         recipeName: meal.strMeal,
-        estimatedTotalCalories: estimatedTotalCalories, // Still 0 for now
-        // Now includes the extracted ingredients list (still pending processing)
-        ingredients: ingredientProcessingDetails,
+        estimatedTotalCalories: estimatedTotalCalories, // Still 0
+        ingredients: ingredientProcessingDetails, // Now includes updated status, fdcId, caloriesPer100g, errors
       },
     };
 
   } catch (error) {
-    // ... (catch block remains the same)
+    // ... (catch block remains the same) ...
      console.error(`Error in estimateRecipeCaloriesHandler for ID ${recipeId}:`, error);
      // Distinguish between a Fetch error from getMealById and other errors
      if (error instanceof Error && error.message.includes("TheMealDB request failed")) {
