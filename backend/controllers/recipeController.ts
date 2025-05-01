@@ -8,6 +8,8 @@ import {
   // but often we can just pass the service result directly.
   // MealDbMeal,
 } from "../services/theMealDbApi.ts"; // Import the service functions
+import { searchFoods, getFoodDetails } from "../services/usdaApi.ts"; // <-- Added this import
+import type { MealDbMeal } from "../services/theMealDbApi.ts"; // <-- Added this type import
 
 /**
  * Handles requests to search for recipes by name.
@@ -83,6 +85,52 @@ export async function getRecipeByIdHandler(ctx: Context) {
     ctx.response.body = {
       success: false,
       message: "Server error retrieving recipe",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Handles requests to estimate calories for a specific recipe ID.
+ * Expects the ID as a route parameter (e.g., /recipes/52771/estimate-calories)
+ * PROTECTED route - requires authentication.
+ */
+export async function estimateRecipeCaloriesHandler(ctx: Context) {
+  try {
+    const recipeId = ctx.params.id; // Get the ID from route param
+
+    if (!recipeId) {
+      console.error("Error: recipeId parameter missing in route context for calorie estimation");
+      ctx.response.status = 400; // Bad Request
+      ctx.response.body = { success: false, message: "Recipe ID is required." };
+      return;
+    }
+
+    console.log(`Attempting to estimate calories for recipe ID: ${recipeId}`);
+    const userId = ctx.state.userId; // Get user ID from authMiddleware (will be available if auth passes)
+    console.log(`Request initiated by user ID: ${userId}`);
+
+    // --- TODO: Implement core logic here ---
+    // Placeholder logic:
+    const estimatedCalories = 0;
+    const processingReport: string[] = ["Calorie estimation not yet implemented."];
+
+    ctx.response.status = 200; // OK
+    ctx.response.body = {
+      success: true,
+      data: {
+        recipeId: recipeId,
+        estimatedTotalCalories: estimatedCalories,
+        notes: processingReport,
+      },
+    };
+
+  } catch (error) {
+    console.error(`Error in estimateRecipeCaloriesHandler for ID ${ctx.params.id}:`, error);
+    ctx.response.status = 500; // Internal Server Error
+    ctx.response.body = {
+      success: false,
+      message: "Server error estimating recipe calories",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }

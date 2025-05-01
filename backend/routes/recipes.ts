@@ -1,15 +1,16 @@
 // backend/routes/recipes.ts
 
-import { Router } from "../deps.ts"; // Import Router from Oak/deps [cite: vitality_vista.zip/backend/deps.ts]
+import { Router } from "../deps.ts"; // Import Router from Oak/deps
 // Import the handler functions we created in recipeController.ts
 import {
   searchRecipesHandler,
   getRecipeByIdHandler,
-  // Import other handlers here later if needed (e.g., listCategoriesHandler)
+  // ---> ADDED: Import for the new calorie estimation handler
+  estimateRecipeCaloriesHandler,
 } from "../controllers/recipeController.ts";
 
-// Import authentication middleware if needed for protected routes later
-// import { authMiddleware } from "../middleware/authMiddleware.ts";
+// ---> ADDED: Import authentication middleware to protect the new route
+import { authMiddleware } from "../middleware/authMiddleware.ts";
 
 // Create a new router instance with a prefix for recipe-related routes
 const recipeRouter = new Router({
@@ -31,6 +32,16 @@ recipeRouter.get("/:id", getRecipeByIdHandler);
 // e.g., GET /api/recipes/categories -> listCategoriesHandler
 // e.g., GET /api/recipes/filter/category/:categoryName -> filterRecipesByCategoryHandler
 // e.g., POST /api/users/me/favorite-recipes (Protected Route) -> addFavoriteRecipeHandler (would need authMiddleware)
+
+
+// ---> ADDED: Route definition for calorie estimation <---
+// GET /api/recipes/:id/estimate-calories (Protected)
+// Estimates the total calories for a given recipe ID.
+recipeRouter.get(
+  "/:id/estimate-calories",
+  authMiddleware, // Protect the route
+  estimateRecipeCaloriesHandler // The new handler function
+);
 
 
 // Export the configured router
