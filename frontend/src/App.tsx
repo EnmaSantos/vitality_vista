@@ -1,5 +1,8 @@
+// frontend/src/App.tsx corrected
+
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+// BrowserRouter as Router REMOVED from here
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import ExercisesPage from "./pages/Exercises";
@@ -10,41 +13,31 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider } from './context/ThemeContext'; // Assuming you also have ThemeProvider
 import "./App.css";
 
-// Create a layout component that will handle the navbar logic
+// AppLayout component remains the same
 const AppLayout = () => {
-  const location = useLocation(); // Use useLocation hook from react-router
-  
-  // List of routes where navbar should be hidden
+  const location = useLocation();
   const noNavbarRoutes = ['/login', '/signup', '/forgot-password', '/landing'];
-  
-  // Check if current path is in the noNavbarRoutes list
   const hideNavbar = noNavbarRoutes.includes(location.pathname);
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Only render Navbar when not on authentication pages */}
       {!hideNavbar && <Navbar />}
-      
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* Routes are defined here, inside AppLayout */}
         <Routes>
-          {/* Public routes - no authentication checks */}
           <Route path="/landing" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          
-          {/* App routes - no authentication required for testing */}
           <Route path="/" element={<Dashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} /> {/* Added explicit dashboard route */}
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/exercises" element={<ExercisesPage />} />
           <Route path="/food-log" element={<FoodLogPage />} />
           <Route path="/progress" element={<ProgressPage />} />
           <Route path="/recipes" element={<RecipesPage />} />
-          
-          {/* Fallback redirect */}
           <Route path="*" element={<Navigate to="/landing" replace />} />
         </Routes>
       </main>
@@ -52,12 +45,12 @@ const AppLayout = () => {
   );
 };
 
+// App component NOW ONLY returns ThemeProvider and AppLayout
 function App() {
   return (
     <ThemeProvider>
-      <Router>
-        <AppLayout />
-      </Router>
+      {/* No <Router> here anymore! It's in index.tsx */}
+      <AppLayout />
     </ThemeProvider>
   );
 }
