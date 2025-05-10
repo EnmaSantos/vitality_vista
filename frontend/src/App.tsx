@@ -4,6 +4,7 @@ import React from "react";
 // BrowserRouter as Router REMOVED from here
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute"; // Import the ProtectedRoute component
 import Dashboard from "./pages/Dashboard";
 import ExercisesPage from "./pages/Exercises";
 import FoodLogPage from "./pages/FoodLog";
@@ -28,16 +29,21 @@ const AppLayout = () => {
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Routes are defined here, inside AppLayout */}
         <Routes>
+          {/* --- Public Routes (Remain Unchanged) --- */}
           <Route path="/landing" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/exercises" element={<ExercisesPage />} />
-          <Route path="/food-log" element={<FoodLogPage />} />
-          <Route path="/progress" element={<ProgressPage />} />
-          <Route path="/recipes" element={<RecipesPage />} />
+
+          {/* --- Protected Routes (Wrap element with ProtectedRoute) --- */}
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/exercises" element={<ProtectedRoute><ExercisesPage /></ProtectedRoute>} />
+          <Route path="/food-log" element={<ProtectedRoute><FoodLogPage /></ProtectedRoute>} />
+          <Route path="/progress" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
+          <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />
+          
+          {/* --- Fallback Route (Remains Unchanged) --- */}
           <Route path="*" element={<Navigate to="/landing" replace />} />
         </Routes>
       </main>

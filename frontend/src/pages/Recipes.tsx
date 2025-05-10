@@ -25,7 +25,8 @@ import {
   List,
   ListItem,
   ListItemText,
-  IconButton
+  IconButton,
+  CircularProgress
 } from '@mui/material';
 import { 
   Search as SearchIcon,
@@ -36,13 +37,17 @@ import {
   BookmarkBorder as BookmarkBorderIcon
 } from '@mui/icons-material';
 import { useThemeContext, themeColors } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { 
+  getRecipeCalorieEstimate, 
+  RecipeCalorieEstimateData
+} from '../services/recipeApi';
 
 interface Recipe {
-  id: number;
+  id: string;
   title: string;
   imageUrl: string;
   prepTime: number;
-  calories: number;
   mealType: string;
   dietType: string[];
   isFavorite: boolean;
@@ -52,24 +57,49 @@ interface Recipe {
 
 const RecipesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [mealType, setMealType] = useState('all');
-  const [dietType, setDietType] = useState('all');
+  const [mealTypeFilter, setMealTypeFilter] = useState('all');
+  const [dietTypeFilter, setDietTypeFilter] = useState('all');
   const [openRecipeDialog, setOpenRecipeDialog] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [calorieEstimateData, setCalorieEstimateData] = useState<RecipeCalorieEstimateData | null>(null);
+  const [isEstimateLoading, setIsEstimateLoading] = useState<boolean>(false);
+  const [estimateApiError, setEstimateApiError] = useState<string | null>(null);
+
   const { setCurrentThemeColor } = useThemeContext();
+  const { token, isAuthenticated } = useAuth();
   
   useEffect(() => {
     setCurrentThemeColor(themeColors.tigersEye);
   }, [setCurrentThemeColor]);
 
-  // Mock recipe data - will be replaced with API data later
   const mockRecipes: Recipe[] = [
     {
-      id: 1,
+      id: "52775",
+      title: 'Vegan Lasagna',
+      imageUrl: '/api/placeholder/600/400',
+      prepTime: 45,
+      mealType: 'dinner',
+      dietType: ['vegan', 'vegetarian'],
+      isFavorite: false,
+      ingredients: ["green red lentils", "Carrots", "onion", "zucchini", "coriander", "spinach", "lasagne sheets", "vegan butter", "flour", "soya milk", "mustard", "vinegar"],
+      instructions: ["Cook lentils.", "Saute vegetables.", "Make bechamel.", "Assemble and bake."]
+    },
+    {
+      id: "52771",
+      title: 'Spicy Arrabiata Penne',
+      imageUrl: '/api/placeholder/600/400',
+      prepTime: 20,
+      mealType: 'dinner',
+      dietType: [],
+      isFavorite: true,
+      ingredients: ["penne rigate", "olive oil", "garlic", "chopped tomatoes", "red chile flakes", "italian seasoning", "basil", "Parmigiano-Reggiano"],
+      instructions: ["Cook pasta.", "Make sauce.", "Combine and serve."]
+    },
+    {
+      id: "1",
       title: 'Greek Yogurt Parfait with Berries',
       imageUrl: '/api/placeholder/600/400',
       prepTime: 10,
-      calories: 320,
       mealType: 'breakfast',
       dietType: ['vegetarian', 'high-protein'],
       isFavorite: true,
@@ -85,103 +115,60 @@ const RecipesPage: React.FC = () => {
         'Repeat layers with remaining ingredients',
         'Drizzle with honey and serve immediately'
       ]
-    },
-    {
-      id: 2,
-      title: 'Grilled Chicken with Quinoa and Vegetables',
-      imageUrl: '/api/placeholder/600/400',
-      prepTime: 25,
-      calories: 450,
-      mealType: 'lunch',
-      dietType: ['high-protein', 'gluten-free'],
-      isFavorite: false,
-      ingredients: [
-        '4 oz grilled chicken breast',
-        '1/2 cup cooked quinoa',
-        '1 cup mixed vegetables',
-        '1 tbsp olive oil',
-        'Salt and pepper to taste'
-      ],
-      instructions: [
-        'Season chicken breast with salt and pepper',
-        'Grill chicken until cooked through, about 6-7 minutes per side',
-        'Cook quinoa according to package instructions',
-        'Sauté mixed vegetables in olive oil until tender',
-        'Plate quinoa, top with vegetables and sliced chicken'
-      ]
-    },
-    {
-      id: 3,
-      title: 'Salmon with Roasted Sweet Potatoes',
-      imageUrl: '/api/placeholder/600/400',
-      prepTime: 35,
-      calories: 520,
-      mealType: 'dinner',
-      dietType: ['high-protein', 'gluten-free'],
-      isFavorite: true,
-      ingredients: [
-        '5 oz salmon fillet',
-        '1 medium sweet potato, cubed',
-        '1 tbsp olive oil',
-        '1 tsp garlic powder',
-        'Fresh herbs (dill, parsley)',
-        'Lemon wedges',
-        'Salt and pepper to taste'
-      ],
-      instructions: [
-        'Preheat oven to 425°F',
-        'Toss sweet potato cubes with olive oil, garlic powder, salt and pepper',
-        'Roast sweet potatoes for 15 minutes',
-        'Season salmon with salt, pepper, and herbs',
-        'Add salmon to the baking sheet and roast for an additional 12-15 minutes',
-        'Serve with lemon wedges'
-      ]
-    },
-    {
-      id: 4,
-      title: 'Protein Smoothie',
-      imageUrl: '/api/placeholder/600/400',
-      prepTime: 5,
-      calories: 280,
-      mealType: 'snack',
-      dietType: ['vegetarian', 'high-protein'],
-      isFavorite: false,
-      ingredients: [
-        '1 scoop protein powder',
-        '1 banana',
-        '1 cup almond milk',
-        '1 tbsp peanut butter',
-        '1/2 cup ice cubes'
-      ],
-      instructions: [
-        'Add all ingredients to a blender',
-        'Blend until smooth and creamy',
-        'Pour into a glass and serve immediately'
-      ]
     }
   ];
 
-  // Filter recipes based on search, meal type, and diet type
   const filteredRecipes = mockRecipes.filter(recipe => {
     const matchesSearch = recipe.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesMealType = mealType === 'all' || recipe.mealType === mealType;
-    const matchesDietType = dietType === 'all' || recipe.dietType.includes(dietType);
+    const matchesMealType = mealTypeFilter === 'all' || recipe.mealType === mealTypeFilter;
+    const matchesDietType = dietTypeFilter === 'all' || recipe.dietType.includes(dietTypeFilter);
     return matchesSearch && matchesMealType && matchesDietType;
   });
 
   const handleOpenRecipe = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
+    setCalorieEstimateData(null);
+    setIsEstimateLoading(false);
+    setEstimateApiError(null);
     setOpenRecipeDialog(true);
   };
 
   const handleCloseRecipe = () => {
     setOpenRecipeDialog(false);
+    setSelectedRecipe(null);
   };
 
-  const toggleFavorite = (id: number) => {
-    // In a real app, this would update state and/or make an API call
+  const toggleFavorite = (id: string) => {
     console.log(`Toggled favorite status for recipe ${id}`);
+    if (selectedRecipe && selectedRecipe.id === id) {
+      setSelectedRecipe(prev => prev ? { ...prev, isFavorite: !prev.isFavorite } : null);
+    }
   };
+
+  useEffect(() => {
+    if (openRecipeDialog && selectedRecipe && selectedRecipe.id && isAuthenticated && token) {
+      console.log(`Fetching calorie estimate for recipe ID: ${selectedRecipe.id}`);
+      setIsEstimateLoading(true);
+      setEstimateApiError(null);
+      setCalorieEstimateData(null);
+
+      getRecipeCalorieEstimate(selectedRecipe.id, token)
+        .then(response => {
+          if (response.success && response.data) {
+            setCalorieEstimateData(response.data);
+          } else {
+            setEstimateApiError(response.message || "Failed to fetch calorie estimate.");
+          }
+        })
+        .catch(err => {
+          console.error("Error in getRecipeCalorieEstimate call:", err);
+          setEstimateApiError(err.message || "An unexpected error occurred.");
+        })
+        .finally(() => {
+          setIsEstimateLoading(false);
+        });
+    }
+  }, [openRecipeDialog, selectedRecipe, isAuthenticated, token]);
 
   return (
     <Box sx={{ padding: 3, backgroundColor: '#fff8f0', minHeight: '100vh' }}>
@@ -192,7 +179,6 @@ const RecipesPage: React.FC = () => {
         Discover delicious and nutritious recipes for your fitness journey.
       </Typography>
 
-      {/* Search and Filters */}
       <Paper elevation={1} sx={{ p: 2, mb: 3, bgcolor: '#fefae0ff', borderLeft: '4px solid #bc6c25ff' }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={6}>
@@ -228,8 +214,8 @@ const RecipesPage: React.FC = () => {
             <FormControl fullWidth variant="outlined">
               <InputLabel sx={{ color: '#606c38ff' }}>Meal Type</InputLabel>
               <Select
-                value={mealType}
-                onChange={(e) => setMealType(e.target.value as string)}
+                value={mealTypeFilter}
+                onChange={(e) => setMealTypeFilter(e.target.value as string)}
                 label="Meal Type"
                 sx={{
                   color: '#283618ff',
@@ -256,8 +242,8 @@ const RecipesPage: React.FC = () => {
             <FormControl fullWidth variant="outlined">
               <InputLabel sx={{ color: '#606c38ff' }}>Diet Type</InputLabel>
               <Select
-                value={dietType}
-                onChange={(e) => setDietType(e.target.value as string)}
+                value={dietTypeFilter}
+                onChange={(e) => setDietTypeFilter(e.target.value as string)}
                 label="Diet Type"
                 sx={{
                   color: '#283618ff',
@@ -285,7 +271,6 @@ const RecipesPage: React.FC = () => {
         </Grid>
       </Paper>
 
-      {/* Recipe Cards */}
       <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
         {filteredRecipes.length} Recipes Found
       </Typography>
@@ -326,12 +311,6 @@ const RecipesPage: React.FC = () => {
                     <TimeIcon fontSize="small" sx={{ mr: 0.5, color: '#606c38ff' }} />
                     <Typography variant="body2" color="#606c38ff">
                       {recipe.prepTime} min
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <CalorieIcon fontSize="small" sx={{ mr: 0.5, color: '#606c38ff' }} />
-                    <Typography variant="body2" color="#606c38ff">
-                      {recipe.calories} kcal
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -382,7 +361,6 @@ const RecipesPage: React.FC = () => {
         ))}
       </Grid>
 
-      {/* Empty state */}
       {filteredRecipes.length === 0 && (
         <Paper 
           sx={{ 
@@ -399,7 +377,6 @@ const RecipesPage: React.FC = () => {
         </Paper>
       )}
 
-      {/* Recipe Detail Dialog */}
       <Dialog
         open={openRecipeDialog}
         onClose={handleCloseRecipe}
@@ -438,25 +415,41 @@ const RecipesPage: React.FC = () => {
                     <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
                       Recipe Details
                     </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={4}>
-                        <Paper sx={{ p: 1, textAlign: 'center', bgcolor: '#fefae0ff' }}>
+                    <Grid container spacing={1}>
+                      <Grid item xs={6} sm={4}>
+                        <Paper sx={{ p: 1, textAlign: 'center', bgcolor: '#fefae0ff', height: '100%' }}>
                           <Typography variant="body2" color="#606c38ff">Prep Time</Typography>
                           <Typography variant="body1" sx={{ color: '#283618ff' }}>{selectedRecipe.prepTime} min</Typography>
                         </Paper>
                       </Grid>
-                      <Grid item xs={4}>
-                        <Paper sx={{ p: 1, textAlign: 'center', bgcolor: '#fefae0ff' }}>
-                          <Typography variant="body2" color="#606c38ff">Calories</Typography>
-                          <Typography variant="body1" sx={{ color: '#283618ff' }}>{selectedRecipe.calories} kcal</Typography>
-                        </Paper>
-                      </Grid>
-                      <Grid item xs={4}>
-                        <Paper sx={{ p: 1, textAlign: 'center', bgcolor: '#fefae0ff' }}>
+                      <Grid item xs={6} sm={4}>
+                        <Paper sx={{ p: 1, textAlign: 'center', bgcolor: '#fefae0ff', height: '100%' }}>
                           <Typography variant="body2" color="#606c38ff">Meal Type</Typography>
                           <Typography variant="body1" sx={{ color: '#283618ff', textTransform: 'capitalize' }}>
                             {selectedRecipe.mealType}
                           </Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <Paper sx={{ p: 1, textAlign: 'center', bgcolor: '#fefae0ff', height: '100%' }}>
+                          <Typography variant="body2" color="#606c38ff">Est. Calories</Typography>
+                          {isEstimateLoading && <CircularProgress size={20} sx={{ mt: 0.5 }} />}
+                          {estimateApiError && !isEstimateLoading && <Typography color="error" variant="caption" sx={{ mt: 0.5, display: 'block' }}>Error: {estimateApiError}</Typography>}
+                          {calorieEstimateData && !isEstimateLoading && !estimateApiError && (
+                            <Typography variant="h6" sx={{ color: '#bc6c25ff', mt: 0.5 }}>
+                              {calorieEstimateData.estimatedTotalCalories} kcal
+                            </Typography>
+                          )}
+                          {!isAuthenticated && !isEstimateLoading && (
+                              <Typography variant="caption" color="textSecondary" sx={{mt: 0.5, display: 'block'}}>
+                                  Login to view.
+                              </Typography>
+                          )}
+                          {calorieEstimateData && !isEstimateLoading && !estimateApiError && (
+                              <Typography variant="caption" color="textSecondary" sx={{mt: 0.5, display: 'block'}}>
+                                  (Automated estimate)
+                              </Typography>
+                          )}
                         </Paper>
                       </Grid>
                     </Grid>
@@ -486,13 +479,25 @@ const RecipesPage: React.FC = () => {
                   <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
                     Ingredients
                   </Typography>
-                  <List>
-                    {selectedRecipe.ingredients.map((ingredient, index) => (
-                      <ListItem key={index} divider={index < selectedRecipe.ingredients.length - 1}
-                       sx={{ borderColor: '#dda15eff' }}>
-                        <ListItemText primary={ingredient} sx={{ color: '#283618ff' }}/>
-                      </ListItem>
-                    ))}
+                  <List dense>
+                    {calorieEstimateData?.ingredients && calorieEstimateData.ingredients.length > 0
+                      ? calorieEstimateData.ingredients.map((ing, index) => (
+                          <ListItem key={`${ing.ingredient}-${index}`} divider={index < calorieEstimateData.ingredients.length -1} sx={{ borderColor: '#dda15eff', py: 0.5 }}>
+                            <ListItemText 
+                              primaryTypographyProps={{ variant: 'body2' }}
+                              secondaryTypographyProps={{ variant: 'caption' }}
+                              primary={`${ing.measure} ${ing.ingredient}`} 
+                              secondary={`Status: ${ing.status}${ing.calculatedCalories ? ` (${ing.calculatedCalories.toFixed(0)} kcal)` : ''}${ing.parsedMeasureInfo?.parseNotes && ing.parsedMeasureInfo.parseNotes.length > 0 ? ` Notes: ${ing.parsedMeasureInfo.parseNotes.join(', ')}` : ''}`}
+                              sx={{ color: '#283618ff' }}
+                            />
+                          </ListItem>
+                        ))
+                      : selectedRecipe.ingredients.map((ingredient, index) => (
+                          <ListItem key={index} divider={index < selectedRecipe.ingredients.length - 1} sx={{ borderColor: '#dda15eff', py: 0.5 }}>
+                            <ListItemText primary={ingredient} sx={{ color: '#283618ff' }} primaryTypographyProps={{ variant: 'body2' }}/>
+                          </ListItem>
+                        ))
+                    }
                   </List>
 
                   <Divider sx={{ my: 2, bgcolor: '#dda15eff' }} />
@@ -500,13 +505,13 @@ const RecipesPage: React.FC = () => {
                   <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
                     Instructions
                   </Typography>
-                  <List>
+                  <List dense>
                     {selectedRecipe.instructions.map((instruction, index) => (
-                      <ListItem key={index} divider={index < selectedRecipe.instructions.length - 1}
-                       sx={{ borderColor: '#dda15eff' }}>
+                      <ListItem key={index} divider={index < selectedRecipe.instructions.length - 1} sx={{ borderColor: '#dda15eff', py: 0.5 }}>
                         <ListItemText 
                           primary={`${index + 1}. ${instruction}`}
                           sx={{ color: '#283618ff' }} 
+                          primaryTypographyProps={{ variant: 'body2' }}
                         />
                       </ListItem>
                     ))}
