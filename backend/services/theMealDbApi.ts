@@ -1,77 +1,78 @@
 // backend/services/theMealDbApi.ts
+import { loadEnv } from "../deps.ts"; // Ensure loadEnv is correctly imported from your deps.ts
 
-// Base URL for TheMealDB API using the free test key '1'
-const API_BASE_URL = "https://www.themealdb.com/api/json/v1/1";
+// It's good practice to load environment variables at the very start of your application,
+// typically in your main server.ts. If it's already done there reliably,
+// this specific `await loadEnv()` might be redundant here, but doesn't hurt.
+await loadEnv({ export: true });
 
-// --- Define Interfaces for API Responses (REFINED) ---
+const PREMIUM_API_KEY = Deno.env.get("THEMEALDB_API"); // This should be "65232507" from your .env
 
-export interface MealDbMeal {
+let API_BASE_URL: string;
+let usingPremiumV2 = false;
+
+if (PREMIUM_API_KEY && PREMIUM_API_KEY !== "1") {
+  // If a premium key (that isn't "1") is provided, use the V2 path
+  API_BASE_URL = `https://www.themealdb.com/api/json/v2/${PREMIUM_API_KEY}`;
+  usingPremiumV2 = true;
+  console.log(`TheMealDBApi: Initialized with V2 Premium API Key.`);
+} else {
+  // Fallback to V1 with key "1" if no premium key is set or if it's explicitly "1"
+  API_BASE_URL = `https://www.themealdb.com/api/json/v1/1`;
+  console.log(`TheMealDBApi: Initialized with V1 Free API Key (1).`);
+}
+// Log the base URL structure for verification (key part masked for safety in logs)
+console.log(`TheMealDBApi: Effective Base URL structure: ${API_BASE_URL.substring(0, API_BASE_URL.lastIndexOf('/') + 1)}YOUR_KEY_WAS_HERE/...`);
+
+
+// --- Define Interfaces for API Responses ---
+
+export interface MealDbFullMeal {
   idMeal: string;
   strMeal: string;
-  strDrinkAlternate: string | null;
-  strCategory: string;
-  strArea: string;
-  strInstructions: string;
-  strMealThumb: string;
-  strTags: string | null; // Can be comma-separated string or null
-  strYoutube: string | null; // Assuming this can also be null
-  strIngredient1: string | null;
-  strIngredient2: string | null;
-  strIngredient3: string | null;
-  strIngredient4: string | null;
-  strIngredient5: string | null;
-  strIngredient6: string | null;
-  strIngredient7: string | null;
-  strIngredient8: string | null;
-  strIngredient9: string | null;
-  strIngredient10: string | null;
-  strIngredient11: string | null;
-  strIngredient12: string | null;
-  strIngredient13: string | null;
-  strIngredient14: string | null;
-  strIngredient15: string | null;
-  strIngredient16: string | null;
-  strIngredient17: string | null;
-  strIngredient18: string | null;
-  strIngredient19: string | null;
-  strIngredient20: string | null;
-  strMeasure1: string | null;
-  strMeasure2: string | null;
-  strMeasure3: string | null;
-  strMeasure4: string | null;
-  strMeasure5: string | null;
-  strMeasure6: string | null;
-  strMeasure7: string | null;
-  strMeasure8: string | null;
-  strMeasure9: string | null;
-  strMeasure10: string | null;
-  strMeasure11: string | null;
-  strMeasure12: string | null;
-  strMeasure13: string | null;
-  strMeasure14: string | null;
-  strMeasure15: string | null;
-  strMeasure16: string | null;
-  strMeasure17: string | null;
-  strMeasure18: string | null;
-  strMeasure19: string | null;
-  strMeasure20: string | null;
-  strSource: string | null;
-  strImageSource: string | null;
-  strCreativeCommonsConfirmed: string | null;
-  dateModified: string | null;
+  strDrinkAlternate?: string | null;
+  strCategory?: string | null;
+  strArea?: string | null;
+  strInstructions?: string | null;
+  strMealThumb?: string | null;
+  strTags?: string | null;
+  strYoutube?: string | null;
+  strIngredient1?: string | null; strMeasure1?: string | null;
+  strIngredient2?: string | null; strMeasure2?: string | null;
+  strIngredient3?: string | null; strMeasure3?: string | null;
+  strIngredient4?: string | null; strMeasure4?: string | null;
+  strIngredient5?: string | null; strMeasure5?: string | null;
+  strIngredient6?: string | null; strMeasure6?: string | null;
+  strIngredient7?: string | null; strMeasure7?: string | null;
+  strIngredient8?: string | null; strMeasure8?: string | null;
+  strIngredient9?: string | null; strMeasure9?: string | null;
+  strIngredient10?: string | null; strMeasure10?: string | null;
+  strIngredient11?: string | null; strMeasure11?: string | null;
+  strIngredient12?: string | null; strMeasure12?: string | null;
+  strIngredient13?: string | null; strMeasure13?: string | null;
+  strIngredient14?: string | null; strMeasure14?: string | null;
+  strIngredient15?: string | null; strMeasure15?: string | null;
+  strIngredient16?: string | null; strMeasure16?: string | null;
+  strIngredient17?: string | null; strMeasure17?: string | null;
+  strIngredient18?: string | null; strMeasure18?: string | null;
+  strIngredient19?: string | null; strMeasure19?: string | null;
+  strIngredient20?: string | null; strMeasure20?: string | null;
+  strSource?: string | null;
+  strImageSource?: string | null;
+  strCreativeCommonsConfirmed?: string | null;
+  dateModified?: string | null;
+  [key: string]: any; // To allow dynamic access like meal[`strIngredient${i}`]
 }
 
-// These wrapper interfaces still look correct based on the response
-interface MealDbSearchResponse {
-    meals: MealDbMeal[] | null;
-}
-interface MealDbLookupResponse {
-    meals: [MealDbMeal] | null; // Array with one meal or null
+interface MealDbFullMealListResponse { // For search.php, randomselection.php
+    meals: MealDbFullMeal[] | null;
 }
 
-// --- NEW Interfaces (Based on observing categories.php and filter.php) ---
+interface MealDbLookupResponse { // For lookup.php
+    meals: [MealDbFullMeal] | null;
+}
 
-interface MealDbCategory {
+interface MealDbCategoryInfo { // For categories.php
     idCategory: string;
     strCategory: string;
     strCategoryThumb: string;
@@ -79,111 +80,83 @@ interface MealDbCategory {
 }
 
 interface MealDbCategoriesResponse {
-    categories: MealDbCategory[]; // Expect an array of categories
+    categories: MealDbCategoryInfo[];
 }
 
-// Interface for the summarized meal object returned by filter endpoints
-interface MealDbSummary {
+export interface MealDbSummary { // For filter.php results
     strMeal: string;
     strMealThumb: string;
     idMeal: string;
 }
 
 interface MealDbFilterResponse {
-    meals: MealDbSummary[] | null; // Filter endpoints return an array of summaries or null
+    meals: MealDbSummary[] | null;
 }
-
 
 // --- API Service Functions ---
 
-/**
- * Searches for meals by name.
- * @param name The search term.
- * @returns Promise resolving to an array of meals or null.
- */
-export async function searchMealsByName(name: string): Promise<MealDbMeal[] | null> {
-  const encodedName = encodeURIComponent(name);
-  const url = `${API_BASE_URL}/search.php?s=${encodedName}`;
-  console.log(`Workspaceing TheMealDB: ${url}`); // For debugging
-
+async function fetchFromApi<T>(endpoint: string, operationName: string): Promise<T> {
+  const url = `${API_BASE_URL}/${endpoint}`;
+  console.log(`TheMealDBApi: ${operationName}: ${url.replace(PREMIUM_API_KEY || "1", "YOUR_KEY")}`); // Mask key in log
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`TheMealDB request failed: ${response.status}`);
+      const errorBody = await response.text();
+      console.error(`TheMealDB ${operationName} request failed: ${response.status} ${response.statusText}`, errorBody);
+      throw new Error(`TheMealDB ${operationName} request failed: ${response.status}`);
     }
-    const data: MealDbSearchResponse = await response.json();
-    return data.meals; // Return the array of meals, or null if none found
+    return await response.json() as T;
   } catch (error) {
-    console.error("Error fetching meals by name:", error);
-    throw error; // Re-throw to be handled by caller
+    console.error(`Error in ${operationName} ("${endpoint}"):`, error);
+    if (error instanceof Error) throw error;
+    throw new Error(`Unknown error during ${operationName}.`);
   }
 }
 
-/**
- * Looks up a full meal detail by its ID.
- * @param id The meal ID.
- * @returns Promise resolving to a single meal object or null.
- */
-export async function getMealById(id: string): Promise<MealDbMeal | null> {
-    const url = `${API_BASE_URL}/lookup.php?i=${id}`;
-    console.log(`Workspaceing TheMealDB: ${url}`);
-
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-          throw new Error(`TheMealDB request failed: ${response.status}`);
-      }
-      const data: MealDbLookupResponse = await response.json();
-      // API returns an array with one item, or null
-      return data.meals ? data.meals[0] : null;
-    } catch (error) {
-        console.error(`Error fetching meal by ID ${id}:`, error);
-        throw error;
-    }
+export async function searchMealsByName(name: string): Promise<MealDbFullMeal[] | null> {
+  const encodedName = encodeURIComponent(name);
+  const data = await fetchFromApi<MealDbFullMealListResponse>(`search.php?s=${encodedName}`, "searchMealsByName");
+  return data.meals;
 }
 
-/**
- * Fetches the list of all meal categories.
- * @returns Promise resolving to an array of category objects.
- */
-export async function listCategories(): Promise<MealDbCategory[]> {
-    const url = `${API_BASE_URL}/categories.php`;
-    console.log(`Workspaceing TheMealDB: ${url}`);
-
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`TheMealDB request failed: ${response.status}`);
-        }
-        const data: MealDbCategoriesResponse = await response.json();
-        return data.categories || []; // Return categories array or empty array if null/missing
-    } catch (error) {
-        console.error("Error fetching categories:", error);
-        throw error;
-    }
+export async function getMealById(id: string): Promise<MealDbFullMeal | null> {
+  const data = await fetchFromApi<MealDbLookupResponse>(`lookup.php?i=${id}`, "getMealById");
+  return data.meals ? data.meals[0] : null;
 }
 
-/**
- * Filters meals by a specific category.
- * @param category The category name to filter by.
- * @returns Promise resolving to an array of summarized meal objects or null.
- */
+export async function listAllCategoriesInfo(): Promise<MealDbCategoryInfo[]> {
+  const data = await fetchFromApi<MealDbCategoriesResponse>('categories.php', "listAllCategoriesInfo");
+  return data.categories || [];
+}
+
 export async function filterByCategory(category: string): Promise<MealDbSummary[] | null> {
-    const encodedCategory = encodeURIComponent(category);
-    const url = `${API_BASE_URL}/filter.php?c=${encodedCategory}`;
-    console.log(`Workspaceing TheMealDB: ${url}`);
-
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`TheMealDB request failed: ${response.status}`);
-        }
-        const data: MealDbFilterResponse = await response.json();
-        return data.meals; // Return array of meal summaries or null
-    } catch (error) {
-        console.error(`Error filtering by category "${category}":`, error);
-        throw error;
-    }
+  const encodedCategory = encodeURIComponent(category);
+  const data = await fetchFromApi<MealDbFilterResponse>(`filter.php?c=${encodedCategory}`, `filterByCategory(${category})`);
+  return data.meals;
 }
 
-// --- TODO: Add functions for list.php?a=list, list.php?i=list, filter.php?a=..., filter.php?i=... ---
+export async function getFeaturedRecipes(): Promise<MealDbFullMeal[] | null> {
+  if (!usingPremiumV2 && PREMIUM_API_KEY === "1") {
+    console.warn("TheMealDBApi: randomselection.php is a premium endpoint. Using single random.php 10 times as fallback.");
+    // Fallback for free key "1": call random.php multiple times
+    const randomMeals: MealDbFullMeal[] = [];
+    const promises = [];
+    for (let i = 0; i < 10; i++) {
+      promises.push(fetchFromApi<MealDbLookupResponse>('random.php', `getFeaturedRecipes_randomFallback_${i+1}`));
+    }
+    const results = await Promise.all(promises);
+    results.forEach(result => {
+      if (result.meals && result.meals[0]) {
+        randomMeals.push(result.meals[0]);
+      }
+    });
+    // Remove duplicates by idMeal if any
+    const uniqueMeals = Array.from(new Map(randomMeals.map(meal => [meal.idMeal, meal])).values());
+    return uniqueMeals.slice(0,10);
+  }
+  // If premium key is set (and not "1"), use randomselection.php
+  const data = await fetchFromApi<MealDbFullMealListResponse>('randomselection.php', "getFeaturedRecipes (premium)");
+  return data.meals;
+}
+
+// --- TODO: Add other functions as needed, e.g., for listing by area, ingredient ---
