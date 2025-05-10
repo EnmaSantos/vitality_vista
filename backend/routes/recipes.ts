@@ -4,8 +4,8 @@ import { Router } from "../deps.ts"; // Import Router from Oak/deps
 // Import the handler functions we created in recipeController.ts
 import {
   searchRecipesHandler,
-  getRecipeByIdHandler,
-  // ---> ADDED: Import for the new calorie estimation handler
+  getRecipeByIdHandler, 
+  getRecipesByCategoryHandler,
   estimateRecipeCaloriesHandler,
 } from "../controllers/recipeController.ts";
 
@@ -28,7 +28,8 @@ recipeRouter.get("/search", searchRecipesHandler);
 recipeRouter.get("/:id", getRecipeByIdHandler);
 
 
-// --- TODO: Add routes for other recipe actions ---
+
+recipeRouter.get("/category/:categoryName", getRecipesByCategoryHandler);// --- TODO: Add routes for other recipe actions ---
 // e.g., GET /api/recipes/categories -> listCategoriesHandler
 // e.g., GET /api/recipes/filter/category/:categoryName -> filterRecipesByCategoryHandler
 // e.g., POST /api/users/me/favorite-recipes (Protected Route) -> addFavoriteRecipeHandler (would need authMiddleware)

@@ -1,9 +1,10 @@
 // backend/controllers/recipeController.ts
 
-import { Context, State } from "../deps.ts"; // Import Oak's Context and State types
+import { Context } from "../deps.ts"; // Import Oak's Context type
 import {
   searchMealsByName,
   getMealById,
+  filterByCategory as filterMealsByCategoryService, // Use an alias
   // We might need the MealDbMeal interface if we do transformations here,
   // but often we can just pass the service result directly.
   // MealDbMeal,
@@ -143,7 +144,7 @@ function parseMeasureToGrams(measureText: string, ingredientName: string): Parse
 }
 
 // Define an interface for the application state, including the userId added by middleware
-interface AppState extends State {
+interface AppState { // Removed "extends State"
   userId: string;
 }
 
@@ -382,6 +383,58 @@ export async function estimateRecipeCaloriesHandler(ctx: Context<AppState>) {
         error: error instanceof Error ? error.message : "Unknown error",
       };
     }
+  }
+}
+
+/**
+ * Handles requests to get recipes by category name.
+ * Expects 'categoryName' as a route parameter.
+ */
+export async function getRecipesByCategoryHandler(ctx: Context) { // Can be Context<AppState> if you access ctx.state.userId
+  try {
+    const categoryName = ctx.params.categoryName;
+
+    if (!categoryName) {
+      ctx.response.status = 400;
+      ctx.response.body = { success: false, message: "Category name parameter is missing." };
+      return;
+    }
+
+    console.log(`RecipeController: Fetching recipes for category: ${categoryName}`);
+    // Call the service function from theMealDbApi.ts
+    const mealSummaries = await filterMealsByCategoryService(categoryName);
+
+    if (!mealSummaries) {
+      // This means TheMealDB returned {"meals": null} for that category
+      console.log(`RecipeController: No meals found for category "${categoryName}" from TheMealDB.`);
+      ctx.response.status = 200; // Successful request, just no data for that category
+      ctx.response.body = {
+        success: true,
+        data: [], // Return an empty array
+        message: `No meals found for category: ${categoryName}`,
+      };
+      return;
+    }
+
+    // TheMealDB's filter.php returns idMeal, strMeal, strMealThumb.
+    // Let's map these to a structure that might be more consistent for your frontend,
+    // similar to your existing Recipe interface, but simplified for summaries.
+    // Or, you can just return mealSummaries as is.
+    // For now, let's return them as is. The frontend will adapt.
+    ctx.response.status = 200;
+    ctx.response.body = {
+      success: true,
+      data: mealSummaries, // mealSummaries is an array of { idMeal, strMeal, strMealThumb }
+    };
+
+  } catch (error) {
+    console.error(`Error in getRecipesByCategoryHandler for category ${ctx.params.categoryName}:`, error);
+    ctx.response.status = 500;
+    ctx.response.body = {
+      success: false,
+      message: "Server error fetching recipes by category.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 

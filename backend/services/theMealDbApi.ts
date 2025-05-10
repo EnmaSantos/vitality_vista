@@ -5,7 +5,7 @@ const API_BASE_URL = "https://www.themealdb.com/api/json/v1/1";
 
 // --- Define Interfaces for API Responses (REFINED) ---
 
-interface MealDbMeal {
+export interface MealDbMeal {
   idMeal: string;
   strMeal: string;
   strDrinkAlternate: string | null;
@@ -187,4 +187,3 @@ export async function filterByCategory(category: string): Promise<MealDbSummary[
 }
 
 // --- TODO: Add functions for list.php?a=list, list.php?i=list, filter.php?a=..., filter.php?i=... ---
-// ...
