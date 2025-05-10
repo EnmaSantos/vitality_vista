@@ -6,20 +6,18 @@ import { loadEnv } from "../deps.ts"; // Ensure loadEnv is correctly imported fr
 // this specific `await loadEnv()` might be redundant here, but doesn't hurt.
 await loadEnv({ export: true });
 
-const PREMIUM_API_KEY = Deno.env.get("THEMEALDB_API"); // This should be "65232507" from your .env
+const PREMIUM_API_KEY = Deno.env.get("THEMEALDB_API"); // Should be "65232507"
 
 let API_BASE_URL: string;
 let usingPremiumV2 = false;
 
-if (PREMIUM_API_KEY && PREMIUM_API_KEY !== "1") {
-  // If a premium key (that isn't "1") is provided, use the V2 path
+if (PREMIUM_API_KEY && PREMIUM_API_KEY !== "1" && PREMIUM_API_KEY !== "") { // Ensure key is not empty
   API_BASE_URL = `https://www.themealdb.com/api/json/v2/${PREMIUM_API_KEY}`;
   usingPremiumV2 = true;
   console.log(`TheMealDBApi: Initialized with V2 Premium API Key.`);
 } else {
-  // Fallback to V1 with key "1" if no premium key is set or if it's explicitly "1"
-  API_BASE_URL = `https://www.themealdb.com/api/json/v1/1`;
-  console.log(`TheMealDBApi: Initialized with V1 Free API Key (1).`);
+  API_BASE_URL = `https://www.themealdb.com/api/json/v1/1`; // Fallback to V1 free key
+  console.log(`TheMealDBApi: Initialized with V1 Free API Key (1). THEMEALDB_API env var was: \'\${PREMIUM_API_KEY}\'`);
 }
 // Log the base URL structure for verification (key part masked for safety in logs)
 console.log(`TheMealDBApi: Effective Base URL structure: ${API_BASE_URL.substring(0, API_BASE_URL.lastIndexOf('/') + 1)}YOUR_KEY_WAS_HERE/...`);
@@ -95,19 +93,25 @@ interface MealDbFilterResponse {
 
 // --- API Service Functions ---
 
-async function fetchFromApi<T>(endpoint: string, operationName: string): Promise<T> {
-  const url = `${API_BASE_URL}/${endpoint}`;
-  console.log(`TheMealDBApi: ${operationName}: ${url.replace(PREMIUM_API_KEY || "1", "YOUR_KEY")}`); // Mask key in log
+async function fetchFromApi<T>(endpointPath: string, operationName: string): Promise<T> {
+  const url = `${API_BASE_URL}/${endpointPath}`;
+  // Mask the key in the log for security if it\'s part of the base URL.
+  // The current API_BASE_URL includes the key.
+  const loggedUrl = API_BASE_URL.includes(PREMIUM_API_KEY || "1") && PREMIUM_API_KEY // Ensure PREMIUM_API_KEY is not null
+    ? url.replace(PREMIUM_API_KEY, "YOUR_KEY") 
+    : url;
+  console.log(`TheMealDBApi: ${operationName}: ${loggedUrl}`);
+
   try {
     const response = await fetch(url);
     if (!response.ok) {
       const errorBody = await response.text();
       console.error(`TheMealDB ${operationName} request failed: ${response.status} ${response.statusText}`, errorBody);
-      throw new Error(`TheMealDB ${operationName} request failed: ${response.status}`);
+      throw new Error(`TheMealDB ${operationName} request (${url}) failed: ${response.status}`);
     }
     return await response.json() as T;
   } catch (error) {
-    console.error(`Error in ${operationName} ("${endpoint}"):`, error);
+    console.error(`Error in ${operationName} calling "${url}":`, error);
     if (error instanceof Error) throw error;
     throw new Error(`Unknown error during ${operationName}.`);
   }
@@ -136,25 +140,34 @@ export async function filterByCategory(category: string): Promise<MealDbSummary[
 }
 
 export async function getFeaturedRecipes(): Promise<MealDbFullMeal[] | null> {
-  if (!usingPremiumV2 && PREMIUM_API_KEY === "1") {
-    console.warn("TheMealDBApi: randomselection.php is a premium endpoint. Using single random.php 10 times as fallback.");
-    // Fallback for free key "1": call random.php multiple times
+  if (!usingPremiumV2) {
+    console.warn("TheMealDBApi: randomselection.php is a premium endpoint. Your current API key is not configured as premium V2 or is missing. Falling back to 10 single random.php calls.");
     const randomMeals: MealDbFullMeal[] = [];
-    const promises = [];
+    const promises: Promise<MealDbFullMeal | null>[] = [];
     for (let i = 0; i < 10; i++) {
-      promises.push(fetchFromApi<MealDbLookupResponse>('random.php', `getFeaturedRecipes_randomFallback_${i+1}`));
+        // getMealById actually calls lookup.php?i=... which expects an ID.
+        // For a single random meal, the endpoint is random.php, which returns a structure like lookup.php
+        promises.push(
+            fetchFromApi<MealDbLookupResponse>(`random.php`, `getFeatured_randomFallback_${i+1}`)
+                .then(data => data.meals ? data.meals[0] : null)
+        );
     }
-    const results = await Promise.all(promises);
-    results.forEach(result => {
-      if (result.meals && result.meals[0]) {
-        randomMeals.push(result.meals[0]);
-      }
-    });
-    // Remove duplicates by idMeal if any
-    const uniqueMeals = Array.from(new Map(randomMeals.map(meal => [meal.idMeal, meal])).values());
-    return uniqueMeals.slice(0,10);
+    try {
+        const results = await Promise.all(promises);
+        results.forEach(meal => {
+            if (meal) {
+                randomMeals.push(meal);
+            }
+        });
+        // Remove duplicates just in case random.php returns the same meal multiple times
+        const uniqueMeals = Array.from(new Map(randomMeals.map(meal => [meal.idMeal, meal])).values());
+        return uniqueMeals.slice(0, 10);
+    } catch (fallbackError) {
+        console.error("Error during fallback random.php calls:", fallbackError);
+        return null;
+    }
   }
-  // If premium key is set (and not "1"), use randomselection.php
+  // If premium key is correctly set and usingPremiumV2 is true
   const data = await fetchFromApi<MealDbFullMealListResponse>('randomselection.php', "getFeaturedRecipes (premium)");
   return data.meals;
 }

@@ -7,6 +7,8 @@ export {
     isHttpError,
     helpers,
   } from "https://deno.land/x/oak@v12.6.1/mod.ts";
+
+export type { RouterContext } from "https://deno.land/x/oak@v12.6.1/mod.ts";
   
   // Environment variables (from Deno standard library)
   export {

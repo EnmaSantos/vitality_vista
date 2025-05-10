@@ -1,19 +1,21 @@
 // backend/routes/recipes.ts
 
 import { Router } from "../deps.ts"; // Import Router from Oak/deps
+import type { AppState } from "../controllers/recipeController.ts"; // Import AppState
 // Import the handler functions we created in recipeController.ts
 import {
   searchRecipesHandler,
   getRecipeByIdHandler, 
   getRecipesByCategoryHandler,
   estimateRecipeCaloriesHandler,
+  getFeaturedRecipesHandler,
 } from "../controllers/recipeController.ts";
 
 // ---> ADDED: Import authentication middleware to protect the new route
 import { authMiddleware } from "../middleware/authMiddleware.ts";
 
-// Create a new router instance with a prefix for recipe-related routes
-const recipeRouter = new Router({
+// Create a new router instance with a prefix and AppState type
+const recipeRouter = new Router<AppState>({ // Specify AppState here
   prefix: "/api/recipes",
 });
 
@@ -23,27 +25,20 @@ const recipeRouter = new Router({
 // Maps to the searchRecipesHandler function
 recipeRouter.get("/search", searchRecipesHandler);
 
-// GET /api/recipes/:id (e.g., /api/recipes/52771)
-// Maps to the getRecipeByIdHandler function. ':id' creates a route parameter.
-recipeRouter.get("/:id", getRecipeByIdHandler);
+// GET /api/recipes/featured
+recipeRouter.get("/featured", getFeaturedRecipesHandler);
 
+// GET /api/recipes/:id
+// The path here should be relative to the prefix, so just "/:id"
+recipeRouter.get<"/:id">("/:id", getRecipeByIdHandler);
 
+// POST /api/recipes/:id/estimate-calories (Protected)
+// The path here should be relative to the prefix, so just "/:id/estimate-calories"
+recipeRouter.post<"/:id/estimate-calories">("/:id/estimate-calories", authMiddleware, estimateRecipeCaloriesHandler);
 
-recipeRouter.get("/category/:categoryName", getRecipesByCategoryHandler);// --- TODO: Add routes for other recipe actions ---
-// e.g., GET /api/recipes/categories -> listCategoriesHandler
-// e.g., GET /api/recipes/filter/category/:categoryName -> filterRecipesByCategoryHandler
-// e.g., POST /api/users/me/favorite-recipes (Protected Route) -> addFavoriteRecipeHandler (would need authMiddleware)
-
-
-// ---> ADDED: Route definition for calorie estimation <---
-// GET /api/recipes/:id/estimate-calories (Protected)
-// Estimates the total calories for a given recipe ID.
-recipeRouter.get(
-  "/:id/estimate-calories",
-  authMiddleware, // Protect the route
-  estimateRecipeCaloriesHandler // The new handler function
-);
-
+// GET /api/recipes/category/:categoryName
+// The path here should be relative to the prefix, so just "/category/:categoryName"
+recipeRouter.get<"/category/:categoryName">("/category/:categoryName", getRecipesByCategoryHandler);
 
 // Export the configured router
 export default recipeRouter;

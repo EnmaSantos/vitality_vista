@@ -1,16 +1,18 @@
 // backend/controllers/recipeController.ts
 
 import { Context } from "../deps.ts"; // Import Oak's Context type
+import type { RouterContext } from "../deps.ts"; // Import RouterContext as a type
 import {
   searchMealsByName,
   getMealById,
-  filterByCategory as filterMealsByCategoryService, // Use an alias
+  filterByCategory as filterMealsByCategoryService,
   // We might need the MealDbMeal interface if we do transformations here,
   // but often we can just pass the service result directly.
   // MealDbMeal,
+  getFeaturedRecipes as getFeaturedRecipesService
 } from "../services/theMealDbApi.ts"; // Import the service functions
 import { searchFoods, getFoodDetails } from "../services/usdaApi.ts"; // <-- Added this import
-import type { MealDbMeal } from "../services/theMealDbApi.ts"; // <-- Added this type import
+import type { MealDbFullMeal } from "../services/theMealDbApi.ts"; // Use MealDbFullMeal instead of MealDbMeal
 
 // Rough conversion factors
 const OZ_TO_GRAMS = 28.3495;
@@ -143,9 +145,18 @@ function parseMeasureToGrams(measureText: string, ingredientName: string): Parse
   return { quantity, unit, estimatedGrams, parseNotes: notes };
 }
 
-// Define an interface for the application state, including the userId added by middleware
-interface AppState { // Removed "extends State"
+// Define and EXPORT the application state interface
+export interface AppState {
   userId: string;
+}
+
+// Define and EXPORT the params interfaces for each route
+export interface RecipeIdParams extends Record<string | number, string | undefined> {
+  id: string;
+}
+
+export interface CategoryParams extends Record<string | number, string | undefined> {
+  categoryName: string;
 }
 
 /**
@@ -187,17 +198,13 @@ export async function searchRecipesHandler(ctx: Context) {
  * Handles requests to get a specific recipe by its ID.
  * Expects the ID as a route parameter (e.g., /api/recipes/52771)
  */
-export async function getRecipeByIdHandler(ctx: Context) {
+export async function getRecipeByIdHandler(ctx: RouterContext<"/:id", RecipeIdParams, AppState>) {
   try {
-    // Oak automatically puts matched route parameters into ctx.params
     const id = ctx.params.id;
-
     if (!id) {
-       // This usually indicates a routing setup issue rather than a client error
-       console.error("Error: ID parameter missing in route context");
-       ctx.response.status = 500;
-       ctx.response.body = { success: false, message: "Server configuration error: Missing ID parameter" };
-       return;
+      ctx.response.status = 400;
+      ctx.response.body = { success: false, message: "Missing recipe ID" };
+      return;
     }
 
     // Call the service function
@@ -232,19 +239,18 @@ export async function getRecipeByIdHandler(ctx: Context) {
  * Expects the ID as a route parameter (e.g., /recipes/52771/estimate-calories)
  * PROTECTED route - requires authentication.
  */
-export async function estimateRecipeCaloriesHandler(ctx: Context<AppState>) {
+export async function estimateRecipeCaloriesHandler(ctx: RouterContext<"/:id/estimate-calories", RecipeIdParams, AppState>) {
   const recipeId = ctx.params.id;
   try {
     const userId = ctx.state.userId;
     if (!recipeId) {
-      console.error("Error: recipeId parameter missing...");
       ctx.response.status = 400;
-      ctx.response.body = { success: false, message: "Recipe ID is required." };
+      ctx.response.body = { success: false, message: "Missing recipe ID" };
       return;
     }
     console.log(`Attempting to estimate calories for recipe ID: ${recipeId} by User ID: ${userId}`);
     
-    const meal: MealDbMeal | null = await getMealById(recipeId);
+    const meal: MealDbFullMeal | null = await getMealById(recipeId);
     if (!meal) {
        console.log(`Recipe with ID ${recipeId} not found...`);
        ctx.response.status = 404;
@@ -270,8 +276,8 @@ export async function estimateRecipeCaloriesHandler(ctx: Context<AppState>) {
     // --- Step 3b: Extract Ingredients and Measures ---
     console.log("Extracting ingredients and measures...");
     for (let i = 1; i <= 20; i++) {
-      const ingredientKey = `strIngredient${i}` as keyof MealDbMeal;
-      const measureKey = `strMeasure${i}` as keyof MealDbMeal;
+      const ingredientKey = `strIngredient${i}` as keyof MealDbFullMeal;
+      const measureKey = `strMeasure${i}` as keyof MealDbFullMeal;
       const ingredientName = meal[ingredientKey] as string | null;
       const measureText = meal[measureKey] as string | null;
       if (ingredientName && ingredientName.trim() !== "" && measureText && measureText.trim() !== "") {
@@ -390,13 +396,12 @@ export async function estimateRecipeCaloriesHandler(ctx: Context<AppState>) {
  * Handles requests to get recipes by category name.
  * Expects 'categoryName' as a route parameter.
  */
-export async function getRecipesByCategoryHandler(ctx: Context) { // Can be Context<AppState> if you access ctx.state.userId
+export async function getRecipesByCategoryHandler(ctx: RouterContext<"/category/:categoryName", CategoryParams, AppState>) {
   try {
     const categoryName = ctx.params.categoryName;
-
     if (!categoryName) {
       ctx.response.status = 400;
-      ctx.response.body = { success: false, message: "Category name parameter is missing." };
+      ctx.response.body = { success: false, message: "Missing category name" };
       return;
     }
 
@@ -433,6 +438,31 @@ export async function getRecipesByCategoryHandler(ctx: Context) { // Can be Cont
     ctx.response.body = {
       success: false,
       message: "Server error fetching recipes by category.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Handles requests to get featured recipes.
+ */
+export async function getFeaturedRecipesHandler(ctx: Context) {
+  try {
+    console.log("RecipeController: Reached getFeaturedRecipesHandler"); 
+    const recipes = await getFeaturedRecipesService(); 
+    if (recipes) {
+      console.log(`RecipeController: getFeaturedRecipesHandler found ${recipes.length} recipes.`);
+    } else {
+      console.log("RecipeController: getFeaturedRecipesHandler found no recipes (null).");
+    }
+    ctx.response.status = 200;
+    ctx.response.body = { success: true, data: recipes || [] }; 
+  } catch (error) {
+    console.error("Error in getFeaturedRecipesHandler:", error);
+    ctx.response.status = 500;
+    ctx.response.body = {
+      success: false,
+      message: "Server error fetching featured recipes.",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
