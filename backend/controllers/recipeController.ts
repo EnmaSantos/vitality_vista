@@ -34,6 +34,7 @@ const GRAMS_PER_GARLIC_CLOVE = 5; // Added for clarity
 const GRAMS_PER_STOCK_CUBE = 10; // Added - for "beef stock concentrate" if it's a cube
 const GRAMS_PER_CAN_COCONUT_MILK = 400; // Standard 400ml can, density ~1g/ml
 const GRAMS_PER_ONION_STICK = 15; // Assuming a green onion / scallion stick
+const GRAMS_PER_EGGPLANT = 300; // Average medium eggplant
 
 interface ParsedMeasure {
   quantity: number | null;
@@ -87,6 +88,22 @@ function parseMeasureToGrams(measureText: string, ingredientName: string): Parse
         
         if (estimatedGrams) notes.push(`Parsed ${numericPart} ${unit}(s) (descriptors ignored), estimated ~${estimatedGrams.toFixed(1)}g.`);
         else { /* keep the other note */ }
+        return { quantity, unit, estimatedGrams, parseNotes: notes };
+    }
+  }
+
+  // Handle "X sticks" for onions (assuming green onions/scallions)
+  if (ingredientName.includes("onion") && measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)\s+stick(s)?$/)) {
+    const quantityMatchSimple = measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)/);
+    if (quantityMatchSimple && quantityMatchSimple[0]) {
+        const qStr = quantityMatchSimple[0].trim();
+        if (qStr.includes(" ")) { const parts = qStr.split(" "); const whole = parseFloat(parts[0]); const fracParts = parts[1].split("/"); numericPart = whole + (parseFloat(fracParts[0]) / parseFloat(fracParts[1])); }
+        else if (qStr.includes("/")) { const fracParts = qStr.split("/"); numericPart = parseFloat(fracParts[0]) / parseFloat(fracParts[1]); }
+        else { numericPart = parseFloat(qStr); }
+        quantity = numericPart;
+        unit = "stick(s)";
+        estimatedGrams = numericPart * GRAMS_PER_ONION_STICK;
+        notes.push(`Parsed ${numericPart} onion stick(s), assumed green onion/scallion, estimated ~${estimatedGrams.toFixed(1)}g.`);
         return { quantity, unit, estimatedGrams, parseNotes: notes };
     }
   }
@@ -191,7 +208,7 @@ function parseMeasureToGrams(measureText: string, ingredientName: string): Parse
     else estimatedGrams = numericPart * TSP_TO_GRAMS_LIQUID; 
     notes.push(`Parsed ${numericPart} tsp, estimated ~${estimatedGrams.toFixed(1)}g for ${ingredientName}.`);
   }
-  else if (ingredientName.includes("egg") && measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)\s*(seperated|separated)?$/)) {
+  else if (((ingredientName.match(/^egg(s)?$/i) || ingredientName.match(/\begg(s)?\b/i)) && !ingredientName.includes("eggplant")) && measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)\s*(seperated|separated)?$/)) {
     const quantityMatchSimple = measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)/);
     if (quantityMatchSimple && quantityMatchSimple[0]) {
         const qStr = quantityMatchSimple[0].trim();
@@ -221,9 +238,9 @@ function parseMeasureToGrams(measureText: string, ingredientName: string): Parse
         estimatedGrams = numericPart * GRAMS_PER_STOCK_CUBE;
         unit = "stock cube/concentrate unit";
       }
-      else if (itemDescriptor.includes("onion") && remainingText.includes("stick")) { // handles "4 sticks" for "onions"
-        estimatedGrams = numericPart * GRAMS_PER_ONION_STICK;
-        notes.push(`Assuming 'stick' refers to green onion/scallion for ingredient 'onion'.`);
+      else if (itemDescriptor.includes("eggplant")) { // Added for eggplant count
+        estimatedGrams = numericPart * GRAMS_PER_EGGPLANT;
+        notes.push(`Parsed ${numericPart} eggplant(s), estimated ~${(numericPart * GRAMS_PER_EGGPLANT).toFixed(1)}g.`);
       }
       else if (itemDescriptor.includes("egg")) estimatedGrams = numericPart * 50; 
       else if (itemDescriptor.includes("potato") && (remainingText.includes("small") || ingredientName.includes("small potato"))) estimatedGrams = numericPart * 100;
@@ -436,8 +453,8 @@ export async function estimateRecipeCaloriesHandler(ctx: RouterContext<"/:id/est
             searchTerm = "Flour, all-purpose"; 
         } else if (lowerIngredient === "egg") {
             searchTerm = "Egg, whole, raw";
-        } else if (lowerIngredient === "egg plants" || lowerIngredient === "eggplant") { // Corrected from "Egg Plants" and added "eggplant"
-            searchTerm = "Eggplant";
+        } else if (lowerIngredient === "egg plants" || lowerIngredient === "eggplant") { 
+            searchTerm = "Eggplant, raw"; // Changed to be more specific
         } else if (lowerIngredient === "red pepper flakes") {
             searchTerm = "Crushed red pepper";
         } else if (lowerIngredient === "salt") {
