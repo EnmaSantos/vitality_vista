@@ -12,8 +12,8 @@ import {
   Bookmark as BookmarkIcon, BookmarkBorder as BookmarkBorderIcon,
   AutoAwesome as FeaturedIcon, ErrorOutline as ErrorIcon
 } from '@mui/icons-material';
-import { useThemeContext, themeColors } from '../context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
+import { useThemeContext, themeColors } from '../context/ThemeContext.tsx';
+import { useAuth } from '../context/AuthContext.tsx';
 import {
   getRecipeCalorieEstimate, RecipeCalorieEstimateData,
   getRecipesByCategory, RecipeSummary,
@@ -22,7 +22,7 @@ import {
   getFeaturedRecipes,       // Expects to return array of MealDbFullMeal
   MealDbFullMeal,           // Type for full meal details from API
   // ApiSingleRecipeResponse, // Type for getRecipeDetailsById response
-} from '../services/recipeApi';
+} from '../services/recipeApi.ts';
 
 // Interface for FULL recipe details used in the Dialog
 interface FullRecipeDetails extends RecipeSummary { // Extends RecipeSummary for common base fields
