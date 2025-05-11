@@ -240,7 +240,10 @@ function parseMeasureToGrams(measureText: string, ingredientName: string): Parse
       else if (itemDescriptor.includes("zucchini")) estimatedGrams = numericPart * 200;
       else if (itemDescriptor.includes("lasagne sheet")) estimatedGrams = numericPart * GRAMS_PER_LASAGNE_SHEET;
       else if (itemDescriptor.includes("lemon")) estimatedGrams = numericPart * GRAMS_PER_LEMON;
-      else if (itemDescriptor.includes("bay leaf") || itemDescriptor.includes("bayleave")) estimatedGrams = numericPart * GRAMS_PER_BAY_LEAF;
+      else if (itemDescriptor.includes("bay leaf") || itemDescriptor.includes("bayleave")) {
+        estimatedGrams = numericPart * GRAMS_PER_BAY_LEAF;
+        notes.push(`Parsed ${numericPart} bay leaf/leaves, estimated ~${estimatedGrams.toFixed(1)}g.`);
+      }
       else if (itemDescriptor.includes("stock cube") || itemDescriptor.includes("bouillon cube") || (ingredientName.includes("stock") && ingredientName.includes("concentrate") && quantity === 1)) { 
         estimatedGrams = numericPart * GRAMS_PER_STOCK_CUBE;
         unit = "stock cube/concentrate unit";
@@ -464,6 +467,8 @@ export async function estimateRecipeCaloriesHandler(ctx: RouterContext<"/:id/est
           searchTerm = "Flour, all-purpose";
         } else if (lowerIngredient.includes("garlic clove")) {
           searchTerm = "Garlic, raw";
+        } else if (lowerIngredient === "garlic") {
+          searchTerm = "Garlic, raw";
         } else if (lowerIngredient === "gruyère" || lowerIngredient === "gruyere") {
           searchTerm = "Cheese, Gruyere";
         } else if (lowerIngredient === "butter") {
@@ -482,6 +487,10 @@ export async function estimateRecipeCaloriesHandler(ctx: RouterContext<"/:id/est
             searchTerm = "Salt, table";
         } else if (lowerIngredient === "milk") {
             searchTerm = "Milk, whole";
+        } else if (lowerIngredient === "sugar") {
+            searchTerm = "Sugar, granulated"; // Refined from generic "Sugar"
+        } else if (lowerIngredient === "pepper" && !lowerIngredient.includes("flakes") && !lowerIngredient.includes("bell")) { // Avoid matching bell peppers or red pepper flakes
+            searchTerm = "Spices, pepper, black"; // Further refined from "Pepper, black"
         }
 
         if (searchTerm !== item.ingredient) {
