@@ -45,3 +45,6 @@ logs
 *.sqlite
 *.sqlite3
 *.sql
+
+# Deno
+test_random_calories.ts
