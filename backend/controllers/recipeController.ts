@@ -17,15 +17,23 @@ import type { MealDbFullMeal } from "../services/theMealDbApi.ts"; // Use MealDb
 // Rough conversion factors
 const OZ_TO_GRAMS = 28.3495;
 const LB_TO_GRAMS = 453.592;
+const KG_TO_GRAMS = 1000; // Added
 const CUP_TO_GRAMS_FLOUR = 120; // Very rough average
 const CUP_TO_GRAMS_SUGAR = 200; // Very rough average
 const CUP_TO_GRAMS_LIQUID = 240; // ~240ml
+const CUP_TO_GRAMS_OIL = 224; // Added for oils (approx 0.93g/ml)
 const TBSP_TO_GRAMS_LIQUID = 15; // ~15ml
 const TSP_TO_GRAMS_LIQUID = 5;   // ~5ml
 const TSP_TO_GRAMS_SPICE = 2;    // Very rough for dense spice/herb
 const GRAMS_PER_LASAGNE_SHEET = 25; // Example average
 const GRAMS_PER_CARROT = 70;       // Example average medium carrot
 const GRAMS_PER_ONION = 150;       // Example average medium onion
+const GRAMS_PER_LEMON = 120; // Added - average medium lemon
+const GRAMS_PER_BAY_LEAF = 0.2; // Added - very light
+const GRAMS_PER_GARLIC_CLOVE = 5; // Added for clarity
+const GRAMS_PER_STOCK_CUBE = 10; // Added - for "beef stock concentrate" if it's a cube
+const GRAMS_PER_CAN_COCONUT_MILK = 400; // Standard 400ml can, density ~1g/ml
+const GRAMS_PER_ONION_STICK = 15; // Assuming a green onion / scallion stick
 
 interface ParsedMeasure {
   quantity: number | null;
@@ -39,107 +47,217 @@ function parseMeasureToGrams(measureText: string, ingredientName: string): Parse
   let estimatedGrams: number | null = null;
   let quantity: number | null = null;
   let unit: string | null = null;
+  let numericPart = 1; // Default to 1, will be overridden if a number is found
 
   measureText = measureText.toLowerCase().trim();
   ingredientName = ingredientName.toLowerCase();
 
-  // Attempt to extract a leading number (integer, decimal, fraction like "1/2", "1 1/2")
-  const quantityMatch = measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)/);
-  let numericPart = 1; // Default to 1 if no number found but unit exists (e.g. "a cup")
+  // Pre-process to handle specific count-based units before general parsing
+  // Handle "4 sliced Garlic Clove" or "4 garlic cloves"
+  if (ingredientName.includes("garlic clove")) {
+    const quantityMatchSimple = measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)/); 
+    if (quantityMatchSimple && quantityMatchSimple[0]) {
+        const qStr = quantityMatchSimple[0].trim();
+        if (qStr.includes(" ")) { const parts = qStr.split(" "); const whole = parseFloat(parts[0]); const fracParts = parts[1].split("/"); numericPart = whole + (parseFloat(fracParts[0]) / parseFloat(fracParts[1])); }
+        else if (qStr.includes("/")) { const fracParts = qStr.split("/"); numericPart = parseFloat(fracParts[0]) / parseFloat(fracParts[1]); }
+        else { numericPart = parseFloat(qStr); }
+        quantity = numericPart;
+        unit = "clove(s)";
+        estimatedGrams = numericPart * GRAMS_PER_GARLIC_CLOVE;
+        notes.push(`Parsed ${numericPart} clove(s) from ingredient 'garlic clove' (descriptors like '${measureText.replace(qStr, '').trim()}' ignored), estimated ~${estimatedGrams.toFixed(1)}g.`);
+        return { quantity, unit, estimatedGrams, parseNotes: notes };
+    }
+  }
+  // Handle cases like "1 onion, chopped" or "1 chopped onion"
+  // Updated to be more general for leading number + descriptor + item name
+  if ((ingredientName.includes("onion") || ingredientName.includes("bread") || ingredientName.includes("potato") || ingredientName.includes("carrot") || ingredientName.includes("zucchini") || ingredientName.includes("apple") || ingredientName.includes("banana")) && 
+      measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)\s+(sliced|chopped|diced|minced|large|medium|small)/)) {
+    const quantityMatchSimple = measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)/); 
+    if (quantityMatchSimple && quantityMatchSimple[0]) {
+        const qStr = quantityMatchSimple[0].trim();
+        if (qStr.includes(" ")) { const parts = qStr.split(" "); const whole = parseFloat(parts[0]); const fracParts = parts[1].split("/"); numericPart = whole + (parseFloat(fracParts[0]) / parseFloat(fracParts[1])); }
+        else if (qStr.includes("/")) { const fracParts = qStr.split("/"); numericPart = parseFloat(fracParts[0]) / parseFloat(fracParts[1]); }
+        else { numericPart = parseFloat(qStr); }
+        quantity = numericPart;
+        unit = ingredientName; // Use the ingredient name as the unit for count
+        if (ingredientName.includes("onion")) estimatedGrams = numericPart * GRAMS_PER_ONION;
+        else if (ingredientName.includes("bread")) estimatedGrams = numericPart * 30; // Approx 30g per slice as a default
+        // Add other specific average weights for other items if needed
+        else notes.push(`Parsed ${numericPart} ${ingredientName}(s) with descriptor, gram estimation needed for this item count.`);
+        
+        if (estimatedGrams) notes.push(`Parsed ${numericPart} ${unit}(s) (descriptors ignored), estimated ~${estimatedGrams.toFixed(1)}g.`);
+        else { /* keep the other note */ }
+        return { quantity, unit, estimatedGrams, parseNotes: notes };
+    }
+  }
+
+  const quantityMatch = measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)/); // Corrected regex
   let remainingText = measureText;
 
   if (quantityMatch && quantityMatch[0]) {
     const qStr = quantityMatch[0].trim();
-    if (qStr.includes(" ")) { // handles "1 1/2"
+    if (qStr.includes(" ")) { 
         const parts = qStr.split(" ");
         const whole = parseFloat(parts[0]);
         const fracParts = parts[1].split("/");
         numericPart = whole + (parseFloat(fracParts[0]) / parseFloat(fracParts[1]));
-    } else if (qStr.includes("/")) { // handles "1/2"
+    } else if (qStr.includes("/")) { 
         const fracParts = qStr.split("/");
         numericPart = parseFloat(fracParts[0]) / parseFloat(fracParts[1]);
     } else {
         numericPart = parseFloat(qStr);
     }
     quantity = numericPart;
-    remainingText = measureText.substring(qStr.length).trim();
+    remainingText = measureText.substring(qStr.length).trim().replace(/^(of|an|a)\s+/,'');
+  } else {
+    if (measureText.match(/^(a|an)\s+/)) {
+        numericPart = 1;
+        quantity = 1;
+        remainingText = measureText.replace(/^(a|an)\s+/, '').trim();
+        notes.push("Assumed quantity of 1 from 'a' or 'an'.");
+    }
   }
 
   unit = remainingText === "" ? null : remainingText;
 
-  // 1. Direct Grams
-  if (remainingText.match(/^g(ram(s)?)?$/)) {
+  if (remainingText.match(/^kg|kilogram(s)?$/)) {
+    estimatedGrams = numericPart * KG_TO_GRAMS;
+    unit = "kg";
+    notes.push(`Parsed ${numericPart}kg, converted to ~${estimatedGrams.toFixed(1)}g.`);
+  }
+  else if (remainingText.match(/^g(ram(s)?)?$/)) {
     estimatedGrams = numericPart;
     unit = "g";
     notes.push(`Directly parsed ${numericPart}g.`);
   }
-  // 2. Direct Milliliters (assume 1g/ml for liquids)
-  else if (remainingText.match(/^ml$/) && quantity) {
-    estimatedGrams = numericPart; // 1ml water/milk ~ 1g
+  else if (remainingText.match(/^ml|millilitre(s)?|milliliter(s)?$/) && quantity) {
+    estimatedGrams = numericPart; 
     unit = "ml";
-    notes.push(`Parsed ${numericPart}ml, assuming ~${estimatedGrams}g (1g/ml density).`);
+    notes.push(`Parsed ${numericPart}ml, assuming ~${estimatedGrams}g (1g/ml density default).`);
   }
-  // 3. Ounces
   else if (remainingText.match(/^oz|ounce(s)?$/) && quantity) {
     estimatedGrams = numericPart * OZ_TO_GRAMS;
     unit = "oz";
     notes.push(`Parsed ${numericPart}oz, converted to ~${estimatedGrams.toFixed(1)}g.`);
   }
-  // 4. Pounds
   else if (remainingText.match(/^lb(s)?|pound(s)?$/) && quantity) {
     estimatedGrams = numericPart * LB_TO_GRAMS;
     unit = "lb";
     notes.push(`Parsed ${numericPart}lb, converted to ~${estimatedGrams.toFixed(1)}g.`);
   }
-  // 5. Cups (Highly ingredient dependent - very rough estimates)
+  else if (remainingText.match(/^can(s)?$/) && quantity) {
+    unit = "can";
+    if (ingredientName.includes("coconut milk")) {
+        estimatedGrams = numericPart * GRAMS_PER_CAN_COCONUT_MILK;
+        notes.push(`Parsed ${numericPart} can(s) of coconut milk, estimated ~${estimatedGrams.toFixed(1)}g.`);
+    } else {
+        notes.push(`Parsed ${numericPart} can(s) of ${ingredientName}, gram estimation for generic 'can' is ambiguous.`);
+    }
+  }
   else if (remainingText.match(/^c(up(s)?)?$/) && quantity) {
     unit = "cup";
-    if (ingredientName.includes("flour")) estimatedGrams = numericPart * CUP_TO_GRAMS_FLOUR;
+    if (ingredientName.includes("flour")) { // General flour
+        if (ingredientName.includes("buckwheat flour")) estimatedGrams = numericPart * 120; 
+        else if (ingredientName.includes("coconut flour")) estimatedGrams = numericPart * 100; 
+        else if (ingredientName.includes("almond flour")) estimatedGrams = numericPart * 96;
+        else estimatedGrams = numericPart * CUP_TO_GRAMS_FLOUR; // Default all-purpose/wheat flour
+    }
+    else if (ingredientName.includes("buckwheat")) estimatedGrams = numericPart * 150; // Buckwheat groats/generic if not specified as flour
     else if (ingredientName.includes("sugar")) estimatedGrams = numericPart * CUP_TO_GRAMS_SUGAR;
-    else if (ingredientName.includes("lentil") || ingredientName.includes("bean")) estimatedGrams = numericPart * 200; // Approx raw
-    else if (ingredientName.includes("milk") || ingredientName.includes("water") || ingredientName.includes("broth") || ingredientName.includes("puree")) estimatedGrams = numericPart * CUP_TO_GRAMS_LIQUID;
-    else notes.push(`Cup conversion to grams for '${ingredientName}' is ambiguous.`);
+    else if (ingredientName.includes("lentil") || ingredientName.includes("bean")) estimatedGrams = numericPart * 200; 
+    else if (ingredientName.includes("oil") || ingredientName.includes("olive oil")) estimatedGrams = numericPart * CUP_TO_GRAMS_OIL; 
+    else if (ingredientName.includes("milk") || ingredientName.includes("water") || ingredientName.includes("broth") || ingredientName.includes("puree") || ingredientName.includes("juice")) estimatedGrams = numericPart * CUP_TO_GRAMS_LIQUID;
+    else notes.push(`Cup conversion to grams for \'${ingredientName}\' is ambiguous without more specific type.`);
     if(estimatedGrams) notes.push(`Parsed ${numericPart} cup(s) of ${ingredientName}, estimated ~${estimatedGrams.toFixed(1)}g.`);
   }
-  // 6. Tablespoons (rough liquid estimate)
-  else if (remainingText.match(/^tbsp|tablespoon(s)?$/) && quantity) {
-    unit = "tbsp";
-    if (ingredientName.includes("oil") || ingredientName.includes("butter") || ingredientName.includes("syrup")) estimatedGrams = numericPart * 14; // fats
-    else if (ingredientName.includes("flour")) estimatedGrams = numericPart * 8; // flour is lighter
-    else if (ingredientName.includes("sugar")) estimatedGrams = numericPart * 12; // sugar
-    else estimatedGrams = numericPart * TBSP_TO_GRAMS_LIQUID; // default liquid
-    notes.push(`Parsed ${numericPart} tbsp, estimated ~${estimatedGrams.toFixed(1)}g.`);
+  else if (remainingText.match(/^(tbsp|tablespoon(s)?|tbs)$/) && quantity) {
+    unit = "tbsp/tbs";
+    if (ingredientName.includes("oil") || ingredientName.includes("butter") || ingredientName.includes("syrup") || ingredientName.includes("honey") || ingredientName.includes("peanut butter")) estimatedGrams = numericPart * 14; 
+    else if (ingredientName.includes("flour")) estimatedGrams = numericPart * 8; 
+    else if (ingredientName.includes("sugar")) estimatedGrams = numericPart * 12; 
+    else if (ingredientName.includes("cocoa powder")) estimatedGrams = numericPart * 7;
+    else if (ingredientName.includes("cornstarch")) estimatedGrams = numericPart * 8;
+    else if (ingredientName.includes("soy sauce") || ingredientName.includes("vinegar") || ingredientName.includes("tomato sauce")) estimatedGrams = numericPart * 16; 
+    else estimatedGrams = numericPart * TBSP_TO_GRAMS_LIQUID; 
+    notes.push(`Parsed ${numericPart} tbsp/tbs, estimated ~${estimatedGrams.toFixed(1)}g for ${ingredientName}.`);
   }
-  // 7. Teaspoons (rough liquid/spice estimate)
   else if (remainingText.match(/^tsp|teaspoon(s)?$/) && quantity) {
     unit = "tsp";
-    if (ingredientName.includes("oil") || ingredientName.includes("butter")) estimatedGrams = numericPart * 4.5; // fats
+    if (ingredientName.includes("oil") || ingredientName.includes("butter")) estimatedGrams = numericPart * 4.5; 
     else if (ingredientName.includes("salt")) estimatedGrams = numericPart * 6;
+    else if (ingredientName.includes("sugar")) estimatedGrams = numericPart * 4;
+    else if (ingredientName.includes("baking soda") || ingredientName.includes("baking powder")) estimatedGrams = numericPart * 4;
     else if (ingredientName.includes("spice") || ingredientName.includes("herb") || ingredientName.includes("powder") || ingredientName.includes("yeast") || ingredientName.includes("mustard") || ingredientName.includes("vinegar")) estimatedGrams = numericPart * TSP_TO_GRAMS_SPICE;
-    else estimatedGrams = numericPart * TSP_TO_GRAMS_LIQUID; // default liquid
-    notes.push(`Parsed ${numericPart} tsp, estimated ~${estimatedGrams.toFixed(1)}g.`);
+    else estimatedGrams = numericPart * TSP_TO_GRAMS_LIQUID; 
+    notes.push(`Parsed ${numericPart} tsp, estimated ~${estimatedGrams.toFixed(1)}g for ${ingredientName}.`);
   }
-  // 8. Count-based items (very rough estimates)
-  else if (quantity && (remainingText === "" || remainingText.match(/^(small|medium|large)?$/)) ) { // e.g. "1", "1 small"
-      unit = "count"; // or remainingText if it's small/medium/large
-      if (ingredientName.includes("carrot")) estimatedGrams = numericPart * GRAMS_PER_CARROT;
-      else if (ingredientName.includes("onion")) estimatedGrams = numericPart * GRAMS_PER_ONION;
-      else if (ingredientName.includes("zucchini") && remainingText.includes("small")) estimatedGrams = numericPart * 150; // small zucchini
-      else if (ingredientName.includes("zucchini")) estimatedGrams = numericPart * 200; // medium zucchini
-      else if (ingredientName.includes("lasagne sheet")) estimatedGrams = numericPart * GRAMS_PER_LASAGNE_SHEET;
-      else if (ingredientName.includes("clove") && ingredientName.includes("garlic")) estimatedGrams = numericPart * 5; // garlic clove
-      else notes.push(`Count-based measure for '${ingredientName}' ('${measureText}') is ambiguous.`);
-      if(estimatedGrams) notes.push(`Parsed count ${numericPart} of ${ingredientName}, estimated ~${estimatedGrams.toFixed(1)}g.`);
+  else if (ingredientName.includes("egg") && measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)\s*(seperated|separated)?$/)) {
+    const quantityMatchSimple = measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)/);
+    if (quantityMatchSimple && quantityMatchSimple[0]) {
+        const qStr = quantityMatchSimple[0].trim();
+        if (qStr.includes(" ")) { const parts = qStr.split(" "); const whole = parseFloat(parts[0]); const fracParts = parts[1].split("/"); numericPart = whole + (parseFloat(fracParts[0]) / parseFloat(fracParts[1])); }
+        else if (qStr.includes("/")) { const fracParts = qStr.split("/"); numericPart = parseFloat(fracParts[0]) / parseFloat(fracParts[1]); }
+        else { numericPart = parseFloat(qStr); }
+        quantity = numericPart;
+        unit = "egg(s)";
+        estimatedGrams = numericPart * 50; // Assume 50g per whole egg
+        notes.push(`Parsed ${numericPart} egg(s); descriptor '${measureText.replace(qStr, '').trim()}' ignored for calorie calculation (using whole egg estimate). Estimated ~${estimatedGrams.toFixed(1)}g.`);
+    }
   }
-  // 9. Descriptive/unparseable
-  else if (remainingText.match(/^(sprinking|pinch|dash|to taste|a bit)/)) {
+  else if (quantity && (remainingText === "" || remainingText.match(/^(small|medium|large)?(\s+)?(piece(s)?|stick(s)?)?$/) || ingredientName.includes(remainingText.replace(/s$/,'')) )) {
+      unit = "count";
+      let itemDescriptor = remainingText;
+      if (remainingText === "" || remainingText.match(/^(small|medium|large)$/)) {
+        itemDescriptor = ingredientName; 
+      }
+
+      if (itemDescriptor.includes("carrot")) estimatedGrams = numericPart * GRAMS_PER_CARROT;
+      else if (itemDescriptor.includes("zucchini") && (remainingText.includes("small") || ingredientName.includes("small zucchini"))) estimatedGrams = numericPart * 150;
+      else if (itemDescriptor.includes("zucchini")) estimatedGrams = numericPart * 200;
+      else if (itemDescriptor.includes("lasagne sheet")) estimatedGrams = numericPart * GRAMS_PER_LASAGNE_SHEET;
+      else if (itemDescriptor.includes("lemon")) estimatedGrams = numericPart * GRAMS_PER_LEMON;
+      else if (itemDescriptor.includes("bay leaf") || itemDescriptor.includes("bayleave")) estimatedGrams = numericPart * GRAMS_PER_BAY_LEAF;
+      else if (itemDescriptor.includes("stock cube") || itemDescriptor.includes("bouillon cube") || (ingredientName.includes("stock") && ingredientName.includes("concentrate") && quantity === 1)) { 
+        estimatedGrams = numericPart * GRAMS_PER_STOCK_CUBE;
+        unit = "stock cube/concentrate unit";
+      }
+      else if (itemDescriptor.includes("onion") && remainingText.includes("stick")) { // handles "4 sticks" for "onions"
+        estimatedGrams = numericPart * GRAMS_PER_ONION_STICK;
+        notes.push(`Assuming 'stick' refers to green onion/scallion for ingredient 'onion'.`);
+      }
+      else if (itemDescriptor.includes("egg")) estimatedGrams = numericPart * 50; 
+      else if (itemDescriptor.includes("potato") && (remainingText.includes("small") || ingredientName.includes("small potato"))) estimatedGrams = numericPart * 100;
+      else if (itemDescriptor.includes("potato")) estimatedGrams = numericPart * 170; 
+      else if (numericPart === 1 && remainingText === "") { 
+        notes.push(`Parsed as 1 count of '${ingredientName}', gram estimation ambiguous without specific item type for count.`);
+      }
+      else notes.push(`Count-based measure for \'${ingredientName}\' (\'${measureText}\') is ambiguous or not yet specifically handled.`);
+
+      if(estimatedGrams) notes.push(`Parsed count ${numericPart} of ${itemDescriptor}, estimated ~${estimatedGrams.toFixed(1)}g.`);
+      else if (unit === "count" && !notes.some(n => n.includes("ambiguous"))) { 
+          notes.push(`Parsed as ${numericPart} count of \'${remainingText}\' for \'${ingredientName}\', but gram conversion not defined for this item count.`);
+      }
+  }
+  else if (remainingText.match(/^(sprinkle|sprinking|pinch|dash|to taste|a bit|generous portion|some)/)) {
     unit = remainingText;
-    estimatedGrams = 2; // token amount for seasoning
-    notes.push(`Parsed descriptive measure '${measureText}', assumed ~2g.`);
+    estimatedGrams = 2; 
+    notes.push(`Parsed descriptive measure \'${measureText}\', assumed ~${estimatedGrams}g.`);
   }
 
-  if (estimatedGrams === null) {
-    notes.push(`Could not parse measure '${measureText}' for ingredient '${ingredientName}' to grams.`);
+  // Add Liters before ml to avoid conflict if "l" is part of "ml"
+  else if (remainingText.match(/^l(iter(s)?)?$/) && quantity) {
+    estimatedGrams = numericPart * 1000; // 1L = 1000ml, assume 1g/ml for density
+    unit = "L";
+    notes.push(`Parsed ${numericPart}L, converted to ~${estimatedGrams.toFixed(0)}g (assuming 1g/ml density).`);
+  }
+  else if (remainingText.match(/^ml|millilitre(s)?|milliliter(s)?$/) && quantity) {
+    estimatedGrams = numericPart; 
+    unit = "ml";
+    notes.push(`Parsed ${numericPart}ml, assuming ~${estimatedGrams}g (1g/ml density default).`);
+  }
+
+  if (estimatedGrams === null && !notes.some(n => n.includes("Could not parse measure"))) {
+    notes.push(`Could not parse measure \'${measureText}\' for ingredient \'${ingredientName}\' to grams. No matching unit or rule.`);
   }
 
   return { quantity, unit, estimatedGrams, parseNotes: notes };
@@ -267,8 +385,10 @@ export async function estimateRecipeCaloriesHandler(ctx: RouterContext<"/:id/est
       status: string;
       fdcId?: number;
       caloriesPer100g?: number;
-      parsedMeasureInfo?: ParsedMeasure; // Store parsing results
-      calculatedCalories?: number;      // Store calculated calories for this ingredient
+      parsedMeasureInfo?: ParsedMeasure; 
+      calculatedCalories?: number;      
+      usdaFoodMatch?: string; 
+      originalSearchTerm?: string; // Added to track if search term was modified
       error?: string;
     };
     const ingredientProcessingDetails: IngredientDetail[] = [];
@@ -297,17 +417,82 @@ export async function estimateRecipeCaloriesHandler(ctx: RouterContext<"/:id/est
     await Promise.all(ingredientProcessingDetails.map(async (item) => {
       try {
         item.status = "processing_usda";
-        const searchResult = await searchFoods(item.ingredient, 1, 1);
+        
+        // --- Refine Search Term --- 
+        let searchTerm = item.ingredient;
+        const lowerIngredient = item.ingredient.toLowerCase();
+
+        if (lowerIngredient === "plain flour") {
+          searchTerm = "Flour, all-purpose";
+        } else if (lowerIngredient.includes("garlic clove")) {
+          searchTerm = "Garlic, raw";
+        } else if (lowerIngredient === "gruyère" || lowerIngredient === "gruyere") {
+          searchTerm = "Cheese, Gruyere";
+        } else if (lowerIngredient === "butter") {
+          searchTerm = "Butter, salted";
+        } else if (lowerIngredient === "bread" && !item.ingredient.match(/bread crumbs|breadcrumbs/i)) {
+          searchTerm = "Bread, white";
+        } else if (lowerIngredient === "flour") {
+            searchTerm = "Flour, all-purpose"; 
+        } else if (lowerIngredient === "egg") {
+            searchTerm = "Egg, whole, raw";
+        } else if (lowerIngredient === "egg plants" || lowerIngredient === "eggplant") { // Corrected from "Egg Plants" and added "eggplant"
+            searchTerm = "Eggplant";
+        } else if (lowerIngredient === "red pepper flakes") {
+            searchTerm = "Crushed red pepper";
+        } else if (lowerIngredient === "salt") {
+            searchTerm = "Salt, table";
+        } else if (lowerIngredient === "milk") {
+            searchTerm = "Milk, whole";
+        }
+
+        if (searchTerm !== item.ingredient) {
+          item.originalSearchTerm = item.ingredient;
+        }
+        // --- End Refine Search Term ---
+
+        const searchResult = await searchFoods(searchTerm, 1, 5); 
         if (!searchResult || searchResult.foods.length === 0) {
           item.status = "usda_not_found"; 
+          item.error = `No USDA food match found for ingredient: '${item.ingredient}' (searched as '${searchTerm}').`;
           return;
         }
         
-        const fdcId = searchResult.foods[0].fdcId;
-        item.fdcId = fdcId;
-        item.status = "usda_matched";
+        // --- Enhanced Food Selection Logic ---
+        let matchedFood = null;
+        // Priority 1: Survey (FNDDS)
+        matchedFood = searchResult.foods.find(food => food.dataType === "Survey (FNDDS)");
         
-        const foodDetails = await getFoodDetails(fdcId);
+        // Priority 2: SR Legacy
+        if (!matchedFood) {
+          matchedFood = searchResult.foods.find(food => food.dataType === "SR Legacy");
+        }
+
+        // Priority 3: Foundation Foods (can also be good generic entries)
+        if (!matchedFood) {
+            matchedFood = searchResult.foods.find(food => food.dataType === "Foundation");
+        }
+        
+        // Fallback: First result if no preferred types found
+        if (!matchedFood) {
+          matchedFood = searchResult.foods[0]; 
+        }
+        // --- End of Enhanced Food Selection Logic ---
+
+        if (!matchedFood) { // Should not happen if searchResult.foods has items, but as a safeguard
+            item.status = "usda_not_found";
+            item.error = `Logical error: No food item could be selected from USDA results for: ${item.ingredient}`;
+            return;
+        }
+
+        item.fdcId = matchedFood.fdcId;
+        item.usdaFoodMatch = matchedFood.description; // Store the description
+        item.status = "usda_matched";
+        // Add original search term to log if it was changed
+        const searchLog = item.originalSearchTerm ? `(originally \"${item.originalSearchTerm}\") ` : ``;
+        console.log(` -> USDA Matched for \"${searchTerm}\" ${searchLog}: \"${item.usdaFoodMatch}\" (Type: ${matchedFood.dataType}, FDC ID: ${item.fdcId})`);
+
+        const foodDetails = await getFoodDetails(matchedFood.fdcId);
         if (!foodDetails || !foodDetails.foodNutrients) {
           item.status = "usda_details_error"; 
           return;
@@ -336,14 +521,56 @@ export async function estimateRecipeCaloriesHandler(ctx: RouterContext<"/:id/est
         // Parse Measure & Calculate Calories for this ingredient
         item.parsedMeasureInfo = parseMeasureToGrams(item.measure, item.ingredient);
 
-        if (item.parsedMeasureInfo.estimatedGrams !== null && item.caloriesPer100g !== undefined) {
+        // SPECIAL HANDLING FOR WATER
+        if (item.ingredient.toLowerCase() === "water") {
+            const originalCalories = item.caloriesPer100g;
+            item.caloriesPer100g = 0; // Override to 0
+            if (item.parsedMeasureInfo.estimatedGrams !== null) {
+                item.calculatedCalories = 0; // Water contributes 0 calories
+                item.status = "calculated_override_water"; // New status to indicate override
+
+                if (!item.parsedMeasureInfo.parseNotes) item.parsedMeasureInfo.parseNotes = []; // Ensure array exists
+                if (originalCalories !== undefined && originalCalories > 0) {
+                    item.parsedMeasureInfo.parseNotes.push(`Water: Calories overridden to 0 (USDA may have shown ${originalCalories.toFixed(0)} kcal/100g for a specific water type).`);
+                } else {
+                    item.parsedMeasureInfo.parseNotes.push("Water: Assumed 0 calories.");
+                }
+            } else {
+                if (!item.parsedMeasureInfo.parseNotes) item.parsedMeasureInfo.parseNotes = []; // Ensure array exists
+                 item.parsedMeasureInfo.parseNotes.push("Water: Assumed 0 calories, but measure could not be estimated.");
+                 // Keep status as is, likely will become measure_parse_failed if not already
+            }
+        }
+
+        // Calculate calories if not overridden for water and inputs are valid
+        if (item.status === "calculated_override_water") {
+             console.log(` -> ${item.ingredient} (Water Override): ${item.parsedMeasureInfo.estimatedGrams !== null ? item.parsedMeasureInfo.estimatedGrams + 'g' : 'Unknown grams'}, 0kcal/100g = 0kcal. Notes: ${item.parsedMeasureInfo.parseNotes.join(' ')}`);
+        } else if (item.parsedMeasureInfo.estimatedGrams !== null && item.caloriesPer100g !== undefined) {
           item.calculatedCalories = (item.parsedMeasureInfo.estimatedGrams / 100) * item.caloriesPer100g;
           item.status = "calculated";
           console.log(` -> ${item.ingredient}: ${item.parsedMeasureInfo.estimatedGrams}g, ${item.caloriesPer100g}kcal/100g = ${item.calculatedCalories.toFixed(0)}kcal. Notes: ${item.parsedMeasureInfo.parseNotes.join(' ')}`);
-        } else {
-          item.status = "measure_parse_failed";
-          item.error = `Measure parsing failed. Notes: ${item.parsedMeasureInfo.parseNotes.join(' ')}`;
-          console.warn(` -> Failed to parse measure or missing calories for ${item.ingredient}. Measure: "${item.measure}". Notes: ${item.parsedMeasureInfo.parseNotes.join(' ')}`);
+        } else { // Covers non-water cases where grams is null OR kcal/100g is undefined (and not an earlier USDA status error)
+            // Ensure status reflects the failure if not already set by a more specific USDA lookup error
+            if (item.status === "nutrition_found" || item.status === "pending" || item.status === "usda_matched") {
+                item.status = "calc_input_error"; // Calculation input error (missing grams or kcal/100g after USDA match)
+            }
+
+            let errorSummary = "";
+            if (item.parsedMeasureInfo.estimatedGrams === null) {
+                errorSummary += "Failed to convert measure to grams. ";
+            }
+            // Check for missing caloriesPer100g only if not already caught by specific USDA error statuses
+            if (item.caloriesPer100g === undefined && 
+                (item.status !== "usda_not_found" && item.status !== "usda_details_error" && item.status !== "calories_not_found")) {
+                errorSummary += "Calorie data per 100g from USDA is missing or invalid. ";
+            }
+            // Ensure parseNotes exists before trying to join
+            const notesString = item.parsedMeasureInfo?.parseNotes ? item.parsedMeasureInfo.parseNotes.join(' ') : 'No parsing notes.';
+            item.error = `${errorSummary}Notes: ${notesString}`;
+            // In the error logging for calc_input_error or measure_parse_failed, if item.originalSearchTerm exists, include it.
+            // Example for the console.warn at the end of the calculation block:
+            const errorSearchTermInfo = item.originalSearchTerm ? `(search was for '${searchTerm}' from original '${item.originalSearchTerm}')` : `(search was for '${searchTerm}')`;
+            console.warn(` -> Calculation failed for ${item.ingredient} ${errorSearchTermInfo}. Status: ${item.status}. Measure: "${item.measure}". Error: ${item.error}`);
         }
 
       } catch (ingredientError) {
