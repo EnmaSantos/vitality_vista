@@ -35,6 +35,7 @@ const GRAMS_PER_STOCK_CUBE = 10; // Added - for "beef stock concentrate" if it's
 const GRAMS_PER_CAN_COCONUT_MILK = 400; // Standard 400ml can, density ~1g/ml
 const GRAMS_PER_ONION_STICK = 15; // Assuming a green onion / scallion stick
 const GRAMS_PER_EGGPLANT = 300; // Average medium eggplant
+const GRAMS_PER_GARLIC_BULB = 50; // Average garlic bulb
 
 interface ParsedMeasure {
   quantity: number | null;
@@ -208,7 +209,13 @@ function parseMeasureToGrams(measureText: string, ingredientName: string): Parse
     else estimatedGrams = numericPart * TSP_TO_GRAMS_LIQUID; 
     notes.push(`Parsed ${numericPart} tsp, estimated ~${estimatedGrams.toFixed(1)}g for ${ingredientName}.`);
   }
-  else if (((ingredientName.match(/^egg(s)?$/i) || ingredientName.match(/\begg(s)?\b/i)) && !ingredientName.includes("eggplant")) && measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)\s*(seperated|separated)?$/)) {
+  // Handle "whole" garlic (bulb)
+  else if (quantity && unit && unit.match(/^whole$/i) && ingredientName.toLowerCase().includes("garlic") && !ingredientName.toLowerCase().includes("clove")) {
+    estimatedGrams = numericPart * GRAMS_PER_GARLIC_BULB;
+    unit = "whole garlic bulb(s)"; // Update unit to be more specific
+    notes.push(`Parsed ${numericPart} ${unit}, estimated ~${estimatedGrams.toFixed(1)}g.`);
+  }
+  else if (((ingredientName.match(/^egg(s)?$/i) || ingredientName.match(/\begg(s)?\b/i)) && !(ingredientName.includes("eggplant") || ingredientName.includes("egg plant"))) && measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)\s*(seperated|separated)?$/)) {
     const quantityMatchSimple = measureText.match(/^(\d+\s*\d\/\d|\d+\/\d|\d*\.?\d+)/);
     if (quantityMatchSimple && quantityMatchSimple[0]) {
         const qStr = quantityMatchSimple[0].trim();
@@ -238,21 +245,35 @@ function parseMeasureToGrams(measureText: string, ingredientName: string): Parse
         estimatedGrams = numericPart * GRAMS_PER_STOCK_CUBE;
         unit = "stock cube/concentrate unit";
       }
-      else if (itemDescriptor.includes("eggplant")) { // Added for eggplant count
+      else if (itemDescriptor.includes("eggplant") || itemDescriptor.includes("egg plant")) { // Handles "eggplant", "egg plants"
         estimatedGrams = numericPart * GRAMS_PER_EGGPLANT;
-        notes.push(`Parsed ${numericPart} eggplant(s), estimated ~${(numericPart * GRAMS_PER_EGGPLANT).toFixed(1)}g.`);
+        notes.push(`Parsed ${numericPart} eggplant(s), estimated ~${(estimatedGrams).toFixed(1)}g.`);
+        unit = "eggplant(s)"; // Set unit for clarity
       }
-      else if (itemDescriptor.includes("egg")) estimatedGrams = numericPart * 50; 
+      // Ensure this is for actual eggs and not part of "eggplant"
+      else if (itemDescriptor.match(/\begg(s)?\b/i) && !(itemDescriptor.includes("eggplant") || itemDescriptor.includes("egg plant"))) { 
+        estimatedGrams = numericPart * 50; 
+        notes.push(`Parsed ${numericPart} egg(s), estimated ~${(estimatedGrams).toFixed(1)}g.`);
+        unit = "egg(s)"; // Set unit for clarity
+      }
       else if (itemDescriptor.includes("potato") && (remainingText.includes("small") || ingredientName.includes("small potato"))) estimatedGrams = numericPart * 100;
       else if (itemDescriptor.includes("potato")) estimatedGrams = numericPart * 170; 
-      else if (numericPart === 1 && remainingText === "") { 
-        notes.push(`Parsed as 1 count of '${ingredientName}', gram estimation ambiguous without specific item type for count.`);
+      else if (numericPart === 1 && remainingText === "") { // Fallback for single count items like "1 Onion"
+        if (ingredientName.includes("onion")){
+            estimatedGrams = numericPart * GRAMS_PER_ONION;
+            notes.push(`Parsed ${numericPart} onion(s), estimated ~${(GRAMS_PER_ONION).toFixed(1)}g.`);
+            unit = "onion(s)";
+        }
+        // Add other single count items here if needed
+        else notes.push(`Parsed as 1 count of '${ingredientName}', gram estimation ambiguous without specific item type for count.`);
       }
       else notes.push(`Count-based measure for \'${ingredientName}\' (\'${measureText}\') is ambiguous or not yet specifically handled.`);
 
-      if(estimatedGrams) notes.push(`Parsed count ${numericPart} of ${itemDescriptor}, estimated ~${estimatedGrams.toFixed(1)}g.`);
-      else if (unit === "count" && !notes.some(n => n.includes("ambiguous"))) { 
-          notes.push(`Parsed as ${numericPart} count of \'${remainingText}\' for \'${ingredientName}\', but gram conversion not defined for this item count.`);
+      // if(estimatedGrams) notes.push(`Parsed count ${numericPart} of ${itemDescriptor}, estimated ~${estimatedGrams.toFixed(1)}g.`);
+      // The above line is removed as specific notes are added in each block now.
+      // Add a general note if a count was parsed but no specific rule hit, and it wasn't deemed ambiguous before.
+      if (estimatedGrams === null && unit === "count" && !notes.some(n => n.includes("ambiguous") || n.includes("Parsed"))) {
+          notes.push(`Parsed as ${numericPart} count of \'${itemDescriptor}\' for \'${ingredientName}\', but gram conversion not defined for this item.`);
       }
   }
   else if (remainingText.match(/^(sprinkle|sprinking|pinch|dash|to taste|a bit|generous portion|some)/)) {
