@@ -541,11 +541,34 @@ export async function estimateRecipeCaloriesHandler(ctx: RouterContext<"/:id/est
                  // Keep status as is, likely will become measure_parse_failed if not already
             }
         }
+        // SPECIAL HANDLING FOR SALT
+        else if (item.ingredient.toLowerCase() === "salt") {
+            const originalCalories = item.caloriesPer100g;
+            item.caloriesPer100g = 0; // Override to 0
+            if (item.parsedMeasureInfo.estimatedGrams !== null) {
+                item.calculatedCalories = 0; // Salt contributes 0 calories
+                item.status = "calculated_override_salt"; // New status for salt override
 
-        // Calculate calories if not overridden for water and inputs are valid
+                if (!item.parsedMeasureInfo.parseNotes) item.parsedMeasureInfo.parseNotes = [];
+                if (originalCalories !== undefined && originalCalories > 0) {
+                    item.parsedMeasureInfo.parseNotes.push(`Salt: Calories overridden to 0 (USDA match '${item.usdaFoodMatch || 'N/A'}' might have shown ${originalCalories.toFixed(0)} kcal/100g).`);
+                } else {
+                    item.parsedMeasureInfo.parseNotes.push("Salt: Assumed 0 calories.");
+                }
+            } else {
+                if (!item.parsedMeasureInfo.parseNotes) item.parsedMeasureInfo.parseNotes = [];
+                 item.parsedMeasureInfo.parseNotes.push("Salt: Assumed 0 calories, but measure could not be estimated.");
+            }
+        }
+
+        // Calculate calories if not overridden for water or salt and inputs are valid
         if (item.status === "calculated_override_water") {
              console.log(` -> ${item.ingredient} (Water Override): ${item.parsedMeasureInfo.estimatedGrams !== null ? item.parsedMeasureInfo.estimatedGrams + 'g' : 'Unknown grams'}, 0kcal/100g = 0kcal. Notes: ${item.parsedMeasureInfo.parseNotes.join(' ')}`);
-        } else if (item.parsedMeasureInfo.estimatedGrams !== null && item.caloriesPer100g !== undefined) {
+        }
+        else if (item.status === "calculated_override_salt") {
+            console.log(` -> ${item.ingredient} (Salt Override): ${item.parsedMeasureInfo.estimatedGrams !== null ? item.parsedMeasureInfo.estimatedGrams + 'g' : 'Unknown grams'}, 0kcal/100g = 0kcal. Notes: ${item.parsedMeasureInfo.parseNotes.join(' ')}`);
+        }
+         else if (item.parsedMeasureInfo.estimatedGrams !== null && item.caloriesPer100g !== undefined) {
           item.calculatedCalories = (item.parsedMeasureInfo.estimatedGrams / 100) * item.caloriesPer100g;
           item.status = "calculated";
           console.log(` -> ${item.ingredient}: ${item.parsedMeasureInfo.estimatedGrams}g, ${item.caloriesPer100g}kcal/100g = ${item.calculatedCalories.toFixed(0)}kcal. Notes: ${item.parsedMeasureInfo.parseNotes.join(' ')}`);
