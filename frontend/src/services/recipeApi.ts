@@ -111,7 +111,7 @@ export async function getRecipeCalorieEstimate(
   const url = `/api/recipes/${recipeId}/estimate-calories`;
   try {
     const response = await fetch(url, {
-      method: "GET",
+      method: "POST",
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
