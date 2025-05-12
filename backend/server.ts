@@ -18,9 +18,14 @@ const app = new Application();
 const port = parseInt(Deno.env.get("PORT") || "8000"); // Uses env var loaded above
 
 
-// Basic middleware
+// Basic middleware with improved CORS configuration
 app.use(oakCors({
-  origin: Deno.env.get("FRONTEND_URL") || "http://localhost:3000",
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://vitality-vista.vercel.app",
+    "https://vitality-vista.vercel.app/"
+  ],
   optionsSuccessStatus: 200,
 }));
 
