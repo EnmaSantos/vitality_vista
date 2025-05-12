@@ -10,12 +10,7 @@ try {
 }
 
 // Log environment variables for debugging
-console.log("Database environment variables:");
-console.log(`DB_HOST: ${Deno.env.get("DB_HOST") || "not set"}`);
-console.log(`DB_USER: ${Deno.env.get("DB_USER") || "not set"}`);
-console.log(`DB_NAME: ${Deno.env.get("DB_NAME") || "not set"}`);
-console.log(`DB_PORT: ${Deno.env.get("DB_PORT") || "not set"}`);
-console.log(`DB_PASSWORD: ${Deno.env.has("DB_PASSWORD") ? "is set" : "not set"}`);
+
 
 // --- Database Connection Configuration ---
 // Retrieve connection details securely from environment variables

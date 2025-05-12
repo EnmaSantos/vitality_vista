@@ -30,7 +30,9 @@ interface User {
   
   // Define other payload types if needed (e.g., RegisterCredentials)
   
-  const API_BASE_URL = "/api/auth"; // Uses Vite proxy defined in vite.config.ts
+  const API_BASE_URL = window.location.hostname === "localhost" 
+    ? "/api/auth"  // Development (uses proxy)
+    : "https://your-deno-deploy-url.deno.dev/api/auth";  // Production
   
   /**
    * Calls the backend login endpoint.
