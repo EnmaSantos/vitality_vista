@@ -23,7 +23,7 @@ import {
     ApiFatSecretRecipeTypesResponse
 } from '../services/recipeApi';
 
-const ITEMS_PER_PAGE = 10; // Adjust as needed, max 50 per FatSecret API
+const ITEMS_PER_PAGE = 9; // Adjust as needed, max 50 per FatSecret API
 const ALL_CATEGORIES_VALUE = "ALL";
 
 const Recipes: React.FC = () => {
@@ -107,7 +107,7 @@ const Recipes: React.FC = () => {
         search_expression: debouncedSearchQuery || undefined,
         recipe_types: selectedRecipeType === ALL_CATEGORIES_VALUE ? undefined : selectedRecipeType,
         page_number: currentPage - 1, // API is 0-based
-        max_results: ITEMS_PER_PAGE,
+        max_results: ITEMS_PER_PAGE, // <--- This uses the ITEMS_PER_PAGE constant
     };
 
     try {
