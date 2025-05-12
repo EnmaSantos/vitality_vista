@@ -52,6 +52,12 @@ const Login: React.FC = () => {
 
     try {
       console.log('Login Page: Attempting login via context...');
+      // IMPORTANT: A 405 error (Method Not Allowed) means the HTTP method used for the login request
+      // (e.g., GET, POST) is not supported by your backend API endpoint.
+      // 1. Check your AuthContext.tsx: The `login` function (called below) makes the actual API call.
+      //    Ensure it's using the POST method, which is standard for login.
+      // 2. Check your Backend: Ensure the login API route (e.g., /api/auth/login) is configured
+      //    to accept POST requests.
       await login(email, password); // <-- Call login function from AuthContext
       console.log('Login Page: Context login reported success.');
       // Navigation happens automatically via the useEffect above when isAuthenticated becomes true
