@@ -30,7 +30,34 @@ if (!dbUser || !dbPassword || !dbDatabase) {
 }
 
 // Check if a direct connection string is provided (preferred for production)
-const connectionString = Deno.env.get("DATABASE_URL");
+let connectionString = Deno.env.get("DATABASE_URL");
+
+// If we have a connection string, ensure it has the SSL parameters
+if (connectionString) {
+  // Detect if this is a Neon database (has neon.tech in the hostname)
+  const isNeonDB = connectionString.includes("neon.tech");
+  
+  // Add required SSL mode if not present
+  if (!connectionString.includes("sslmode=")) {
+    connectionString += connectionString.includes("?") 
+      ? "&sslmode=require" 
+      : "?sslmode=require";
+  }
+  
+  // For Neon specifically, we might need additional parameters
+  if (isNeonDB) {
+    console.log("Detected Neon database, adding specific configuration");
+    
+    // Add Neon-specific parameters if not already present
+    if (!connectionString.includes("pgbouncer=")) {
+      connectionString += "&pgbouncer=true";
+    }
+    
+    if (!connectionString.includes("connect_timeout=")) {
+      connectionString += "&connect_timeout=10";
+    }
+  }
+}
 
 // Determine if we're in production or development
 const isProduction = Deno.env.get("ENVIRONMENT") === "production" || 
@@ -74,7 +101,11 @@ async function testDbConnection() {
       console.log(`- Database: ${dbDatabase}`);
       console.log(`- SSL mode: ${isProduction ? 'enforced (production)' : 'optional (development)'}`);
     } else {
-      console.log("- Using connection string (details masked)"); 
+      // Log the connection string with sensitive info masked
+      const maskedConnectionString = connectionString
+        .replace(/password=([^&]*)/, 'password=*****')
+        .replace(/:[^@:]*@/, ':*****@'); // Mask password in standard connection string
+      console.log(`- Connection string: ${maskedConnectionString}`);
     }
     await dbClient.connect();
     console.log("✅ Database connection pool established successfully!");
@@ -89,6 +120,12 @@ async function testDbConnection() {
       console.error("   - Using connection string (details masked)");
     }
     console.error("   - Error:", err);
+    
+    // Add more detailed error debugging
+    if (err instanceof Error) {
+      console.error("   - Error message:", err.message);
+      console.error("   - Error stack:", err.stack);
+    }
   }
 }
 testDbConnection(); // Call the test function
