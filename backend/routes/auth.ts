@@ -3,7 +3,7 @@ import { Router } from "../deps.ts";
 import { register, login, getCurrentUser } from "../controllers/authController.ts";
 import { authMiddleware } from "../middleware/authMiddleware.ts";
 
-const router = new Router({ prefix: "/api/auth" });
+const router = new Router({ prefix: "/auth" });
 
 // Public routes
 router.post("/register", register);

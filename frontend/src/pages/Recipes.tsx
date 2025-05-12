@@ -64,12 +64,34 @@ const Recipes: React.FC = () => {
   // Fetch available recipe types on mount
   useEffect(() => {
     const fetchTypes = async () => {
-      const response = await getFatSecretRecipeTypes();
-      if (response.success && response.data?.recipe_types?.recipe_type) {
-        setAvailableRecipeTypes([ALL_CATEGORIES_VALUE, ...response.data.recipe_types.recipe_type]);
-      } else {
-        console.error("Failed to fetch recipe types:", response.message);
-        // Keep default [ALL_CATEGORIES_VALUE]
+      try {
+        console.log("Fetching recipe types...");
+        const response = await getFatSecretRecipeTypes();
+        console.log("Recipe types response:", response);
+        
+        if (response.success && response.data) {
+          // Handle both possible response structures - first check recipes.recipe_type
+          let recipeTypes: string[] = [];
+          if (response.data.recipes?.recipe_type) {
+            recipeTypes = response.data.recipes.recipe_type;
+          } 
+          // Fallback to recipe_types.recipe_type if available
+          else if (response.data.recipe_types?.recipe_type) {
+            recipeTypes = response.data.recipe_types.recipe_type;
+          }
+          
+          if (recipeTypes.length > 0) {
+            console.log("Found recipe types:", recipeTypes);
+            setAvailableRecipeTypes([ALL_CATEGORIES_VALUE, ...recipeTypes]);
+          } else {
+            console.error("Failed to fetch recipe types: Empty recipe types array");
+          }
+        } else {
+          console.error("Failed to fetch recipe types:", response.message);
+          // Keep default [ALL_CATEGORIES_VALUE]
+        }
+      } catch (error) {
+        console.error("Error fetching recipe types:", error);
       }
     };
     fetchTypes();
@@ -90,9 +112,10 @@ const Recipes: React.FC = () => {
 
     try {
         const response = await searchRecipesFromFatSecret(params);
-        if (response.success && response.data) {
-            setRecipes(response.data.recipe || []);
-            const total = parseInt(response.data.total_results || '0', 10);
+        if (response.success && response.data && response.data.recipes) {
+            const recipesData = response.data.recipes;
+            setRecipes(recipesData.recipe || []);
+            const total = parseInt(recipesData.total_results || '0', 10);
             setTotalResults(total);
             setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
             if (total === 0) {
@@ -360,12 +383,12 @@ const Recipes: React.FC = () => {
                 </Grid>
                 <Grid item xs={12} md={7}>
                     {/* Display Ingredients from ingredients.ingredient */}
-                    {selectedRecipeDetails.ingredients?.ingredient && selectedRecipeDetails.ingredients.ingredient.length > 0 && (
+                    {selectedRecipeDetails?.ingredients?.ingredient && selectedRecipeDetails.ingredients.ingredient.length > 0 && (
                       <Box mb={3}>
                         <Typography variant="h6" gutterBottom>Ingredients</Typography>
                         <List dense disablePadding>
-                          {selectedRecipeDetails.ingredients.ingredient.map((ing, index) => (
-                            <ListItem key={ing.food_id + index} disableGutters divider={index < selectedRecipeDetails.ingredients.ingredient.length -1}>
+                          {selectedRecipeDetails?.ingredients?.ingredient.map((ing, index) => (
+                            <ListItem key={ing.food_id + index} disableGutters divider={index < (selectedRecipeDetails?.ingredients?.ingredient.length || 0) -1}>
                               <ListItemText primary={ing.ingredient_description} secondary={`(${ing.food_name})`} />
                             </ListItem>
                           ))}
@@ -373,12 +396,12 @@ const Recipes: React.FC = () => {
                       </Box>
                     )}
                     {/* Display Directions from directions.direction */} 
-                    {selectedRecipeDetails.directions?.direction && selectedRecipeDetails.directions.direction.length > 0 && (
+                    {selectedRecipeDetails?.directions?.direction && selectedRecipeDetails.directions.direction.length > 0 && (
                       <Box>
                          <Typography variant="h6" gutterBottom>Instructions</Typography>
                          <List dense disablePadding>
-                           {selectedRecipeDetails.directions.direction.map((step, index) => (
-                             <ListItem key={step.direction_number} disableGutters divider={index < selectedRecipeDetails.directions.direction.length - 1} sx={{alignItems: 'flex-start'}}>
+                           {selectedRecipeDetails?.directions?.direction.map((step, index) => (
+                             <ListItem key={step.direction_number} disableGutters divider={index < (selectedRecipeDetails?.directions?.direction.length || 0) - 1} sx={{alignItems: 'flex-start'}}>
                                <ListItemText primary={`${step.direction_number}. ${step.direction_description}`} />
                              </ListItem>
                            ))}

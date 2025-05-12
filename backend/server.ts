@@ -7,11 +7,11 @@ await loadEnv({ export: true });
 // Remove the temporary import for db.ts - it's no longer needed here
 // import "./services/db.ts"; // <-- REMOVE OR COMMENT OUT THIS LINE
 import "./services/db.ts";
-// Import routers
+// Import controllers directly for this approach
+import { handleSearchFatSecretRecipes, handleGetFatSecretRecipeById, handleGetFatSecretRecipeTypes } from "./controllers/recipeController.ts";
 import authRouter from "./routes/auth.ts";
-import recipeRouter from "./routes/recipes.ts"; // <-- ADD THIS IMPORT
-// import foodRouter from "./routes/food.ts"; // <-- COMMENTED OUT FOR NOW
-import workoutRouter from "./routes/workout.ts"; // <-- ADD THIS IMPORT
+// import foodRouter from "./routes/food.ts";
+import workoutRouter from "./routes/workout.ts";
 
 // Initialize the app
 const app = new Application();
@@ -36,30 +36,22 @@ app.use(async (ctx, next) => {
 
 const apiRouter = new Router({ prefix: "/api" });
 
-// Mount Auth routes (assuming they are directly under /api, e.g., /api/login)
-// If authRouter already includes /api or similar, adjust accordingly.
-// For now, assuming authRouter defines routes like /login, /register
+// Mount Auth routes
 apiRouter.use(authRouter.routes());
 apiRouter.use(authRouter.allowedMethods());
 
-// Mount FatSecret Recipe routes under /api/fatsecret/recipes
-apiRouter.use("/fatsecret/recipes", recipeRouter.routes(), recipeRouter.allowedMethods());
+// --- Define FatSecret Recipe routes DIRECTLY under apiRouter ---
+apiRouter
+    .get("/fatsecret/recipes/search", handleSearchFatSecretRecipes)
+    .get("/fatsecret/recipes/types", handleGetFatSecretRecipeTypes)
+    .get("/fatsecret/recipes/:id", handleGetFatSecretRecipeById);
 
-// Mount Workout routes (assuming under /api/workouts or similar)
-// Adjust path as needed based on workoutRouter's definition
+// Mount Workout routes 
 apiRouter.use("/workouts", workoutRouter.routes(), workoutRouter.allowedMethods());
 
 // Register the main API router with the application
 app.use(apiRouter.routes());
 app.use(apiRouter.allowedMethods());
-
-// --- Remove the old direct app.use calls for routers --- 
-// app.use(authRouter.routes());         // REMOVED
-// app.use(authRouter.allowedMethods()); // REMOVED
-// app.use(recipeRouter.routes());       // REMOVED
-// app.use(recipeRouter.allowedMethods());// REMOVED
-// app.use(workoutRouter.routes());      // REMOVED
-// app.use(workoutRouter.allowedMethods()); // REMOVED
 
 // Default route (Handles requests that don't match any api routes)
 app.use((ctx) => {

@@ -31,10 +31,12 @@ export interface FatSecretRecipeSummary {
 
 // Overall Search Response
 interface FatSecretSearchData {
-    max_results: string;
-    total_results: string;
-    page_number: string;
-    recipe: FatSecretRecipeSummary[]; // Array of recipes
+    recipes: {
+        max_results: string;
+        total_results: string;
+        page_number: string;
+        recipe: FatSecretRecipeSummary[]; // Array of recipes
+    };
 }
 
 export interface ApiFatSecretSearchResponse {
@@ -124,7 +126,12 @@ export interface ApiFatSecretGetRecipeResponse {
 // --- Types for FatSecret Recipe Types Get All (v2) ---
 
 interface FatSecretRecipeTypesData {
-    recipe_types: { recipe_type: string[] }; // Nested array
+    recipes?: {
+        recipe_type: string[]
+    };
+    recipe_types?: { 
+        recipe_type: string[] 
+    }; // Nested array
 }
 
 export interface ApiFatSecretRecipeTypesResponse {
@@ -191,14 +198,20 @@ export async function getFatSecretRecipeDetailsById(recipeId: string): Promise<A
 }
 
 export async function getFatSecretRecipeTypes(): Promise<ApiFatSecretRecipeTypesResponse> {
-    const url = '/api/fatsecret/recipe-types';
+    const url = '/api/fatsecret/recipes/types';
     console.log(`RecipeApi: Fetching FatSecret recipe types from ${url}`);
     try {
         const response = await fetch(url);
         const responseData: ApiFatSecretRecipeTypesResponse = await response.json();
         if (!response.ok) { throw new Error(responseData.message || `HTTP error! status: ${response.status}`); }
         // Assuming backend proxy adds success flag
-        if (!responseData.success || !responseData.data?.recipe_types) { throw new Error(responseData.message || `API error fetching FatSecret recipe types`); }
+        if (!responseData.success) { 
+            throw new Error(responseData.message || `API error fetching FatSecret recipe types`); 
+        }
+        // Check if data exists in either format
+        if (!responseData.data?.recipe_types && !responseData.data?.recipes) {
+            throw new Error("No recipe types data found in the response");
+        }
         return responseData;
     } catch (error) {
         console.error("Error fetching FatSecret recipe types:", error);

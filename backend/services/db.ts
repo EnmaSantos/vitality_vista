@@ -2,9 +2,20 @@
 import { loadEnv } from "../deps.ts"; // Import loadEnv
 import { PostgresClient } from "../deps.ts"; // Keep existing import [cite: vitality_vista.zip/backend/deps.ts]
 
-// --- Load Environment Variables ---
-// Explicitly load environment variables from .env file within this module first
-await loadEnv({ export: true }); // Make sure .env is loaded before proceeding
+// Only try to load .env file in development environment, not in Deno Deploy
+try {
+  await loadEnv({ export: true });
+} catch (error) {
+  console.log("No .env file found, using environment variables from the system");
+}
+
+// Log environment variables for debugging
+console.log("Database environment variables:");
+console.log(`DB_HOST: ${Deno.env.get("DB_HOST") || "not set"}`);
+console.log(`DB_USER: ${Deno.env.get("DB_USER") || "not set"}`);
+console.log(`DB_NAME: ${Deno.env.get("DB_NAME") || "not set"}`);
+console.log(`DB_PORT: ${Deno.env.get("DB_PORT") || "not set"}`);
+console.log(`DB_PASSWORD: ${Deno.env.has("DB_PASSWORD") ? "is set" : "not set"}`);
 
 // --- Database Connection Configuration ---
 // Retrieve connection details securely from environment variables
