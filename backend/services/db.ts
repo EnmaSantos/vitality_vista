@@ -39,13 +39,14 @@ const dbClient = new PostgresClient({
   database: dbDatabase,
   tls: {
     enabled: true,
-    // If your database server uses a self-signed certificate or one not recognized
-    // by default CA stores, you might need to set 'enforce' to false.
-    // However, 'sslmode=require' usually means the server expects SSL, and
-    // client-side certificate validation might still be enforced by the server or client defaults.
-    // Start with just 'enabled: true'. If you get certificate errors, uncommenting
-    // and setting 'enforce: false' might be necessary, but be aware of the security implications.
-    // enforce: false, 
+    // IMPORTANT: Setting 'enforce: false' disables server certificate validation.
+    // This can make your connection vulnerable to man-in-the-middle attacks.
+    // Use this ONLY for debugging to see if certificate validation is the issue.
+    // If this works, you should ideally investigate why the certificate isn't validating
+    // (e.g., missing CA certs in Deno Deploy environment, or Neon's specific cert chain).
+    // For production, you'd want to resolve the certificate issue or, if absolutely necessary
+    // and you understand the risks, ensure you are on a trusted network.
+    enforce: false, 
   },
 });
 
