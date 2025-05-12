@@ -1,29 +1,26 @@
-Vitality Vista
+# Vitality Vista
 ===========================
 
-A comprehensive fitness tracking application that integrates exercise data, nutrition information, and meal recipes. Built with modern web technologies including React, TypeScript, Tailwind CSS, Material UI, and Deno. This project serves as a learning platform for contemporary web development practices while creating a useful fitness tool.
+A comprehensive fitness tracking application that integrates exercise data, nutrition information, and meal recipes. Built with modern web technologies including React, TypeScript, Material UI, and Deno. This project serves as a learning platform for contemporary web development practices while creating a useful fitness tool.
 
 🏋️‍♂️ Project Overview
------------------------
+----------------------
 
 This application helps users track their fitness journey by providing access to:
 
--   A comprehensive exercise database with detailed instructions and images
--   Nutritional information from the USDA food database
--   Recipe suggestions from TheMealDB
--   Workout planning and progress tracking capabilities
+-   A **Recipe Discovery** module leveraging the FatSecret API for searching and viewing detailed recipes.
+-   Future capabilities for exercise tracking, nutrition logging, and workout planning.
+-   A user-friendly interface for managing health and wellness data.
 
 The project is built as a full-stack application with a TypeScript React frontend and a Deno backend, emphasizing modern development practices and a responsive user experience.
 
 ✨ Features
 ----------
 
--   **Exercise Library**: Browse and search through hundreds of exercises with detailed instructions, images, and muscle group information
--   **Nutrition Tracking**: Access nutritional data for thousands of food items using the USDA API
--   **Recipe Discovery**: Find and save recipes based on nutritional goals and dietary preferences
--   **Workout Creation**: Build custom workout routines by selecting exercises from the database
--   **Progress Visualization**: Track fitness progress with intuitive charts and statistics
--   **Responsive Design**: Fully responsive interface that works on desktop and mobile devices
+-   **Recipe Discovery**: Find and view detailed recipes using the FatSecret API, including ingredients, instructions, and nutritional information.
+-   **User Authentication**: Secure login and signup capabilities.
+-   **Responsive Design**: Fully responsive interface that works on desktop and mobile devices using Material UI.
+-   *(Placeholder for future features: Exercise Library, Nutrition Tracking, Workout Creation, Progress Visualization)*
 
 🛠️ Technology Stack
 --------------------
@@ -31,66 +28,39 @@ The project is built as a full-stack application with a TypeScript React fronten
 ### Frontend
 
 -   **React 18** with **TypeScript**: For building a robust and type-safe user interface
--   **Tailwind CSS**: For utility-first styling and responsive design
 -   **Material UI (MUI)**: For advanced UI components and consistent design
 -   **React Router**: For client-side routing
 -   **Vite**: For fast development and optimized builds
+-   *(Tailwind CSS might still be in the project but MUI is the primary component library)*
 
 ### Backend
 
 -   **Deno**: A secure runtime for JavaScript and TypeScript
--   **Oak**: A middleware framework for Deno, similar to Express
+-   **Oak**: *(Verify if Oak is the primary middleware, update if needed)* A middleware framework for Deno.
 -   **TypeScript**: For type-safe API development
 
 ### External APIs
 
--   Custom Exercise API (self-developed)
--   USDA Food Database API
--   TheMealDB Recipe API
+-   **FatSecret API**: For comprehensive recipe search, details, and nutritional information.
 
 📁 Project Structure
 --------------------
 
-```
-fitness-tracker/
-├── backend/                # Deno backend
-│   ├── controllers/        # API route handlers
-│   ├── models/             # Data models
-│   ├── routes/             # API route definitions
-│   ├── services/           # Business logic
-│   ├── deps.ts             # Dependencies (like package.json)
-│   └── server.ts           # Main server file
-├── frontend/               # React frontend
-│   ├── public/             # Static files
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── pages/          # Page components
-│   │   ├── services/       # API client code
-│   │   ├── types/          # TypeScript type definitions
-│   │   ├── utils/          # Helper functions
-│   │   ├── App.tsx         # Main App component
-│   │   └── index.tsx       # Entry point
-│   ├── vite.config.ts      # Vite configuration
-│   ├── tailwind.config.js  # Tailwind CSS configuration
-│   └── package.json        # Frontend dependencies
-└── README.md               # Project documentation
-
-```
+*(Note: Project structure is illustrative and might vary slightly.)*
 
 🚀 Getting Started
 ------------------
 
 ### Prerequisites
 
--   Node.js (v16+)
--   npm or yarn
--   Deno (v1.30+)
+-   Node.js (v16+ recommended)
+-   npm (or yarn)
+-   Deno (v1.30+ recommended)
 -   Git
 
-### Frontend Setup
+### Frontend Setup (in `frontend` directory)
 
-```
+```bash
 # Navigate to the frontend directory
 cd frontend
 
@@ -99,61 +69,51 @@ npm install
 
 # Start the development server
 npm run dev
-
 ```
 
-The frontend will be available at `http://localhost:3000`
+The frontend will be available at `http://localhost:5173` (Vite's default port).
 
-### Backend Setup
+### Backend Setup (in `backend` directory)
 
-```
+```bash
 # Navigate to the backend directory
 cd backend
 
-# Run the Deno server
-deno run --allow-net --allow-read --allow-env server.ts
+# Ensure Deno is installed and accessible in your PATH.
+# Create any necessary .env files if required by the backend configuration (e.g., for API keys).
 
+# Run the Deno server (assuming a 'start' task is defined in deno.json or deno.jsonc)
+deno task start
+
+# If no task runner is configured, or for more direct control, use the deno run command:
+# Example: deno run --allow-net --allow-read --allow-env server.ts
+# (Adjust permissions like --allow-net, --allow-read, --allow-env based on your server's needs)
 ```
 
-The backend API will be available at `http://localhost:8000`
+The backend API for the deployed version is `https://enmanueldel-vitality-vi-71.deno.dev/api`.
+For local development, it's typically `http://localhost:8000/api` (verify the port your Deno server uses, often 8000 by default).
 
 🔌 API Integrations
 -------------------
 
-### Exercise API
+### FatSecret API
 
-The application uses a custom-built Exercise API (previously developed with FastAPI) that provides detailed information about exercises, including:
+The application uses the FatSecret Platform API (REST) to provide:
 
--   Instructions
--   Target muscle groups
--   Required equipment
--   Difficulty levels
--   Calorie burning estimates
+-   Recipe search by keywords, types, and other criteria.
+-   Detailed recipe information including ingredients, instructions, and nutritional breakdown per serving.
+-   Access to recipe categories/types.
 
-### USDA Food Database API
-
-For nutritional information, the app integrates with the USDA FoodData Central API:
-
--   Comprehensive nutritional profiles
--   Food search capabilities
--   Portion size calculations
-
-### TheMealDB API
-
-Recipe data is sourced from TheMealDB API:
-
--   Thousands of recipes with ingredients and instructions
--   Categorized by cuisine, ingredients, and dietary preferences
--   Video tutorials for many recipes
+*(Note: This integration requires API credentials (key/secret) to be configured in the backend environment.)*
 
 👨‍💻 Development Workflow
 --------------------------
 
-1.  **Feature Branches**: Create a new branch for each feature or bug fix
-2.  **TypeScript First**: Write all code with TypeScript types for better code quality
-3.  **Component-Driven UI**: Build reusable components before assembling pages
-4.  **API-First Backend**: Design and document API endpoints before implementation
-5.  **Regular Commits**: Make small, focused commits with descriptive messages
+1.  **Feature Branches**: Create a new branch for each feature or bug fix.
+2.  **TypeScript First**: Write all code with TypeScript types for better code quality.
+3.  **Component-Driven UI**: Build reusable components before assembling pages.
+4.  **API-First Backend**: Design and document API endpoints before implementation.
+5.  **Regular Commits**: Make small, focused commits with descriptive messages.
 
 🎯 Learning Goals
 -----------------
@@ -162,12 +122,11 @@ This project serves as a learning platform for:
 
 -   TypeScript development and type safety practices
 -   React component architecture and hooks
--   State management patterns in frontend applications
+-   State management patterns in frontend applications (e.g., Context API)
 -   API integration techniques
 -   Deno backend development
--   CSS architecture with Tailwind
--   Responsive design implementation
 -   Component library customization with MUI
+-   Modern frontend tooling (Vite)
 
 🤝 Contributing
 ---------------
@@ -183,12 +142,12 @@ As this is a personal learning project, contributions are welcome but should ali
 📝 License
 ----------
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See `LICENSE` (if one exists) for more information.
 
 📞 Contact
 ----------
 
-Your Name - [@EnmanueldelosS3](https://x.com/EnmanueldelosS3) 
+Enmanuel De Los Santos Cruz - [@EnmanueldelosS3](https://x.com/EnmanueldelosS3)
 
 Project Link: <https://github.com/EnmaSantos/vitality_vista>
 
