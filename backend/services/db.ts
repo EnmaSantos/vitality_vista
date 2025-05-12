@@ -37,6 +37,16 @@ const dbClient = new PostgresClient({
   user: dbUser,
   password: dbPassword,
   database: dbDatabase,
+  tls: {
+    enabled: true,
+    // If your database server uses a self-signed certificate or one not recognized
+    // by default CA stores, you might need to set 'enforce' to false.
+    // However, 'sslmode=require' usually means the server expects SSL, and
+    // client-side certificate validation might still be enforced by the server or client defaults.
+    // Start with just 'enabled: true'. If you get certificate errors, uncommenting
+    // and setting 'enforce: false' might be necessary, but be aware of the security implications.
+    // enforce: false, 
+  },
 });
 
 // --- Connection Test Function ---
