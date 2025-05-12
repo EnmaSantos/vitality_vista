@@ -38,6 +38,12 @@ export const handleSearchFatSecretRecipes = async (ctx: RouterContext<any, any>)
         Object.keys(params).forEach(key => params[key as keyof FatSecretRecipeAPISearchParams] === undefined && delete params[key as keyof FatSecretRecipeAPISearchParams]);
 
         const result = await searchFatSecretRecipesPlatform(params);
+        
+        // Check if the result contains an error from FatSecret API
+        if (result.error) {
+            return sendError(ctx, `FatSecret API error ${result.error.code}: ${result.error.message}`, 400);
+        }
+        
         sendSuccess(ctx, result);
     } catch (error) {
         sendError(ctx, error instanceof Error ? error.message : "Failed to search recipes");
@@ -55,6 +61,12 @@ export const handleGetFatSecretRecipeById = async (ctx: RouterContext<any, { id:
             return sendError(ctx, "Recipe ID is required", 400);
         }
         const result = await getFatSecretRecipeByIdPlatform(id);
+        
+        // Check if the result contains an error from FatSecret API
+        if (result.error) {
+            return sendError(ctx, `FatSecret API error ${result.error.code}: ${result.error.message}`, 400);
+        }
+        
         sendSuccess(ctx, result);
     } catch (error) {
         sendError(ctx, error instanceof Error ? error.message : "Failed to get recipe details");
@@ -68,6 +80,12 @@ export const handleGetFatSecretRecipeTypes = async (ctx: RouterContext<any, any>
     console.log("Attempting to handle /api/fatsecret/recipes/types");
     try {
         const result = await getFatSecretRecipeTypesPlatform();
+        
+        // Check if the result contains an error from FatSecret API
+        if (result.error) {
+            return sendError(ctx, `FatSecret API error ${result.error.code}: ${result.error.message}`, 400);
+        }
+        
         sendSuccess(ctx, result);
     } catch (error) {
         sendError(ctx, error instanceof Error ? error.message : "Failed to get recipe types");
