@@ -161,7 +161,7 @@ export interface FatSecretSearchParams {
 export async function searchRecipesFromFatSecret(
     params: FatSecretSearchParams
 ): Promise<ApiFatSecretSearchResponse> {
-    const url = new URL('/fatsecret/recipes/search', API_BASE_URL);
+    const url = new URL(API_BASE_URL + '/fatsecret/recipes/search');
     // Add params to URL search query
     if (params.search_expression) url.searchParams.append('search_expression', params.search_expression);
     if (params.recipe_types) url.searchParams.append('recipe_types', params.recipe_types);
