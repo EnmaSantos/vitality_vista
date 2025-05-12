@@ -28,13 +28,10 @@ interface User {
       password: string;
   }
   
-  // Define other payload types if needed (e.g., RegisterCredentials)
+  // Type for other payload types if needed (e.g., RegisterCredentials)
   
-  // IMPORTANT: If your app is deployed, ensure "your-deno-deploy-url.deno.dev"
-  // below is replaced with your ACTUAL Deno deployment URL.
-  const API_BASE_URL = window.location.hostname === "localhost" 
-    ? "/api/auth"  // Development (uses proxy)
-    : "https://enmanueldel-vitality-vi-71.deno.dev/api/auth";  // Production
+  // Always use the direct Deno Deploy URL to avoid CORS issues
+  const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api/auth";
   
   console.log("authApi: Using API_BASE_URL:", API_BASE_URL); // Log the base URL being used
   

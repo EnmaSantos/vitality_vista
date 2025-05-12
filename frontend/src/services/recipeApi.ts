@@ -142,6 +142,9 @@ export interface ApiFatSecretRecipeTypesResponse {
 
 // --- Service Functions ---
 
+// Define the backend API base URL
+const API_BASE_URL = 'https://enmanueldel-vitality-vi-71.deno.dev/api';
+
 // Existing functions (getRecipeCalorieEstimate, getRecipesByCategory, etc.) remain here
 // ...
 
@@ -158,7 +161,7 @@ export interface FatSecretSearchParams {
 export async function searchRecipesFromFatSecret(
     params: FatSecretSearchParams
 ): Promise<ApiFatSecretSearchResponse> {
-    const url = new URL('/api/fatsecret/recipes/search', window.location.origin);
+    const url = new URL('/fatsecret/recipes/search', API_BASE_URL);
     // Add params to URL search query
     if (params.search_expression) url.searchParams.append('search_expression', params.search_expression);
     if (params.recipe_types) url.searchParams.append('recipe_types', params.recipe_types);
@@ -182,7 +185,7 @@ export async function searchRecipesFromFatSecret(
 }
 
 export async function getFatSecretRecipeDetailsById(recipeId: string): Promise<ApiFatSecretGetRecipeResponse> {
-    const url = `/api/fatsecret/recipes/${recipeId}`;
+    const url = `${API_BASE_URL}/fatsecret/recipes/${recipeId}`;
     console.log(`RecipeApi: Fetching FatSecret recipe details for ID "${recipeId}" from ${url}`);
     try {
         const response = await fetch(url);
@@ -198,7 +201,7 @@ export async function getFatSecretRecipeDetailsById(recipeId: string): Promise<A
 }
 
 export async function getFatSecretRecipeTypes(): Promise<ApiFatSecretRecipeTypesResponse> {
-    const url = '/api/fatsecret/recipes/types';
+    const url = `${API_BASE_URL}/fatsecret/recipes/types`;
     console.log(`RecipeApi: Fetching FatSecret recipe types from ${url}`);
     try {
         const response = await fetch(url);
