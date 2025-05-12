@@ -1,5 +1,5 @@
 // server.ts
-import { Application, oakCors, loadEnv, Router as _Router } from "./deps.ts";
+import { Application, oakCors, loadEnv, Router } from "./deps.ts";
 
 // Load environment variables for the server itself (e.g., PORT)
 await loadEnv({ export: true });
@@ -10,7 +10,7 @@ import "./services/db.ts";
 // Import routers
 import authRouter from "./routes/auth.ts";
 import recipeRouter from "./routes/recipes.ts"; // <-- ADD THIS IMPORT
-import foodRouter from "./routes/food.ts"; // <-- ADD THIS IMPORT
+// import foodRouter from "./routes/food.ts"; // <-- COMMENTED OUT FOR NOW
 import workoutRouter from "./routes/workout.ts"; // <-- ADD THIS IMPORT
 
 // Initialize the app
@@ -32,29 +32,51 @@ app.use(async (ctx, next) => {
   console.log(`${ctx.request.method} ${ctx.request.url.pathname} - ${ctx.response.status} - ${ms}ms`);
 });
 
-// Use the imported authRouter
-app.use(authRouter.routes());
-app.use(authRouter.allowedMethods());
+// --- Set up API Routing --- 
 
-// Use the recipe routes <-- ADD THESE LINES
-app.use(recipeRouter.routes());
-app.use(recipeRouter.allowedMethods());
+const apiRouter = new Router({ prefix: "/api" });
 
-// Use the food routes <-- ADD THESE LINES
-app.use(foodRouter.routes());
-app.use(foodRouter.allowedMethods());
+// Mount Auth routes (assuming they are directly under /api, e.g., /api/login)
+// If authRouter already includes /api or similar, adjust accordingly.
+// For now, assuming authRouter defines routes like /login, /register
+apiRouter.use(authRouter.routes());
+apiRouter.use(authRouter.allowedMethods());
 
-// Use the workout routes <-- ADD THESE LINES
-app.use(workoutRouter.routes());
-app.use(workoutRouter.allowedMethods());
+// Mount FatSecret Recipe routes under /api/fatsecret/recipes
+apiRouter.use("/fatsecret/recipes", recipeRouter.routes(), recipeRouter.allowedMethods());
 
-// Default route
+// Mount Workout routes (assuming under /api/workouts or similar)
+// Adjust path as needed based on workoutRouter's definition
+apiRouter.use("/workouts", workoutRouter.routes(), workoutRouter.allowedMethods());
+
+// Register the main API router with the application
+app.use(apiRouter.routes());
+app.use(apiRouter.allowedMethods());
+
+// --- Remove the old direct app.use calls for routers --- 
+// app.use(authRouter.routes());         // REMOVED
+// app.use(authRouter.allowedMethods()); // REMOVED
+// app.use(recipeRouter.routes());       // REMOVED
+// app.use(recipeRouter.allowedMethods());// REMOVED
+// app.use(workoutRouter.routes());      // REMOVED
+// app.use(workoutRouter.allowedMethods()); // REMOVED
+
+// Default route (Handles requests that don't match any api routes)
 app.use((ctx) => {
-  ctx.response.body = {
-    success: true,
-    message: "Welcome to Vitality Vista API",
-    timestamp: new Date().toISOString(),
-  };
+  // Check if it looks like an API request that wasn't caught
+  if (ctx.request.url.pathname.startsWith('/api/')) {
+      ctx.response.status = 404;
+      ctx.response.body = { success: false, message: "API endpoint not found." };
+  } else {
+     // Handle non-API routes (e.g., potentially serving frontend static files later)
+     // For now, keep the welcome message or send a 404
+     ctx.response.body = {
+       success: true,
+       message: "Welcome to Vitality Vista API",
+       timestamp: new Date().toISOString(),
+     };
+     // Or ctx.response.status = 404;
+  }
 });
 
 // Start the server

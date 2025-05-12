@@ -1,391 +1,276 @@
-// frontend/src/pages/RecipesPage.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Typography, Box, Paper, Grid, Card, CardContent, CardMedia,
-  CardActions, TextField, InputAdornment, Button, Chip, FormControl,
-  InputLabel, Select, MenuItem, Dialog, DialogContent, DialogTitle,
-  DialogActions, Divider, List, ListItem, ListItemText, IconButton,
-  CircularProgress, Alert, Pagination
+  TextField, InputAdornment, Button, Chip, FormControl,
+  InputLabel, Select, MenuItem, Pagination, CircularProgress, Alert,
+  SelectChangeEvent,
+  Dialog, DialogTitle, DialogContent, DialogActions, IconButton,
+  List, ListItem, ListItemText, Divider
 } from '@mui/material';
+import { Search as SearchIcon, Close as CloseIcon } from '@mui/icons-material';
+
+// Import FatSecret types and functions
 import {
-  Search as SearchIcon, AccessTime as TimeIcon, Restaurant as MealTypeIcon,
-  Bookmark as BookmarkIcon, BookmarkBorder as BookmarkBorderIcon,
-  AutoAwesome as FeaturedIcon, ErrorOutline as ErrorIcon
-} from '@mui/icons-material';
-import { useThemeContext, themeColors } from '../context/ThemeContext.tsx';
-import { useAuth } from '../context/AuthContext.tsx';
-import {
-  getRecipeCalorieEstimate, RecipeCalorieEstimateData,
-  getRecipesByCategory, RecipeSummary,
-  searchRecipesByNameFromApi, // Expects to return array of MealDbFullMeal
-  getRecipeDetailsById,     // Expects to return single MealDbFullMeal
-  getFeaturedRecipes,       // Expects to return array of MealDbFullMeal
-  MealDbFullMeal,           // Type for full meal details from API
-  // ApiSingleRecipeResponse, // Type for getRecipeDetailsById response
+    FatSecretRecipeSummary, // Use this for the cards
+    FatSecretRecipeDetail, // Use this for the dialog
+    FatSecretServingDetail,
+    FatSecretIngredientDetail,
+    searchRecipesFromFatSecret,
+    getFatSecretRecipeDetailsById,
+    getFatSecretRecipeTypes,
+    ApiFatSecretSearchResponse, // Import response types if needed for direct handling
+    ApiFatSecretGetRecipeResponse,
+    ApiFatSecretRecipeTypesResponse
 } from '../services/recipeApi.ts';
 
-// Interface for FULL recipe details used in the Dialog
-interface FullRecipeDetails extends RecipeSummary { // Extends RecipeSummary for common base fields
-  category?: string;
-  area?: string;
-  instructions?: string[];
-  ingredients?: { name: string; measure: string }[];
-  tags?: string[];
-  youtubeUrl?: string;
-  prepTime?: number; // These might be mocked or derived if not directly from API
-  isFavorite?: boolean; // Managed locally or synced with backend
-}
+const ITEMS_PER_PAGE = 10; // Adjust as needed, max 50 per FatSecret API
+const ALL_CATEGORIES_VALUE = "ALL";
 
-const ALL_CATEGORIES_VALUE = "ALL_CATEGORIES_SEARCH_MODE";
-const FEATURED_RECIPES_MODE = "FEATURED_RECIPES_MODE"; // To represent initial featured load
-const ITEMS_PER_PAGE = 6;
+const Recipes: React.FC = () => {
+  // Search and Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [selectedRecipeType, setSelectedRecipeType] = useState<string>(ALL_CATEGORIES_VALUE);
+  const [availableRecipeTypes, setAvailableRecipeTypes] = useState<string[]>([ALL_CATEGORIES_VALUE]);
 
-const RecipesPage: React.FC = () => {
-  const [searchQueryInput, setSearchQueryInput] = useState(''); // Text in the search bar
-  const [submittedSearchQuery, setSubmittedSearchQuery] = useState(''); // Query used for API global search
-  const [currentCategoryOrMode, setCurrentCategoryOrMode] = useState<string>(FEATURED_RECIPES_MODE);
-
-  const [masterRecipesList, setMasterRecipesList] = useState<RecipeSummary[]>([]); // Full list for current view
-  const [paginatedRecipes, setPaginatedRecipes] = useState<RecipeSummary[]>([]); // Items for current page
-  const [isLoadingList, setIsLoadingList] = useState<boolean>(true);
+  // Recipe List State
+  const [recipes, setRecipes] = useState<FatSecretRecipeSummary[]>([]);
+  const [isLoadingList, setIsLoadingList] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
 
-  const [currentPage, setCurrentPage] = useState(1);
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1); // FatSecret uses 0-based index, adjust in API call
+  const [totalResults, setTotalResults] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
-  // Dialog States
+  // Dialog State
   const [openRecipeDialog, setOpenRecipeDialog] = useState(false);
-  const [clickedRecipeSummaryForDialog, setClickedRecipeSummaryForDialog] = useState<RecipeSummary | null>(null);
-  const [selectedRecipeDetails, setSelectedRecipeDetails] = useState<FullRecipeDetails | null>(null);
-  const [isLoadingDetails, setIsLoadingDetails] = useState<boolean>(false);
+  const [selectedRecipeIdForDialog, setSelectedRecipeIdForDialog] = useState<string | null>(null);
+  const [selectedRecipeDetails, setSelectedRecipeDetails] = useState<FatSecretRecipeDetail | null>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
 
-  // Calorie Estimation States
-  const [calorieEstimateData, setCalorieEstimateData] = useState<RecipeCalorieEstimateData | null>(null);
-  const [isEstimateLoading, setIsEstimateLoading] = useState<boolean>(false);
-  const [estimateApiError, setEstimateApiError] = useState<string | null>(null);
-
-  const { setCurrentThemeColor } = useThemeContext();
-  const { token, isAuthenticated } = useAuth();
-
+  // Debounce search input
   useEffect(() => {
-    setCurrentThemeColor(themeColors.tigersEye);
-  }, [setCurrentThemeColor]);
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
 
-  // --- Data Adapters ---
-  const adaptMealDbFullToRecipeSummary = (meal: MealDbFullMeal): RecipeSummary => ({
-    idMeal: meal.idMeal,
-    strMeal: meal.strMeal,
-    strMealThumb: meal.strMealThumb || '/api/placeholder/600/400', // Fallback image
-  });
-
-  const adaptMealDbFullToFullRecipeDetails = (meal: MealDbFullMeal): FullRecipeDetails => {
-    const ingredientsList: { name: string; measure: string }[] = [];
-    for (let i = 1; i <= 20; i++) {
-      const ingredient = meal[`strIngredient${i}` as keyof MealDbFullMeal] as string | null;
-      const measure = meal[`strMeasure${i}` as keyof MealDbFullMeal] as string | null;
-      if (ingredient && ingredient.trim() !== "") {
-        ingredientsList.push({ name: ingredient.trim(), measure: (measure || "").trim() });
-      } else { break; }
-    }
-    return {
-      idMeal: meal.idMeal, strMeal: meal.strMeal, strMealThumb: meal.strMealThumb || '/api/placeholder/600/400',
-      category: meal.strCategory || undefined, area: meal.strArea || undefined,
-      instructions: meal.strInstructions?.split(/\r?\n/).filter((line: string) => line.trim() !== "") || [],
-      ingredients: ingredientsList, tags: meal.strTags?.split(',').map((t: string) => t.trim()) || [],
-      youtubeUrl: meal.strYoutube || undefined, prepTime: 30, // Example placeholder
-      isFavorite: false, // Default
+    return () => {
+      clearTimeout(handler);
     };
-  };
+  }, [searchQuery]);
 
-  // --- Data Fetching Logic for the Main List ---
-  const loadRecipes = useCallback(async () => {
+  // Fetch available recipe types on mount
+  useEffect(() => {
+    const fetchTypes = async () => {
+      const response = await getFatSecretRecipeTypes();
+      if (response.success && response.data?.recipe_types?.recipe_type) {
+        setAvailableRecipeTypes([ALL_CATEGORIES_VALUE, ...response.data.recipe_types.recipe_type]);
+      } else {
+        console.error("Failed to fetch recipe types:", response.message);
+        // Keep default [ALL_CATEGORIES_VALUE]
+      }
+    };
+    fetchTypes();
+  }, []);
+
+  // Fetch recipes when search, filter, or page changes
+  const fetchRecipes = useCallback(async () => {
     setIsLoadingList(true);
     setListError(null);
-    setMasterRecipesList([]);
-    setCurrentPage(1);
+    setRecipes([]); // Clear previous results
+
+    const params = {
+        search_expression: debouncedSearchQuery || undefined,
+        recipe_types: selectedRecipeType === ALL_CATEGORIES_VALUE ? undefined : selectedRecipeType,
+        page_number: currentPage - 1, // API is 0-based
+        max_results: ITEMS_PER_PAGE,
+    };
 
     try {
-      let apiResponse;
-      let newMasterList: RecipeSummary[] = [];
-
-      if (currentCategoryOrMode === FEATURED_RECIPES_MODE) {
-        console.log("RecipesPage: Fetching featured recipes");
-        apiResponse = await getFeaturedRecipes(); // Expects { success, data: MealDbFullMeal[] }
-        if (apiResponse.success && apiResponse.data && Array.isArray(apiResponse.data)) {
-          newMasterList = apiResponse.data.map(adaptMealDbFullToRecipeSummary);
-        } else if (apiResponse.success && !apiResponse.data) {
-          console.log("RecipesPage: Featured recipes returned no data.");
-          // newMasterList remains empty
+        const response = await searchRecipesFromFatSecret(params);
+        if (response.success && response.data) {
+            setRecipes(response.data.recipe || []);
+            const total = parseInt(response.data.total_results || '0', 10);
+            setTotalResults(total);
+            setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
+            if (total === 0) {
+              setListError('No recipes found matching your criteria.');
+            }
         } else {
-          setListError(apiResponse.message || "Failed to load featured recipes.");
+            setListError(response.message || "Failed to fetch recipes.");
+            setTotalResults(0);
+            setTotalPages(0);
         }
-      } else if (currentCategoryOrMode === ALL_CATEGORIES_VALUE && submittedSearchQuery.trim() !== "") {
-        console.log(`RecipesPage: Global search for: "${submittedSearchQuery}"`);
-        apiResponse = await searchRecipesByNameFromApi(submittedSearchQuery); // Expects { success, data: MealDbFullMeal[] }
-        if (apiResponse.success && apiResponse.data && Array.isArray(apiResponse.data)) {
-          newMasterList = apiResponse.data.map(adaptMealDbFullToRecipeSummary);
-        } else if (apiResponse.success && !apiResponse.data) {
-          console.log(`RecipesPage: Search for "${submittedSearchQuery}" returned no data.`);
-          // newMasterList remains empty
-        } else {
-          setListError(apiResponse.message || `No results found for "${submittedSearchQuery}".`);
-        }
-      } else if (currentCategoryOrMode !== ALL_CATEGORIES_VALUE && currentCategoryOrMode !== FEATURED_RECIPES_MODE) { // Specific category
-        console.log(`RecipesPage: Fetching recipes for category: ${currentCategoryOrMode}`);
-        apiResponse = await getRecipesByCategory(currentCategoryOrMode); // Expects { success, data: RecipeSummary[] }
-        if (apiResponse.success && apiResponse.data && Array.isArray(apiResponse.data)) {
-          newMasterList = apiResponse.data;
-        } else if (apiResponse.success && !apiResponse.data) {
-          console.log(`RecipesPage: Category "${currentCategoryOrMode}" returned no data.`);
-          // newMasterList remains empty
-        } else {
-          setListError(apiResponse.message || "Failed to load recipes for this category.");
-        }
-      } else {
-        console.log("RecipesPage: No active search or category. Clearing list or show prompt.");
-        newMasterList = []; // Clear list or show specific prompt message
-      }
-      setMasterRecipesList(newMasterList);
-    } catch (err) {
-      console.error("RecipesPage: Error in loadRecipes:", err);
-      setListError(err instanceof Error ? err.message : "An unexpected error occurred.");
-      setMasterRecipesList([]);
+    } catch (error) {
+        console.error("Error fetching recipes:", error);
+        setListError(error instanceof Error ? error.message : "An unexpected error occurred.");
+        setTotalResults(0);
+        setTotalPages(0);
     } finally {
-      setIsLoadingList(false);
+        setIsLoadingList(false);
     }
-  }, [currentCategoryOrMode, submittedSearchQuery]);
+  }, [debouncedSearchQuery, selectedRecipeType, currentPage]);
 
-  // This useEffect triggers the main recipe list fetch
   useEffect(() => {
-    loadRecipes(); // This is correctly calling the loadRecipes function defined above
-  }, [loadRecipes]);
+    fetchRecipes();
+  }, [fetchRecipes]);
 
-  // --- Client-side Filtering and Pagination Logic ---
+  // Fetch full recipe details when dialog opens
   useEffect(() => {
-    let listToPaginate = masterRecipesList;
-    // If a specific category is selected AND there's a search query input, filter client-side
-    if (currentCategoryOrMode !== ALL_CATEGORIES_VALUE &&
-        currentCategoryOrMode !== FEATURED_RECIPES_MODE &&
-        searchQueryInput.trim() !== "") {
-      listToPaginate = masterRecipesList.filter(recipe =>
-        recipe.strMeal.toLowerCase().includes(searchQueryInput.toLowerCase())
-      );
+    if (selectedRecipeIdForDialog && openRecipeDialog) {
+      const fetchDetails = async () => {
+        setIsLoadingDetails(true);
+        setDetailsError(null);
+        setSelectedRecipeDetails(null); // Clear previous details
+        try {
+          const response = await getFatSecretRecipeDetailsById(selectedRecipeIdForDialog);
+          if (response.success && response.data?.recipe) {
+            setSelectedRecipeDetails(response.data.recipe);
+          } else {
+            setDetailsError(response.message || "Failed to load recipe details.");
+          }
+        } catch (error) {
+          console.error("Error fetching recipe details:", error);
+          setDetailsError(error instanceof Error ? error.message : "An unexpected error occurred.");
+        } finally {
+          setIsLoadingDetails(false);
+        }
+      };
+      fetchDetails();
     }
+  }, [selectedRecipeIdForDialog, openRecipeDialog]);
 
-    setTotalPages(Math.ceil(listToPaginate.length / ITEMS_PER_PAGE));
-    const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
-    const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-    setPaginatedRecipes(listToPaginate.slice(indexOfFirstItem, indexOfLastItem));
+  // Handlers
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+    setCurrentPage(1); // Reset page on new search query
+  };
 
-  }, [masterRecipesList, currentPage, searchQueryInput, currentCategoryOrMode]);
+  const handleCategoryChange = (event: SelectChangeEvent<string>) => {
+    setSelectedRecipeType(event.target.value as string);
+    setCurrentPage(1); // Reset page on category change
+  };
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
   };
 
-
-  // --- Dialog and Calorie Estimation ---
-  const fetchFullRecipeDetailsForDialog = useCallback(async (recipeId: string) => {
-    if (!recipeId) return;
-    setIsLoadingDetails(true);
-    setDetailsError(null);
-    setSelectedRecipeDetails(null);
-    try {
-      const response = await getRecipeDetailsById(recipeId);
-      if (response.success && response.data) {
-        setSelectedRecipeDetails(adaptMealDbFullToFullRecipeDetails(response.data));
-      } else {
-        setDetailsError(response.message || "Full recipe details not found.");
-      }
-    } catch (err) {
-      console.error("RecipesPage: Error fetching full recipe details for dialog:", err);
-      setDetailsError(err instanceof Error ? err.message : "Failed to load recipe details.");
-    } finally {
-      setIsLoadingDetails(false);
-    }
-  }, []);
-
-  useEffect(() => { // For Calorie Estimation
-    if (openRecipeDialog && selectedRecipeDetails && selectedRecipeDetails.idMeal && isAuthenticated && token) {
-      console.log(`RecipesPage: Fetching calorie estimate for recipe ID: ${selectedRecipeDetails.idMeal}`);
-      setIsEstimateLoading(true);
-      setEstimateApiError(null);
-      setCalorieEstimateData(null);
-      getRecipeCalorieEstimate(selectedRecipeDetails.idMeal, token)
-        .then(response => { /* ... set calorie data or error ... */
-            if (response.success && response.data) { setCalorieEstimateData(response.data); }
-            else { setEstimateApiError(response.message || "Failed to fetch calorie estimate."); }
-        })
-        .catch(err => { setEstimateApiError(err.message || "Error fetching calorie estimate."); })
-        .finally(() => setIsEstimateLoading(false));
-    }
-  }, [openRecipeDialog, selectedRecipeDetails, isAuthenticated, token]);
-
-  const handleOpenRecipe = (recipeSummary: RecipeSummary) => {
-    setClickedRecipeSummaryForDialog(recipeSummary); // Keep this to show basic info while full loads
-    setSelectedRecipeDetails(null);
-    setCalorieEstimateData(null);
-    setIsEstimateLoading(false);
-    setEstimateApiError(null);
-    setDetailsError(null); // Clear previous details error
+  const handleOpenRecipe = (recipeId: string) => {
+    setSelectedRecipeIdForDialog(recipeId);
     setOpenRecipeDialog(true);
-    fetchFullRecipeDetailsForDialog(recipeSummary.idMeal);
   };
 
   const handleCloseRecipe = () => {
     setOpenRecipeDialog(false);
-    setClickedRecipeSummaryForDialog(null);
-    setSelectedRecipeDetails(null);
-    setCalorieEstimateData(null);
+    setSelectedRecipeIdForDialog(null);
+    setSelectedRecipeDetails(null); // Clear details on close
+    setDetailsError(null);
   };
 
-  const toggleFavorite = (id: string) => { /* ... placeholder ... */ console.log(`Toggle fav: ${id}`); };
-
-  const handleSearchSubmit = (event?: React.FormEvent) => {
-    if (event) event.preventDefault();
-    setCurrentCategoryOrMode(ALL_CATEGORIES_VALUE); // Switch to global search mode
-    setSubmittedSearchQuery(searchQueryInput);     // Set the query that triggers API call
-    setCurrentPage(1); // Reset to first page for new search
-  };
-
-  const handleCategoryChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    const newCategory = event.target.value as string;
-    setCurrentCategoryOrMode(newCategory);
-    setSearchQueryInput('');       // Clear visual search input text
-    setSubmittedSearchQuery(''); // Clear submitted search query
-    setCurrentPage(1);
-  };
-
-  // Determine current title based on mode
-  let pageTitle = "Featured Recipes";
-  if (currentCategoryOrMode === ALL_CATEGORIES_VALUE && submittedSearchQuery) {
-    pageTitle = `Search Results for "${submittedSearchQuery}"`;
-  } else if (currentCategoryOrMode === ALL_CATEGORIES_VALUE && !submittedSearchQuery) {
-    pageTitle = "Search All Recipes";
-  } else if (currentCategoryOrMode !== FEATURED_RECIPES_MODE) {
-    pageTitle = `Recipes from "${currentCategoryOrMode}"`;
+  // Helper to get primary recipe type for chip display
+  const getPrimaryRecipeType = (recipe: FatSecretRecipeSummary): string => {
+      return recipe.recipe_types?.recipe_type?.[0] || 'Unknown';
   }
 
   return (
-    <Box sx={{ padding: 3, backgroundColor: '#fff8f0', minHeight: '100vh' }}>
-      <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}>
-        {pageTitle}
-      </Typography>
-      <Typography variant="subtitle1" sx={{ mb: 4, color: '#606c38ff' }}>
-        Discover delicious and nutritious recipes.
+    <Box sx={{ padding: 3, backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
+      <Typography variant="h4" gutterBottom sx={{ color: '#333' }}>
+        Discover Recipes (FatSecret)
       </Typography>
 
-      {/* Search and Filters Paper */}
-      <Paper elevation={1} sx={{ p: 2, mb: 3, bgcolor: '#fefae0ff', borderLeft: '4px solid #bc6c25ff' }}>
+      <Paper elevation={2} sx={{ p: 2, mb: 3, backgroundColor: '#fff' }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={8}>
-            <form onSubmit={handleSearchSubmit}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder={currentCategoryOrMode === ALL_CATEGORIES_VALUE || currentCategoryOrMode === FEATURED_RECIPES_MODE ? "Search all recipes by name..." : `Filter within "${currentCategoryOrMode}"...`}
-                value={searchQueryInput}
-                onChange={(e) => setSearchQueryInput(e.target.value)}
-                InputProps={{
-                  startAdornment: (<InputAdornment position="start"><SearchIcon sx={{ color: '#606c38ff' }} /></InputAdornment>),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton type="submit" edge="end" aria-label="Search recipes">
-                        <SearchIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  )
-                }}
-              />
-            </form>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Search recipes by name..."
+              value={searchQuery} // Controlled by instant input
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (<InputAdornment position="start"><SearchIcon /></InputAdornment>),
+              }}
+            />
           </Grid>
           <Grid item xs={12} md={4}>
             <FormControl fullWidth variant="outlined">
-              <InputLabel sx={{ color: '#606c38ff' }}>View</InputLabel>
-              <Select
-                value={currentCategoryOrMode}
+              <InputLabel>Recipe Type</InputLabel>
+              <Select<string>
+                value={selectedRecipeType}
                 onChange={handleCategoryChange}
-                label="View"
+                label="Recipe Type"
               >
-                <MenuItem value={FEATURED_RECIPES_MODE}><FeaturedIcon sx={{mr:1, fontSize:'1.2rem'}} />Featured Recipes</MenuItem>
-                <MenuItem value={ALL_CATEGORIES_VALUE}>All (Global Search)</MenuItem>
-                <MenuItem value="Seafood">Seafood</MenuItem>
-                <MenuItem value="Dessert">Dessert</MenuItem>
-                <MenuItem value="Chicken">Chicken</MenuItem>
-                <MenuItem value="Beef">Beef</MenuItem>
-                <MenuItem value="Vegetarian">Vegetarian</MenuItem>
-                <MenuItem value="Pasta">Pasta</MenuItem>
-                <MenuItem value="Starter">Starter</MenuItem>
-                <MenuItem value="Breakfast">Breakfast</MenuItem>
-                {/* TODO: Populate more categories dynamically */}
+                {availableRecipeTypes.map(type => (
+                  <MenuItem key={type} value={type}>
+                    {type === ALL_CATEGORIES_VALUE ? 'All Types' : type}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* Loading/Error/Empty State for Recipe List */}
       {isLoadingList && (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 5 }}>
           <CircularProgress /> <Typography sx={{ ml: 2 }}>Loading recipes...</Typography>
         </Box>
       )}
       {!isLoadingList && listError && (
-        <Alert severity="error" sx={{ my: 2 }}>{listError}</Alert>
+        <Alert severity="warning" sx={{ my: 2 }}>{listError}</Alert>
       )}
-      {!isLoadingList && !listError && paginatedRecipes.length === 0 && (
-         <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#fefae0ff', border: '1px dashed #bc6c25ff' }}>
-          <Typography variant="h6" sx={{ color: '#283618ff' }}>No recipes found.</Typography>
-          <Typography sx={{ color: '#606c38ff' }}>
-            {currentCategoryOrMode === ALL_CATEGORIES_VALUE && !submittedSearchQuery
-              ? "Enter a search term above to find recipes globally."
-              : currentCategoryOrMode === FEATURED_RECIPES_MODE ? "No featured recipes available at the moment. Try selecting a category or searching."
-              : "Try a different search term or category."}
-          </Typography>
+      {!isLoadingList && !listError && recipes.length === 0 && (
+         <Paper sx={{ p: 3, textAlign: 'center', backgroundColor: '#fff' }}>
+          <Typography variant="h6">Ready to search.</Typography>
+          <Typography>Enter a search term or select a type.</Typography>
         </Paper>
       )}
 
-      {/* Recipe Cards Grid - maps over paginatedRecipes */}
-      {!isLoadingList && !listError && paginatedRecipes.length > 0 && (
+      {!isLoadingList && !listError && recipes.length > 0 && (
         <>
-          <Typography variant="h6" gutterBottom sx={{ color: '#283618ff', mt: 2 }}>
-            Showing {paginatedRecipes.length} of {masterRecipesList.length} recipes
-            {currentCategoryOrMode === ALL_CATEGORIES_VALUE && submittedSearchQuery ? ` for "${submittedSearchQuery}"`
-            : (currentCategoryOrMode !== FEATURED_RECIPES_MODE && currentCategoryOrMode !== ALL_CATEGORIES_VALUE) ? ` in "${currentCategoryOrMode}"`
-            : ''}
-             {totalPages > 1 ? ` (Page ${currentPage} of ${totalPages})` : ''}
-          </Typography>
+         <Typography variant="body2" sx={{ mb: 2 }}>
+           Showing {recipes.length} of {totalResults} results {totalPages > 1 ? ` (Page ${currentPage} of ${totalPages})` : ''}
+         </Typography>
           <Grid container spacing={3}>
-            {paginatedRecipes.map((recipeSummary) => (
-              <Grid item xs={12} sm={6} md={4} key={recipeSummary.idMeal}>
-                <Card sx={{ transition: 'transform 0.3s ease', '&:hover': { transform: 'translateY(-5px)', boxShadow: 3 }, borderTop: '4px solid #bc6c25ff', display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {recipes.map((recipe) => (
+              <Grid item xs={12} sm={6} md={4} key={recipe.recipe_id}>
+                <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.03)'} }}>
                   <CardMedia
                     component="img"
-                    height="180"
-                    image={recipeSummary.strMealThumb}
-                    alt={recipeSummary.strMeal}
+                    height="200"
+                    // Use recipe_image, provide fallback
+                    image={recipe.recipe_image || 'https://via.placeholder.com/300x200.png?text=No+Image'}
+                    alt={recipe.recipe_name}
                   />
                   <CardContent sx={{ flexGrow: 1 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', minHeight: {xs: 50, sm: 70} }}>
-                      <Typography variant="h6" component="div" gutterBottom sx={{ color: '#283618ff', fontSize: '1.1rem' }}>
-                        {recipeSummary.strMeal}
-                      </Typography>
-                      <IconButton onClick={() => console.log('Favorite for', recipeSummary.idMeal)} size="small">
-                        <BookmarkBorderIcon sx={{ color: '#dda15eff' }} />
-                      </IconButton>
-                    </Box>
+                    <Typography gutterBottom variant="h6" component="div">
+                      {recipe.recipe_name}
+                    </Typography>
+                    {/* Display primary recipe type */}
+                    <Chip label={getPrimaryRecipeType(recipe)} size="small" sx={{ mb: 1 }} />
+                    <Typography variant="body2" color="text.secondary">
+                      {/* Access calories from recipe_nutrition */} 
+                      Calories: {recipe.recipe_nutrition?.calories || 'N/A'}
+                    </Typography>
+                    {/* Use recipe_description */} 
+                    {recipe.recipe_description && (
+                       <Typography variant="body2" color="text.secondary" sx={{mt: 1, maxHeight: 60, overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                         {recipe.recipe_description}
+                       </Typography>
+                    )}
                   </CardContent>
-                  <CardActions sx={{ mt: 'auto' }}>
-                    <Button size="small" variant="contained" onClick={() => handleOpenRecipe(recipeSummary)} fullWidth sx={{ bgcolor: '#bc6c25ff', '&:hover': { bgcolor: '#a55b20' } }}>
-                      View Recipe
-                    </Button>
-                  </CardActions>
+                  <Box sx={{ p: 2, pt: 0 }}>
+                     {/* Pass recipe_id to handler */}
+                     <Button size="small" variant="contained" fullWidth onClick={() => handleOpenRecipe(recipe.recipe_id)}>
+                       View Recipe
+                     </Button>
+                   </Box>
                 </Card>
               </Grid>
             ))}
           </Grid>
-          {/* Pagination Controls */}
           {totalPages > 1 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2 }}>
               <Pagination
@@ -402,97 +287,117 @@ const RecipesPage: React.FC = () => {
       )}
 
       {/* --- Recipe Detail Dialog --- */}
-      <Dialog open={openRecipeDialog} onClose={handleCloseRecipe} maxWidth="md" fullWidth PaperProps={{ sx: { bgcolor: '#fff8f0' } }}>
-         {(isLoadingDetails || (openRecipeDialog && !selectedRecipeDetails && !detailsError)) && (
-          <DialogContent sx={{ p: 3, textAlign: 'center', minHeight: 300, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <CircularProgress /> <Typography sx={{ mt: 2 }}>Loading recipe details...</Typography>
-          </DialogContent>
+      <Dialog open={openRecipeDialog} onClose={handleCloseRecipe} maxWidth="md" fullWidth scroll="paper">
+        {isLoadingDetails && (
+             <DialogContent sx={{ p: 3, textAlign: 'center', minHeight: 300, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                 <CircularProgress /> <Typography sx={{ mt: 2 }}>Loading details...</Typography>
+             </DialogContent>
         )}
-        {detailsError && !isLoadingDetails && (
-          <DialogContent sx={{ p: 3 }}>
-            <Alert severity="error">Error loading recipe details: {detailsError}</Alert>
-            <DialogActions><Button onClick={handleCloseRecipe}>Close</Button></DialogActions>
-          </DialogContent>
+        {!isLoadingDetails && detailsError && (
+            <DialogContent sx={{ p: 3 }}>
+                 <Alert severity="error">{detailsError}</Alert>
+                 <DialogActions><Button onClick={handleCloseRecipe}>Close</Button></DialogActions>
+            </DialogContent>
         )}
         {!isLoadingDetails && !detailsError && selectedRecipeDetails && (
           <>
-            <DialogTitle sx={{ color: '#283618ff', borderBottom: '1px solid #dda15eff' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                {selectedRecipeDetails.strMeal}
-                <IconButton onClick={() => toggleFavorite(selectedRecipeDetails.idMeal)} sx={{ color: selectedRecipeDetails.isFavorite ? '#bc6c25ff' : '#dda15eff' }}>
-                  {selectedRecipeDetails.isFavorite ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-                </IconButton>
-              </Box>
+            <DialogTitle sx={{ m: 0, p: 2, borderBottom: '1px solid #eee' }}>
+              {selectedRecipeDetails.recipe_name}
+              <IconButton
+                aria-label="close"
+                onClick={handleCloseRecipe}
+                sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
+              >
+                <CloseIcon />
+              </IconButton>
             </DialogTitle>
-            <DialogContent dividers sx={{ borderColor: '#dda15eff' }}>
-              <Grid container spacing={2}>
+            <DialogContent dividers={true}>
+              <Grid container spacing={3}> {/* Increased spacing */}
                 <Grid item xs={12} md={5}>
-                  <CardMedia component="img" image={selectedRecipeDetails.strMealThumb} alt={selectedRecipeDetails.strMeal} sx={{ borderRadius: 1, mb: 2, maxHeight: 300, objectFit: 'cover' }}/>
-                  {selectedRecipeDetails.prepTime && <Paper sx={{ p: 1, textAlign: 'center', bgcolor: '#fefae0ff', mb: 1 }}><TimeIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} /> Prep: {selectedRecipeDetails.prepTime} min</Paper>}
-                  {selectedRecipeDetails.category && <Paper sx={{ p: 1, textAlign: 'center', bgcolor: '#fefae0ff', mb: 1 }}><MealTypeIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} /> Category: {selectedRecipeDetails.category}</Paper>}
-                  <Paper sx={{ p: 1, textAlign: 'center', bgcolor: '#fefae0ff', mb: 2 }}>
-                    <Typography variant="body2" color="#606c38ff">Est. Calories</Typography>
-                    {isEstimateLoading && <CircularProgress size={20} sx={{ mt: 0.5 }} />}
-                    {estimateApiError && !isEstimateLoading && <Typography color="error" variant="caption" sx={{ mt: 0.5, display: 'block' }}>{estimateApiError}</Typography>}
-                    {calorieEstimateData && !isEstimateLoading && !estimateApiError && ( <Typography variant="h6" sx={{ color: '#bc6c25ff', mt: 0.5 }}>{calorieEstimateData.estimatedTotalCalories} kcal</Typography> )}
-                    {!isAuthenticated && !isEstimateLoading && !estimateApiError && ( <Typography variant="caption" color="textSecondary" sx={{mt: 0.5, display: 'block'}}>Login to view.</Typography> )}
-                    {calorieEstimateData && !isEstimateLoading && !estimateApiError && ( <Typography variant="caption" color="textSecondary" sx={{mt: 0.5, display: 'block'}}>(Automated estimate)</Typography> )}
-                  </Paper>
-                  {selectedRecipeDetails.tags && selectedRecipeDetails.tags.length > 0 && (
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="subtitle1" gutterBottom sx={{ color: '#283618ff', fontWeight:'bold' }}>Tags</Typography>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selectedRecipeDetails.tags.map((tag) => ( <Chip key={tag} label={tag} size="small" sx={{ textTransform: 'capitalize', bgcolor: '#fefae0ff', color: '#606c38ff' }}/> ))}
-                      </Box>
-                    </Box>
+                  <CardMedia
+                    component="img"
+                    // Use first image from recipe_images array if available, then fallback to recipe_image from summary (if we had it), or placeholder
+                    image={selectedRecipeDetails.recipe_images?.recipe_image?.[0] || 'https://via.placeholder.com/300x200.png?text=No+Image'}
+                    alt={selectedRecipeDetails.recipe_name}
+                    sx={{ borderRadius: 1, mb: 2, maxHeight: 350, objectFit: 'cover' }}
+                  />
+                  {/* Display Types & Categories if they exist */}
+                  {selectedRecipeDetails.recipe_types?.recipe_type && (
+                     <Box mb={1}><Typography variant="subtitle2">Types:</Typography>
+                       {selectedRecipeDetails.recipe_types.recipe_type.map(type => <Chip key={type} label={type} size="small" sx={{ mr: 0.5, mb: 0.5}} />)}
+                     </Box>
                   )}
+                   {selectedRecipeDetails.recipe_categories?.recipe_category && (
+                     <Box mb={1}><Typography variant="subtitle2">Categories:</Typography>
+                       {selectedRecipeDetails.recipe_categories.recipe_category.map(cat => <Chip key={cat.recipe_category_name} label={cat.recipe_category_name} size="small" sx={{ mr: 0.5, mb: 0.5}} />)}
+                     </Box>
+                  )}
+                  {/* Display Time & Rating */} 
+                  {selectedRecipeDetails.preparation_time_min && <Typography variant="body2" sx={{mb: 0.5}}>Prep Time: {selectedRecipeDetails.preparation_time_min} min</Typography>}
+                  {selectedRecipeDetails.cooking_time_min && <Typography variant="body2" sx={{mb: 0.5}}>Cook Time: {selectedRecipeDetails.cooking_time_min} min</Typography>}
+                  {selectedRecipeDetails.number_of_servings && <Typography variant="body2" sx={{mb: 0.5}}>Servings: {selectedRecipeDetails.number_of_servings}</Typography>}
+                  {selectedRecipeDetails.rating && <Typography variant="body2" sx={{mb: 1}}>Rating: {selectedRecipeDetails.rating}/5</Typography>}
+
+                  {/* Display Nutrition from serving_sizes.serving */} 
+                  {selectedRecipeDetails.serving_sizes?.serving && (
+                    <Paper variant="outlined" sx={{p: 1.5, mb: 2}}>
+                        <Typography variant="subtitle1" gutterBottom>Nutrition (per {selectedRecipeDetails.serving_sizes.serving.serving_size || 'serving'})</Typography>
+                        <Typography variant="body2">Calories: <strong>{selectedRecipeDetails.serving_sizes.serving.calories}</strong> kcal</Typography>
+                        <Typography variant="body2">Carbs: {selectedRecipeDetails.serving_sizes.serving.carbohydrate}g</Typography>
+                        <Typography variant="body2">Protein: {selectedRecipeDetails.serving_sizes.serving.protein}g</Typography>
+                        <Typography variant="body2">Fat: {selectedRecipeDetails.serving_sizes.serving.fat}g</Typography>
+                        {/* Add other optional nutrients here */}
+                        {selectedRecipeDetails.serving_sizes.serving.fiber && <Typography variant="caption" display="block">Fiber: {selectedRecipeDetails.serving_sizes.serving.fiber}g</Typography>}
+                        {selectedRecipeDetails.serving_sizes.serving.sugar && <Typography variant="caption" display="block">Sugar: {selectedRecipeDetails.serving_sizes.serving.sugar}g</Typography>}
+                        {selectedRecipeDetails.serving_sizes.serving.sodium && <Typography variant="caption" display="block">Sodium: {selectedRecipeDetails.serving_sizes.serving.sodium}mg</Typography>}
+                    </Paper>
+                  )}
+                  {selectedRecipeDetails.recipe_description && (
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                       {selectedRecipeDetails.recipe_description}
+                    </Typography>
+                   )}
                 </Grid>
                 <Grid item xs={12} md={7}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ color: '#283618ff', fontWeight:'bold' }}>Ingredients</Typography>
-                  <List dense sx={{ maxHeight: 200, overflow: 'auto', mb:2, border: '1px solid #dda15eff', borderRadius: 1, bgcolor: '#fffefa', p:0 }}>
-                    {calorieEstimateData?.ingredients && calorieEstimateData.ingredients.length > 0
-                      ? calorieEstimateData.ingredients.map((ing, index) => (
-                          <ListItem key={`${ing.ingredient}-${index}`} dense divider={index < calorieEstimateData.ingredients.length -1} sx={{ borderColor: '#fefae0ff', py: 0.25 }}>
-                            <ListItemText 
-                              primary={`${ing.measure} ${ing.ingredient}`}
-                              secondary={`(${ing.status})${ing.calculatedCalories ? ` ~${ing.calculatedCalories.toFixed(0)} kcal.` : '.'}${ing.parsedMeasureInfo?.parseNotes && ing.parsedMeasureInfo.parseNotes.length > 0 ? ` Notes: ${ing.parsedMeasureInfo.parseNotes.join(' ')}` : ''}${ing.error ? ` Error: ${ing.error}`: ''}`}
-                              primaryTypographyProps={{ variant: 'body2', color: '#283618ff' }}
-                              secondaryTypographyProps={{ variant: 'caption', style: { whiteSpace: 'pre-wrap', wordBreak: 'break-word' } }}/>
-                          </ListItem>
-                        ))
-                      : selectedRecipeDetails.ingredients?.map((ingredient, index) => (
-                          <ListItem key={index} dense divider={index < selectedRecipeDetails.ingredients.length - 1} sx={{ borderColor: '#fefae0ff', py: 0.25 }}>
-                            <ListItemText primary={`${ingredient.measure} ${ingredient.name}`} sx={{ color: '#283618ff' }} primaryTypographyProps={{ variant: 'body2' }}/>
-                          </ListItem>
-                        ))
-                    }
-                  </List>
-                  <Typography variant="subtitle1" gutterBottom sx={{ color: '#283618ff', fontWeight:'bold', mt:1 }}>Instructions</Typography>
-                  <List dense sx={{ maxHeight: 300, overflow: 'auto', border: '1px solid #dda15eff', borderRadius: 1, bgcolor: '#fffefa', p:0 }}>
-                    {selectedRecipeDetails.instructions?.map((instruction, index) => (
-                      <ListItem key={index} dense divider={index < selectedRecipeDetails.instructions.length - 1} sx={{ borderColor: '#fefae0ff', py: 0.25, alignItems: 'flex-start' }}>
-                        <ListItemText primary={`${index + 1}. ${instruction}`} sx={{ color: '#283618ff' }} primaryTypographyProps={{ variant: 'body2' }} />
-                      </ListItem>
-                    ))}
-                  </List>
+                    {/* Display Ingredients from ingredients.ingredient */}
+                    {selectedRecipeDetails.ingredients?.ingredient && selectedRecipeDetails.ingredients.ingredient.length > 0 && (
+                      <Box mb={3}>
+                        <Typography variant="h6" gutterBottom>Ingredients</Typography>
+                        <List dense disablePadding>
+                          {selectedRecipeDetails.ingredients.ingredient.map((ing, index) => (
+                            <ListItem key={ing.food_id + index} disableGutters divider={index < selectedRecipeDetails.ingredients.ingredient.length -1}>
+                              <ListItemText primary={ing.ingredient_description} secondary={`(${ing.food_name})`} />
+                            </ListItem>
+                          ))}
+                        </List>
+                      </Box>
+                    )}
+                    {/* Display Directions from directions.direction */} 
+                    {selectedRecipeDetails.directions?.direction && selectedRecipeDetails.directions.direction.length > 0 && (
+                      <Box>
+                         <Typography variant="h6" gutterBottom>Instructions</Typography>
+                         <List dense disablePadding>
+                           {selectedRecipeDetails.directions.direction.map((step, index) => (
+                             <ListItem key={step.direction_number} disableGutters divider={index < selectedRecipeDetails.directions.direction.length - 1} sx={{alignItems: 'flex-start'}}>
+                               <ListItemText primary={`${step.direction_number}. ${step.direction_description}`} />
+                             </ListItem>
+                           ))}
+                         </List>
+                      </Box>
+                    )}
                 </Grid>
               </Grid>
             </DialogContent>
-            <DialogActions sx={{ borderTop: '1px solid #dda15eff', px:3, py:2 }}>
-              <Button onClick={handleCloseRecipe} sx={{ color: '#606c38ff' }}>Close</Button>
-              <Button variant="contained" sx={{ bgcolor: '#bc6c25ff', '&:hover': { bgcolor: '#a55b20' } }}>Add to Meal Plan</Button>
+            <DialogActions sx={{ borderTop: '1px solid #eee', p: '8px 16px' }}>
+              <Button onClick={handleCloseRecipe}>Close</Button>
+              <Button variant="contained">Add to Meal Plan</Button>
             </DialogActions>
           </>
         )}
       </Dialog>
 
-      <Box sx={{ mt: 4, textAlign: 'center' }}>
-        <Typography variant="body2" sx={{ color: '#606c38ff' }}>
-          Recipes powered by TheMealDB.
-        </Typography>
-      </Box>
     </Box>
   );
 };
 
-export default RecipesPage;
+export default Recipes;
