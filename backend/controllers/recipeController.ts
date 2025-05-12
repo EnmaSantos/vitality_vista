@@ -65,6 +65,7 @@ export const handleGetFatSecretRecipeById = async (ctx: RouterContext<any, { id:
  * Controller to handle getting the list of FatSecret recipe types.
  */
 export const handleGetFatSecretRecipeTypes = async (ctx: RouterContext<any, any>) => {
+    console.log("Attempting to handle /api/fatsecret/recipes/types");
     try {
         const result = await getFatSecretRecipeTypesPlatform();
         sendSuccess(ctx, result);
