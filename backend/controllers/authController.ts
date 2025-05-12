@@ -1,5 +1,6 @@
 // backend/controllers/authController.ts
-import { Context, bcrypt, createJwt, getNumericDate } from "../deps.ts"; 
+import { Context, createJwt, getNumericDate } from "../deps.ts"; // Import needed functions directly
+import { hash, compare } from "../deps.ts"; // Import the hash and compare functions from deps.ts
 import dbClient from "../services/db.ts"; // Import the database client [cite: vitality_vista.zip/backend/services/db.ts]
 import { UserSchema, USER_TABLE_NAME } from "../models/user.model.ts"; // Import the schema and table name [cite: backend/models/user.model.ts]
 
@@ -143,9 +144,8 @@ export async function register(ctx: Context) {
       return;
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(body.password, salt);
+    // Hash password using scrypt instead of bcrypt
+    const passwordHash = await hash(body.password);
 
     // Create new user in DB (now async)
     const newUser = await createUser(body, passwordHash); // newUser is now UserSchema
@@ -196,8 +196,8 @@ export async function login(ctx: Context) {
       return;
     }
 
-    // Check password (use user.password_hash from UserSchema)
-    const isPasswordValid = await bcrypt.compare(body.password, user.password_hash);
+    // Check password using scrypt compare instead of bcrypt
+    const isPasswordValid = await compare(body.password, user.password_hash);
     if (!isPasswordValid) {
       ctx.response.status = 401;
       ctx.response.body = { success: false, message: "Invalid credentials" };

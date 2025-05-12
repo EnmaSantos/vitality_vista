@@ -18,8 +18,8 @@ export type { RouterContext } from "https://deno.land/x/oak@v12.6.1/mod.ts";
   // CORS middleware
   export { oakCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
   
-  // Authentication utilities
-  export * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
+  // Authentication utilities - replaced bcrypt with scrypt
+  export { compare, hash } from "https://deno.land/x/scrypt@v4.2.1/mod.ts";
   export {
     create as createJwt,
     verify as verifyJwt,

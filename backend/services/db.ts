@@ -29,40 +29,65 @@ if (!dbUser || !dbPassword || !dbDatabase) {
   // throw new Error("Missing required database environment variables!");
 }
 
+// Check if a direct connection string is provided (preferred for production)
+const connectionString = Deno.env.get("DATABASE_URL");
+
+// Determine if we're in production or development
+const isProduction = Deno.env.get("ENVIRONMENT") === "production" || 
+                    !Deno.env.get("ENVIRONMENT"); // Default to production if not specified
+
 // --- Create PostgreSQL Client Instance ---
-// This should now receive the correct values from the loaded environment
-const dbClient = new PostgresClient({
-  hostname: dbHost,
-  port: dbPort,
-  user: dbUser,
-  password: dbPassword,
-  database: dbDatabase,
-  tls: {
-    enabled: true,
-    // IMPORTANT: Setting 'enforce: false' disables server certificate validation.
-    // This can make your connection vulnerable to man-in-the-middle attacks.
-    // Use this ONLY for debugging to see if certificate validation is the issue.
-    // If this works, you should ideally investigate why the certificate isn't validating
-    // (e.g., missing CA certs in Deno Deploy environment, or Neon's specific cert chain).
-    // For production, you'd want to resolve the certificate issue or, if absolutely necessary
-    // and you understand the risks, ensure you are on a trusted network.
-    enforce: false, 
-  },
-});
+let dbClient: PostgresClient;
+
+if (connectionString) {
+  // Use the complete connection string if available
+  console.log("Using database connection string (DATABASE_URL)");
+  dbClient = new PostgresClient(connectionString);
+} else {
+  // Build connection details from individual environment variables
+  console.log("Building database connection from individual parameters");
+  dbClient = new PostgresClient({
+    hostname: dbHost,
+    port: dbPort,
+    user: dbUser,
+    password: dbPassword,
+    database: dbDatabase,
+    // Use application_name to identify your app in database logs
+    applicationName: "vitality_vista_api",
+    // Add necessary SSL params for Neon and other PostgreSQL providers
+    tls: {
+      enabled: true,
+      // In production, we need to enforce SSL
+      // In development, we can be more lenient
+      enforce: isProduction,
+    },
+  });
+}
 
 // --- Connection Test Function ---
 // (Keep the test function as corrected in the previous step)
 async function testDbConnection() {
   try {
-    console.log(`Attempting to connect to database "${dbDatabase}" on ${dbHost}:${dbPort}...`);
+    console.log(`Attempting to connect to database...`);
+    if (!connectionString) {
+      console.log(`- Server: ${dbHost}:${dbPort}`);
+      console.log(`- Database: ${dbDatabase}`);
+      console.log(`- SSL mode: ${isProduction ? 'enforced (production)' : 'optional (development)'}`);
+    } else {
+      console.log("- Using connection string (details masked)"); 
+    }
     await dbClient.connect();
     console.log("✅ Database connection pool established successfully!");
     // await dbClient.end(); // Optional: Uncomment only if you want the test to disconnect immediately.
   } catch (err) {
     console.error("❌ Database connection failed:");
-    console.error(`   - Host: ${dbHost}:${dbPort}`);
-    console.error(`   - Database: ${dbDatabase}`);
-    console.error(`   - User: ${dbUser}`);
+    if (!connectionString) {
+      console.error(`   - Host: ${dbHost}:${dbPort}`);
+      console.error(`   - Database: ${dbDatabase}`);
+      console.error(`   - User: ${dbUser}`);
+    } else {
+      console.error("   - Using connection string (details masked)");
+    }
     console.error("   - Error:", err);
   }
 }
