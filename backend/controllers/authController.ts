@@ -1,8 +1,8 @@
 // backend/controllers/authController.ts
 import { Context, createJwt, getNumericDate } from "../deps.ts"; // Import needed functions directly
-import { hash, compare } from "../deps.ts"; // Import the hash and compare functions from deps.ts
 import dbClient from "../services/db.ts"; // Import the database client [cite: vitality_vista.zip/backend/services/db.ts]
 import { UserSchema, USER_TABLE_NAME } from "../models/user.model.ts"; // Import the schema and table name [cite: backend/models/user.model.ts]
+import { hash, compare } from "../services/password.ts"; // Import hash and compare from our custom password service
 
 // --- Interfaces (DTOs and API Response) ---
 // UserSchema from user.model.ts now represents the DB/internal user structure
