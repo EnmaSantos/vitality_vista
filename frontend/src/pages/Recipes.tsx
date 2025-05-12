@@ -21,7 +21,7 @@ import {
     ApiFatSecretSearchResponse, // Import response types if needed for direct handling
     ApiFatSecretGetRecipeResponse,
     ApiFatSecretRecipeTypesResponse
-} from '../services/recipeApi.ts';
+} from '../services/recipeApi';
 
 const ITEMS_PER_PAGE = 10; // Adjust as needed, max 50 per FatSecret API
 const ALL_CATEGORIES_VALUE = "ALL";
@@ -220,12 +220,13 @@ const Recipes: React.FC = () => {
           <Grid item xs={12} md={4}>
             <FormControl fullWidth variant="outlined">
               <InputLabel>Recipe Type</InputLabel>
-              <Select<string>
+              <Select
+                labelId="recipe-type-select-label"
                 value={selectedRecipeType}
-                onChange={handleCategoryChange}
                 label="Recipe Type"
+                onChange={handleCategoryChange}
               >
-                {availableRecipeTypes.map(type => (
+                {availableRecipeTypes.map((type: string) => (
                   <MenuItem key={type} value={type}>
                     {type === ALL_CATEGORIES_VALUE ? 'All Types' : type}
                   </MenuItem>
@@ -352,7 +353,7 @@ const Recipes: React.FC = () => {
                   )}
                    {selectedRecipeDetails.recipe_categories?.recipe_category && (
                      <Box mb={1}><Typography variant="subtitle2">Categories:</Typography>
-                       {selectedRecipeDetails.recipe_categories.recipe_category.map(cat => <Chip key={cat.recipe_category_name} label={cat.recipe_category_name} size="small" sx={{ mr: 0.5, mb: 0.5}} />)}
+                       {selectedRecipeDetails.recipe_categories.recipe_category.map((cat: any, index: number) => <Chip key={cat.recipe_category_name} label={cat.recipe_category_name} size="small" sx={{ mr: 0.5, mb: 0.5}} />)}
                      </Box>
                   )}
                   {/* Display Time & Rating */} 
@@ -387,7 +388,7 @@ const Recipes: React.FC = () => {
                       <Box mb={3}>
                         <Typography variant="h6" gutterBottom>Ingredients</Typography>
                         <List dense disablePadding>
-                          {selectedRecipeDetails?.ingredients?.ingredient.map((ing, index) => (
+                          {selectedRecipeDetails?.ingredients?.ingredient.map((ing: any, index: number) => (
                             <ListItem key={ing.food_id + index} disableGutters divider={index < (selectedRecipeDetails?.ingredients?.ingredient.length || 0) -1}>
                               <ListItemText primary={ing.ingredient_description} secondary={`(${ing.food_name})`} />
                             </ListItem>
@@ -400,7 +401,7 @@ const Recipes: React.FC = () => {
                       <Box>
                          <Typography variant="h6" gutterBottom>Instructions</Typography>
                          <List dense disablePadding>
-                           {selectedRecipeDetails?.directions?.direction.map((step, index) => (
+                           {selectedRecipeDetails?.directions?.direction.map((step: any, index: number) => (
                              <ListItem key={step.direction_number} disableGutters divider={index < (selectedRecipeDetails?.directions?.direction.length || 0) - 1} sx={{alignItems: 'flex-start'}}>
                                <ListItemText primary={`${step.direction_number}. ${step.direction_description}`} />
                              </ListItem>

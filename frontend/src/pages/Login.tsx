@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useAuth } from '../context/AuthContext.tsx'; // <-- Import useAuth
+import { useAuth } from '../context/AuthContext'; // <-- Import useAuth
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
