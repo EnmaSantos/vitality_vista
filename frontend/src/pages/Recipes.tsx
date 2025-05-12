@@ -348,7 +348,7 @@ const Recipes: React.FC = () => {
                   {/* Display Types & Categories if they exist */}
                   {selectedRecipeDetails.recipe_types?.recipe_type && (
                      <Box mb={1}><Typography variant="subtitle2">Types:</Typography>
-                       {selectedRecipeDetails.recipe_types.recipe_type.map(type => <Chip key={type} label={type} size="small" sx={{ mr: 0.5, mb: 0.5}} />)}
+                       {selectedRecipeDetails.recipe_types.recipe_type.map((type: string) => <Chip key={type} label={type} size="small" sx={{ mr: 0.5, mb: 0.5}} />)}
                      </Box>
                   )}
                    {selectedRecipeDetails.recipe_categories?.recipe_category && (
