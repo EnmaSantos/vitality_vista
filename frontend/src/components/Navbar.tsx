@@ -23,7 +23,7 @@ import {
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useThemeContext, themeColors } from '../context/ThemeContext';
+import { useThemeContext, themeColors } from '../context/ThemeContext.tsx';
 
 // Navigation items - path and label pairs
 const navItems = [
@@ -46,8 +46,10 @@ const Navbar: React.FC = () => {
   // Check if we're on the dashboard page
   const isDashboard = location.pathname === '/' || location.pathname === '/dashboard';
   
-  // Set text color based on current page
-  const textColor = isDashboard ? '#283618' : 'white';
+  // Set text color based on current page and theme
+  // Light text for dark backgrounds, dark text for light backgrounds
+  const textColor = isDashboard ? '#283618' : 
+                   (currentThemeColor === themeColors.cornsilk ? '#283618' : 'white');
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);

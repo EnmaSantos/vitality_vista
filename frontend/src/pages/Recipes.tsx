@@ -8,6 +8,7 @@ import {
   List, ListItem, ListItemText, Divider
 } from '@mui/material';
 import { Search as SearchIcon, Close as CloseIcon } from '@mui/icons-material';
+import { useThemeContext, themeColors } from '../context/ThemeContext.tsx';
 
 // Import FatSecret types and functions
 import {
@@ -21,12 +22,20 @@ import {
     ApiFatSecretSearchResponse, // Import response types if needed for direct handling
     ApiFatSecretGetRecipeResponse,
     ApiFatSecretRecipeTypesResponse
-} from '../services/recipeApi';
+} from '../services/recipeApi.ts';
 
 const ITEMS_PER_PAGE = 9; // Adjust as needed, max 50 per FatSecret API
 const ALL_CATEGORIES_VALUE = "ALL";
 
 const Recipes: React.FC = () => {
+  // Theme context
+  const { setCurrentThemeColor } = useThemeContext();
+  
+  // Set theme color on component mount
+  useEffect(() => {
+    setCurrentThemeColor(themeColors.tigersEye);
+  }, [setCurrentThemeColor]);
+
   // Search and Filter State
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
