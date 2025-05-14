@@ -23,7 +23,7 @@ import {
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useThemeContext, themeColors } from '../context/ThemeContext.tsx';
+import { useThemeContext, themeColors } from '../context/ThemeContext';
 
 // Navigation items - path and label pairs
 const navItems = [

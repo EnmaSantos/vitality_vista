@@ -8,7 +8,7 @@ import {
   List, ListItem, ListItemText, Divider
 } from '@mui/material';
 import { Search as SearchIcon, Close as CloseIcon } from '@mui/icons-material';
-import { useThemeContext, themeColors } from '../context/ThemeContext.tsx';
+import { useThemeContext, themeColors } from '../context/ThemeContext';
 
 // Import FatSecret types and functions
 import {
@@ -22,7 +22,7 @@ import {
     ApiFatSecretSearchResponse, // Import response types if needed for direct handling
     ApiFatSecretGetRecipeResponse,
     ApiFatSecretRecipeTypesResponse
-} from '../services/recipeApi.ts';
+} from '../services/recipeApi';
 
 const ITEMS_PER_PAGE = 9; // Adjust as needed, max 50 per FatSecret API
 const ALL_CATEGORIES_VALUE = "ALL";
