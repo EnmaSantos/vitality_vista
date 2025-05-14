@@ -259,7 +259,7 @@ const Recipes: React.FC = () => {
          </Typography>
           <Grid container spacing={3}>
             {recipes.map((recipe) => (
-              <Grid item xs={12} sm={6} md={4} key={recipe.recipe_id}>
+              <Grid item xs={12} sm={6} md={4} key={recipe.recipe_id}> {/* Changed md from 6 back to 4 */}
                 <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.03)'} }}>
                   <CardMedia
                     component="img"
