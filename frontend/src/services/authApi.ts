@@ -113,3 +113,39 @@ interface User {
       throw new Error("Verify token not implemented");
   }
   */
+
+// --- Logout Function ---  
+export async function logout(): Promise<void> {
+  console.log("authApi: Sending logout request...");
+  try {
+    const response = await fetch(`${API_BASE_URL}/logout`, {
+      method: 'POST',
+      headers: {
+        // Include credentials if your backend expects cookies to be sent
+        // This might be necessary for the backend to identify the session to clear
+        // However, for a simple JWT cookie clearing, the backend might not need this.
+        // 'Content-Type': 'application/json', // No body being sent usually for logout
+        'Accept': 'application/json',
+      },
+      // No body is typically sent for a logout request that just clears a cookie
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok || !responseData.success) {
+      console.log("authApi: Logout failed response:", responseData);
+      throw new Error(responseData.message || `Logout failed. Status: ${response.status}`);
+    }
+
+    console.log("authApi: Logout successful.");
+    // No data to return, but the promise resolves, indicating success
+
+  } catch (error) {
+    console.error("authApi: Logout API call failed:", error);
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error("An unknown error occurred during logout.");
+    }
+  }
+}

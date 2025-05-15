@@ -258,3 +258,26 @@ export async function getCurrentUser(ctx: Context) { // Mark as async
     };
   }
 }
+
+// Logout user
+export async function logoutUser(ctx: Context) {
+  try {
+    // Standard way to clear a cookie is to set it with an expiration date in the past.
+    // The name 'jwt' is assumed here; adjust if your token cookie has a different name.
+    ctx.cookies.delete("jwt", { path: "/" }); // Ensure path matches how it was set
+    // For httpOnly cookies, you might also need to specify domain and secure attributes
+    // if they were used when setting the cookie.
+    // Example: ctx.cookies.delete("jwt", { path: "/", domain: "yourdomain.com", secure: true, httpOnly: true });
+
+    ctx.response.status = 200;
+    ctx.response.body = { success: true, message: "Logout successful" };
+  } catch (error) {
+    console.error("Logout error:", error);
+    ctx.response.status = 500;
+    ctx.response.body = {
+      success: false,
+      message: "Server error during logout",
+      error: (error instanceof Error) ? error.message : "Unknown error",
+    };
+  }
+}

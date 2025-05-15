@@ -1,7 +1,7 @@
 // frontend/src/context/AuthContext.tsx
 
 import React, { createContext, useState, useContext, useEffect, useMemo, ReactNode } from 'react';
-import * as authApi from '../services/authApi'; // Import our new auth service
+import * as authApi from '../services/authApi.ts'; // Import our new auth service with .ts extension
 // 1. Define Types
 
 // Match the sanitized user data returned from your backend's /api/auth/login or /api/auth/me
@@ -105,17 +105,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   // --- Logout Function (Implemented) ---
-  const logout = (): void => {
+  const logout = async (): Promise<void> => {
     console.log("AuthProvider: Logging out.");
-    // Clear state
-    setToken(null);
-    setUser(null);
-    setIsAuthenticated(false);
-    // Clear localStorage
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
-    // Note: Navigation/redirect should typically be handled by the component
-    // or routing logic that calls logout, not within the context itself.
+    try {
+      await authApi.logout();
+      console.log("AuthProvider: API logout successful.");
+    } catch (error) {
+      console.error("AuthProvider: API logout failed. Proceeding with local logout.", error);
+    } finally {
+      setToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authUser');
+      console.log("AuthProvider: Local state and storage cleared.");
+    }
   };
 
   // Memoize the context value to prevent unnecessary re-renders
@@ -124,9 +128,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     isAuthenticated,
     isLoading,
-    login, // Provide the implemented function
-    logout // Provide the implemented function
-  }), [token, user, isAuthenticated, isLoading]); // Dependencies for useMemo
+    login,
+    logout
+  }), [token, user, isAuthenticated, isLoading]);
 
   return (
     <AuthContext.Provider value={value}>

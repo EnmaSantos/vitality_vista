@@ -23,7 +23,8 @@ import {
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useThemeContext, themeColors } from '../context/ThemeContext';
+import { useThemeContext, themeColors } from '../context/ThemeContext.tsx';
+import { useAuth } from '../context/AuthContext.tsx';
 
 // Navigation items - path and label pairs
 const navItems = [
@@ -42,6 +43,7 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentThemeColor } = useThemeContext();
+  const { logout } = useAuth();
 
   // Check if we're on the dashboard page
   const isDashboard = location.pathname === '/' || location.pathname === '/dashboard';
@@ -63,10 +65,15 @@ const Navbar: React.FC = () => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    // Simple redirection to landing page
+  const handleLogout = async () => {
     handleProfileMenuClose();
-    navigate('/landing');
+    try {
+      await logout();
+      console.log("Navbar: Logout successful, navigating to landing page.");
+      navigate('/landing');
+    } catch (error) {
+      console.error("Navbar: Error during logout operation:", error);
+    }
   };
 
   // Active route styling
