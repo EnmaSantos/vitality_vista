@@ -27,31 +27,52 @@ export interface FatSecretFood {
     food_type: string; // "Generic" or "Brand"
     brand_name?: string;
     food_url: string;
-    food_description: string;
+    servings?: { // Add servings to the FatSecretFood interface
+        serving: FatSecretServing[] | FatSecretServing; // Can be an array or single object
+    };
 }
 
 interface FatSecretFoodsSearchResponse {
-    foods: {
-        food: FatSecretFood[];
+    foods_search: { // Changed from 'foods'
+        results: {     // Added 'results'
+            food: FatSecretFood[];
+        } | null;
+        // other potential fields like max_results, total_results, page_number
     } | null;
+}
+
+// Define a type for individual serving from FatSecret API
+interface FatSecretServing {
+    serving_id: string;
+    serving_description: string;
+    calories: string; // These are often strings in the API response
+    protein: string;
+    fat: string;
+    carbohydrate: string;
+    fiber?: string;
+    sugar?: string;
+    sodium?: string;
+    is_default?: string; // Can be "1" or undefined
+    // Potentially other fields like metric_serving_amount, metric_serving_unit
 }
 
 /**
  * Standardized nutrition data interface for application use
  */
 export interface NutritionData {
-    id: string;
+    id: string; // FatSecret's food_id
     name: string;
     isGeneric: boolean;
     brandName?: string;
-    calories: number;
+    servingId: string; // FatSecret's serving_id for the chosen reference serving
+    servingSize: string; // e.g., "100g", "1 cup", "1 medium apple"
+    calories: number; // for the servingSize above
     calorieUnit: string; // "kcal"
-    servingSize: string; // "100g", "1 cup", etc.
-    protein: number;
+    protein: number; // for the servingSize above
     proteinUnit: string; // "g"
-    carbs: number;
+    carbs: number; // for the servingSize above
     carbsUnit: string; // "g"
-    fat: number;
+    fat: number; // for the servingSize above
     fatUnit: string; // "g"
     // Optional additional nutritional info
     fiber?: number;
@@ -153,10 +174,12 @@ export async function searchFoodNutrition(
         
         // Build search URL
         const searchUrl = new URL("https://platform.fatsecret.com/rest/server.api");
-        searchUrl.searchParams.append("method", "foods.search");
+        searchUrl.searchParams.append("method", "foods.search.v3"); // Updated to v3
         searchUrl.searchParams.append("search_expression", ingredient);
         searchUrl.searchParams.append("format", "json");
         searchUrl.searchParams.append("max_results", maxResults.toString());
+        // Requesting the default serving flag if available (Premier feature, but good to ask)
+        searchUrl.searchParams.append("flag_default_serving", "true"); 
         
         // Make API request
         const response = await fetch(searchUrl.toString(), {
@@ -171,64 +194,87 @@ export async function searchFoodNutrition(
         }
 
         const responseText = await response.text();
+        // console.log("Raw FatSecret Data:", responseText); // For debugging the raw response
         const data: FatSecretFoodsSearchResponse = JSON.parse(responseText);
         
-        // Handle no results
-        if (!data.foods || !data.foods.food || data.foods.food.length === 0) {
+        // Handle no results or incorrect structure
+        if (!data.foods_search || !data.foods_search.results || !data.foods_search.results.food) {
             return [];
         }
         
         // Process and filter results
-        let foods = data.foods.food;
+        let foodsFromApi = data.foods_search.results.food;
         
         // Filter to generic-only if requested
         if (genericOnly) {
-            foods = foods.filter(food => food.food_type === "Generic");
+            foodsFromApi = foodsFromApi.filter(food => food.food_type === "Generic");
         } else {
             // Otherwise sort to prioritize generic results
-            foods = [...foods].sort((a, b) => {
+            foodsFromApi = [...foodsFromApi].sort((a, b) => {
                 if (a.food_type === "Generic" && b.food_type !== "Generic") return -1;
                 if (a.food_type !== "Generic" && b.food_type === "Generic") return 1;
                 return 0;
             });
         }
         
-        // Limit results after sorting
-        foods = foods.slice(0, maxResults);
+        // Limit results after sorting/filtering
+        foodsFromApi = foodsFromApi.slice(0, maxResults);
         
         // Convert to standardized format
-        return foods.map(food => {
-            const nutrition = parseNutritionValues(food.food_description);
+        const processedFoods: NutritionData[] = [];
+
+        for (const food of foodsFromApi) {
+            if (!food.servings || !food.servings.serving) {
+                console.warn(`No servings data for food: ${food.food_name} (ID: ${food.food_id})`);
+                continue;
+            }
+
+            const servingsArray = Array.isArray(food.servings.serving) ? food.servings.serving : [food.servings.serving];
             
-            // Default values if parsing fails
-            const defaults = {
-                calories: 0,
-                servingSize: "unknown",
-                protein: 0,
-                carbs: 0,
-                fat: 0
-            };
+            if (servingsArray.length === 0) {
+                console.warn(`Empty servings array for food: ${food.food_name} (ID: ${food.food_id})`);
+                continue;
+            }
+
+            // Strategy to pick a reference serving:
+            let referenceServing: FatSecretServing | undefined = servingsArray.find(s => s.is_default === "1");
+            if (!referenceServing) {
+                referenceServing = servingsArray.find(s => s.serving_description?.toLowerCase().includes("100g") || s.serving_description?.toLowerCase().includes("100 g"));
+            }
+            if (!referenceServing) {
+                referenceServing = servingsArray[0]; // Fallback to the first serving
+            }
+
+            if (!referenceServing) {
+                console.warn(`Could not determine a reference serving for food: ${food.food_name} (ID: ${food.food_id})`);
+                continue;
+            }
             
-            const values = nutrition || defaults;
-            
-            return {
+            processedFoods.push({
                 id: food.food_id,
                 name: food.food_name,
                 isGeneric: food.food_type === "Generic",
                 brandName: food.brand_name,
-                calories: values.calories,
+                servingId: referenceServing.serving_id,
+                servingSize: referenceServing.serving_description,
+                calories: parseFloat(referenceServing.calories) || 0,
                 calorieUnit: "kcal",
-                servingSize: values.servingSize,
-                protein: values.protein,
+                protein: parseFloat(referenceServing.protein) || 0,
                 proteinUnit: "g",
-                carbs: values.carbs,
+                carbs: parseFloat(referenceServing.carbohydrate) || 0,
                 carbsUnit: "g",
-                fat: values.fat,
+                fat: parseFloat(referenceServing.fat) || 0,
                 fatUnit: "g",
+                fiber: referenceServing.fiber ? parseFloat(referenceServing.fiber) : undefined,
+                sugar: referenceServing.sugar ? parseFloat(referenceServing.sugar) : undefined,
+                sodium: referenceServing.sodium ? parseFloat(referenceServing.sodium) : undefined,
                 source: "FatSecret",
                 sourceUrl: food.food_url
-            };
-        });
+            });
+        }
+        // console.log("Processed Nutrition Data:", JSON.stringify(processedFoods, null, 2)); // For debugging processed data
+        return processedFoods;
+
     } catch (error) {
         console.error(`Error searching for "${ingredient}":`, error);
         throw error;
@@ -247,6 +293,7 @@ export async function getFoodNutritionById(foodId: string): Promise<NutritionDat
         apiUrl.searchParams.append("method", "food.get.v2");
         apiUrl.searchParams.append("food_id", foodId);
         apiUrl.searchParams.append("format", "json");
+        apiUrl.searchParams.append("flag_default_serving", "true"); // Request default serving flag
         
         // Make API request
         const response = await fetch(apiUrl.toString(), {
@@ -262,54 +309,96 @@ export async function getFoodNutritionById(foodId: string): Promise<NutritionDat
 
         const data = await response.json();
         
-        // Handle no data
+        // Handle no data or incorrect structure
         if (!data.food) {
+            console.warn(`No food data returned for food ID ${foodId}`);
             return null;
         }
         
-        const food = data.food;
+        const foodFromApi = data.food; // food is the root object
         
-        // Get the nutrition from the food description (if present)
-        let nutrition = undefined;
-        if (food.food_description && typeof food.food_description === "string") {
-            nutrition = parseNutritionValues(food.food_description);
+        let referenceServing: FatSecretServing | undefined;
+        let selectedServingData: {
+            servingId: string;
+            servingSize: string;
+            calories: number;
+            protein: number;
+            carbs: number;
+            fat: number;
+            fiber?: number;
+            sugar?: number;
+            sodium?: number;
+        } | null = null;
+
+        if (foodFromApi.servings && foodFromApi.servings.serving) {
+            const servingsArray = Array.isArray(foodFromApi.servings.serving) 
+                ? foodFromApi.servings.serving 
+                : [foodFromApi.servings.serving];
+
+            if (servingsArray.length > 0) {
+                // Strategy to pick a reference serving:
+                referenceServing = servingsArray.find(s => s.is_default === "1" || s.is_default === 1); // Check for "1" string or 1 number
+                if (!referenceServing) {
+                    referenceServing = servingsArray.find(s => s.serving_description?.toLowerCase().includes("100g") || s.serving_description?.toLowerCase().includes("100 g"));
+                }
+                if (!referenceServing) {
+                    referenceServing = servingsArray[0]; // Fallback to the first serving
+                }
+
+                if (referenceServing) {
+                    selectedServingData = {
+                        servingId: referenceServing.serving_id,
+                        servingSize: referenceServing.serving_description,
+                        calories: parseFloat(referenceServing.calories) || 0,
+                        protein: parseFloat(referenceServing.protein) || 0,
+                        carbs: parseFloat(referenceServing.carbohydrate) || 0,
+                        fat: parseFloat(referenceServing.fat) || 0,
+                        fiber: referenceServing.fiber ? parseFloat(referenceServing.fiber) : undefined,
+                        sugar: referenceServing.sugar ? parseFloat(referenceServing.sugar) : undefined,
+                        sodium: referenceServing.sodium ? parseFloat(referenceServing.sodium) : undefined,
+                    };
+                }
+            }
         }
 
-        // If parsing from description failed or description absent, try to derive from the first serving entry
-        if (!nutrition && food.servings && food.servings.serving) {
-            const firstServing = Array.isArray(food.servings.serving) ? food.servings.serving[0] : food.servings.serving;
-            if (firstServing && firstServing.calories !== undefined) {
-                nutrition = {
-                    calories: parseFloat(firstServing.calories) || 0,
-                    servingSize: firstServing.serving_description || "per serving",
-                    protein: parseFloat(firstServing.protein) || 0,
-                    carbs: parseFloat(firstServing.carbohydrate) || 0,
-                    fat: parseFloat(firstServing.fat) || 0,
+        // Fallback to parsing from food_description if no serving data was successfully processed
+        if (!selectedServingData && foodFromApi.food_description && typeof foodFromApi.food_description === 'string') {
+            const parsedFromDescription = parseNutritionValues(foodFromApi.food_description);
+            if (parsedFromDescription) {
+                console.warn(`Using parsed food_description for food ID ${foodId} as serving data was incomplete or missing.`);
+                selectedServingData = {
+                    ...parsedFromDescription, // calories, servingSize, protein, carbs, fat
+                    servingId: "unknown_from_description", // No servingId from description
+                    // Optional fields will be undefined if not in parsedFromDescription
                 };
             }
         }
 
-        if (!nutrition) {
-            console.warn(`Could not extract nutrition values for food ID ${foodId}`);
+        if (!selectedServingData) {
+            console.warn(`Could not extract serving nutrition data for food ID ${foodId}`);
             return null;
         }
         
         return {
-            id: food.food_id,
-            name: food.food_name,
-            isGeneric: food.food_type === "Generic",
-            brandName: food.brand_name,
-            calories: nutrition.calories,
+            id: foodFromApi.food_id,
+            name: foodFromApi.food_name,
+            isGeneric: foodFromApi.food_type === "Generic",
+            brandName: foodFromApi.brand_name,
+            servingId: selectedServingData.servingId,
+            servingSize: selectedServingData.servingSize,
+            calories: selectedServingData.calories,
             calorieUnit: "kcal",
-            servingSize: nutrition.servingSize,
-            protein: nutrition.protein,
+            protein: selectedServingData.protein,
             proteinUnit: "g",
-            carbs: nutrition.carbs,
+            carbs: selectedServingData.carbs,
             carbsUnit: "g",
-            fat: nutrition.fat,
+            fat: selectedServingData.fat,
             fatUnit: "g",
+            fiber: selectedServingData.fiber,
+            sugar: selectedServingData.sugar,
+            sodium: selectedServingData.sodium,
             source: "FatSecret",
-            sourceUrl: food.food_url
+            sourceUrl: foodFromApi.food_url
         };
     } catch (error) {
         console.error(`Error getting food nutrition by ID ${foodId}:`, error);
