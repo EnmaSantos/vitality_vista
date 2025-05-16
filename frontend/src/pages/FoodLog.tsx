@@ -209,8 +209,8 @@ const FoodLog: React.FC = () => {
       setDialogError("Selected food is missing or log date is not set. Please select a food from search results.");
       return;
     }
-    if (formDataForDialog.logged_quantity == null || Number(formDataForDialog.logged_quantity) <= 0) {
-        setDialogError("Quantity must be a positive number.");
+    if (formDataForDialog.logged_quantity == null || Number(formDataForDialog.logged_quantity) < 0.5) {
+        setDialogError("Quantity must be at least 0.5.");
         return;
     }
     if (!formDataForDialog.meal_type) {
