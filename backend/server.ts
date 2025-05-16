@@ -9,9 +9,14 @@ await loadEnv({ export: true });
 import "./services/db.ts";
 // Import controllers directly for this approach
 import { handleSearchFatSecretRecipes, handleGetFatSecretRecipeById, handleGetFatSecretRecipeTypes } from "./controllers/recipeController.ts";
+// Food controller handlers are now imported by the specific routers
 import authRouter from "./routes/auth.ts";
-// import foodRouter from "./routes/food.ts";
 import workoutRouter from "./routes/workout.ts";
+// import { authMiddleware } from "./middleware/authMiddleware.ts"; // authMiddleware is used by routers internally
+
+// Import new specific routers
+import fatsecretProxyRouter from "./routes/fatsecretProxy.ts";
+import foodLogRouter from "./routes/foodLogRoutes.ts";
 
 // Initialize the app
 const app = new Application();
@@ -50,6 +55,12 @@ apiRouter
     .get("/fatsecret/recipes/search", handleSearchFatSecretRecipes)
     .get("/fatsecret/recipes/types", handleGetFatSecretRecipeTypes)
     .get("/fatsecret/recipes/:id", handleGetFatSecretRecipeById);
+
+// Mount FatSecret Food Search/Details proxy routes
+apiRouter.use("/fatsecret/foods", fatsecretProxyRouter.routes(), fatsecretProxyRouter.allowedMethods());
+
+// Mount Food Logging routes
+apiRouter.use("/food-logs", foodLogRouter.routes(), foodLogRouter.allowedMethods());
 
 // Mount Workout routes 
 apiRouter.use("/workouts", workoutRouter.routes(), workoutRouter.allowedMethods());

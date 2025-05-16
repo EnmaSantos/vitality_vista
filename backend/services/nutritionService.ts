@@ -337,9 +337,9 @@ export async function getFoodNutritionById(foodId: string): Promise<NutritionDat
 
             if (servingsArray.length > 0) {
                 // Strategy to pick a reference serving:
-                referenceServing = servingsArray.find(s => s.is_default === "1" || s.is_default === 1); // Check for "1" string or 1 number
+                referenceServing = servingsArray.find((s: FatSecretServing) => s.is_default === "1");
                 if (!referenceServing) {
-                    referenceServing = servingsArray.find(s => s.serving_description?.toLowerCase().includes("100g") || s.serving_description?.toLowerCase().includes("100 g"));
+                    referenceServing = servingsArray.find((s: FatSecretServing) => s.serving_description?.toLowerCase().includes("100g") || s.serving_description?.toLowerCase().includes("100 g"));
                 }
                 if (!referenceServing) {
                     referenceServing = servingsArray[0]; // Fallback to the first serving
@@ -447,6 +447,7 @@ export async function calculateRecipeNutrition(
             id: "recipe",
             name: "Recipe",
             isGeneric: true,
+            servingId: "aggregated_recipe_serving",
             calories: Math.round(totalCalories),
             calorieUnit: "kcal",
             servingSize: "entire recipe",
