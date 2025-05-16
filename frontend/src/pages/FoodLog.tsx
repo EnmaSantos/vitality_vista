@@ -38,7 +38,7 @@ import {
   CreateFoodLogEntryPayload,
   searchFoodsAPI,
   createFoodLogEntryAPI,
-} from '../services/foodLogApi.ts';
+} from '../services/foodLogApi';
 
 function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
   let timeout: ReturnType<typeof setTimeout> | null = null;
@@ -155,7 +155,7 @@ const FoodLog: React.FC = () => {
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = event.target.value;
     setCurrentDate(newDate);
-    setFormDataForDialog(prev => ({ ...prev, log_date: newDate }));
+    setFormDataForDialog((prev: Partial<CreateFoodLogEntryPayload>) => ({ ...prev, log_date: newDate }));
   };
 
   const handleOpenLogDialog = (food: NutritionData) => {
