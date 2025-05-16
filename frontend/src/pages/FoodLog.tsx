@@ -459,7 +459,7 @@ const FoodLog: React.FC = () => {
                 name="logged_quantity"
                 value={formDataForDialog.logged_quantity}
                 onChange={handleDialogFormChange}
-                InputProps={{ inputProps: { min: 0.01, step: 0.01 } }} 
+                InputProps={{ inputProps: { min: 1, step: 1 } }} 
                 required
                 autoFocus 
                 sx={{
