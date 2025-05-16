@@ -1,5 +1,5 @@
 // frontend/src/services/foodLogApi.ts
-import { AuthContextType } from '../context/AuthContext.tsx'; // Adjust path if your AuthContextType is elsewhere
+import { AuthContextType } from '../context/AuthContext'; // Adjust path if your AuthContextType is elsewhere
 
 // --- Re-define or Import Shared Types ---
 

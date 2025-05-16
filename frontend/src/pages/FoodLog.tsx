@@ -30,8 +30,8 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, Search as SearchIcon } from '@mui/icons-material';
 import { SelectChangeEvent } from '@mui/material/Select';
-import { useThemeContext, themeColors } from '../context/ThemeContext.tsx';
-import { useAuth } from '../context/AuthContext.tsx';
+import { useThemeContext, themeColors } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import {
   NutritionData,
   FoodLogEntry,
