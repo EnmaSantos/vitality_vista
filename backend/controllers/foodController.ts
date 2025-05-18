@@ -30,6 +30,7 @@ interface CreateFoodLogEntryPayload {
   base_protein: number;
   base_fat: number;
   base_carbs: number;
+  food_name: string;
   logged_quantity: number;
   meal_type: string;
   log_date: string;
@@ -49,6 +50,7 @@ interface FoodLogEntrySchema {
   protein_consumed: number;
   fat_consumed: number;
   carbs_consumed: number;
+  food_name?: string | null;
   notes?: string | null;
   created_at: string; // Or Date
   updated_at: string; // Or Date
@@ -226,6 +228,7 @@ export async function createFoodLogEntryHandler(ctx: RouterContext<string, any, 
     const requiredFields: (keyof CreateFoodLogEntryPayload)[] = [
       "fatsecret_food_id", "fatsecret_serving_id", "reference_serving_description",
       "base_calories", "base_protein", "base_fat", "base_carbs",
+      "food_name",
       "logged_quantity", "meal_type", "log_date",
     ];
 
@@ -248,24 +251,26 @@ export async function createFoodLogEntryHandler(ctx: RouterContext<string, any, 
     }
     // --- End Validation ---
 
-    // --- Server-Side Calculation ---
-    const calories_consumed = Math.round(payload.base_calories * payload.logged_quantity);
-    const protein_consumed = parseFloat((payload.base_protein * payload.logged_quantity).toFixed(2));
-    const fat_consumed = parseFloat((payload.base_fat * payload.logged_quantity).toFixed(2));
-    const carbs_consumed = parseFloat((payload.base_carbs * payload.logged_quantity).toFixed(2));
+    // Calculate derived nutritional values
+    const calories_consumed = payload.base_calories * payload.logged_quantity;
+    const protein_consumed = payload.base_protein * payload.logged_quantity;
+    const fat_consumed = payload.base_fat * payload.logged_quantity;
+    const carbs_consumed = payload.base_carbs * payload.logged_quantity;
 
     // --- Insert into Database ---
     const insertQuery = `
       INSERT INTO public.food_log_entries (
-        user_id, log_date, meal_type, 
-        fatsecret_food_id, fatsecret_serving_id, 
+        user_id, log_date, meal_type,
+        fatsecret_food_id, fatsecret_serving_id,
         logged_serving_description, logged_quantity,
         calories_consumed, protein_consumed, fat_consumed, carbs_consumed,
-        notes
+        notes, food_name
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
       )
-      RETURNING log_entry_id, user_id, log_date, meal_type, fatsecret_food_id, fatsecret_serving_id, logged_serving_description, logged_quantity, calories_consumed, protein_consumed, fat_consumed, carbs_consumed, notes, created_at, updated_at;
+      RETURNING log_entry_id, user_id, log_date, meal_type, fatsecret_food_id, fatsecret_serving_id,
+                logged_serving_description, logged_quantity, calories_consumed, protein_consumed,
+                fat_consumed, carbs_consumed, notes, food_name, created_at, updated_at;
     `;
 
     const result = await dbClient.queryObject<FoodLogEntrySchema>(insertQuery, [
@@ -281,7 +286,14 @@ export async function createFoodLogEntryHandler(ctx: RouterContext<string, any, 
       fat_consumed,
       carbs_consumed,
       payload.notes || null,
+      payload.food_name,
     ]);
+
+    if (result.rows.length === 0) {
+      ctx.response.status = 500;
+      ctx.response.body = { success: false, message: "Failed to create food log entry or retrieve created entry." };
+      return;
+    }
 
     const newLogEntry = result.rows[0];
 

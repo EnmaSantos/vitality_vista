@@ -44,6 +44,7 @@ export interface CreateFoodLogEntryPayload {
   base_protein: number;
   base_fat: number;
   base_carbs: number;
+  food_name: string;
   logged_quantity: number; // User-entered multiplier
   meal_type: string; // 'breakfast', 'lunch', 'dinner', 'snack'
   log_date: string; // Format: "YYYY-MM-DD"
@@ -65,6 +66,7 @@ export interface FoodLogEntry {
   protein_consumed: number; // May come as string
   fat_consumed: number;     // May come as string
   carbs_consumed: number;   // May come as string
+  food_name?: string | null;
   notes?: string | null;
   created_at: string; // Or Date
   updated_at: string; // Or Date

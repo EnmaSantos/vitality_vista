@@ -226,6 +226,7 @@ const FoodLog: React.FC = () => {
       base_protein: selectedFoodForDialog.protein,
       base_fat: selectedFoodForDialog.fat,
       base_carbs: selectedFoodForDialog.carbs,
+      food_name: selectedFoodForDialog.name,
       logged_quantity: Number(formDataForDialog.logged_quantity),
       meal_type: formDataForDialog.meal_type,
       log_date: formDataForDialog.log_date,
