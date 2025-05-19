@@ -1,8 +1,7 @@
 // frontend/src/context/AuthContext.tsx
 
 import React, { createContext, useState, useContext, useEffect, useMemo, ReactNode } from 'react';
-import * as authApi from '../services/authApi'; // Import our new auth service with .ts extension
-// 1. Define Types
+import * as authApi from '../services/authApi';
 
 // Match the sanitized user data returned from your backend's /api/auth/login or /api/auth/me
 interface User {
