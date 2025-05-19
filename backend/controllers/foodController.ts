@@ -355,7 +355,8 @@ export async function getFoodLogEntriesHandler(ctx: RouterContext<string, any, A
         fatsecret_food_id, fatsecret_serving_id, 
         logged_serving_description, logged_quantity,
         calories_consumed, protein_consumed, fat_consumed, carbs_consumed,
-        notes, created_at, updated_at
+        notes, food_name,
+        created_at, updated_at
       FROM public.food_log_entries
       WHERE user_id = $1 AND log_date = $2
       ORDER BY 

@@ -1,5 +1,5 @@
 // frontend/src/pages/FoodLog.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Typography,
   Box,
@@ -27,6 +27,7 @@ import {
   Alert,
   InputAdornment,
   DialogContentText,
+  Snackbar,
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, Search as SearchIcon } from '@mui/icons-material';
 import { SelectChangeEvent } from '@mui/material/Select';
@@ -38,6 +39,8 @@ import {
   CreateFoodLogEntryPayload,
   searchFoodsAPI,
   createFoodLogEntryAPI,
+  getFoodLogEntriesAPI,
+  deleteFoodLogEntryAPI,
 } from '../services/foodLogApi';
 
 function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
@@ -92,9 +95,33 @@ const FoodLog: React.FC = () => {
   const [isLoadingLog, setIsLoadingLog] = useState(false);
   const [logError, setLogError] = useState<string | null>(null);
 
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
+
   useEffect(() => {
     setCurrentThemeColor(themeColors.earthYellow);
   }, [setCurrentThemeColor]);
+
+  const fetchLoggedEntries = useCallback(async (date: string) => {
+    if (!auth.token) return;
+
+    setIsLoadingLog(true);
+    setLogError(null);
+    try {
+      const entries = await getFoodLogEntriesAPI(date, auth);
+      setLoggedEntries(entries);
+    } catch (err) {
+      setLogError(err instanceof Error ? err.message : "Failed to fetch logged entries.");
+      setLoggedEntries([]);
+    } finally {
+      setIsLoadingLog(false);
+    }
+  }, [auth]);
+
+  useEffect(() => {
+    fetchLoggedEntries(currentDate);
+  }, [currentDate, fetchLoggedEntries]);
 
   const debouncedSearch = useCallback(
     debounce(async (query: string) => {
@@ -156,6 +183,7 @@ const FoodLog: React.FC = () => {
     const newDate = event.target.value;
     setCurrentDate(newDate);
     setFormDataForDialog((prev: Partial<CreateFoodLogEntryPayload>) => ({ ...prev, log_date: newDate }));
+    fetchLoggedEntries(newDate);
   };
 
   const handleOpenLogDialog = (food: NutritionData) => {
@@ -168,6 +196,7 @@ const FoodLog: React.FC = () => {
       base_protein: food.protein,
       base_fat: food.fat,
       base_carbs: food.carbs,
+      food_name: food.name,
       logged_quantity: 1.0,
       meal_type: formDataForDialog.meal_type || 'breakfast',
       log_date: currentDate, 
@@ -205,9 +234,14 @@ const FoodLog: React.FC = () => {
   };
 
   const handleSaveFoodLog = async () => {
-    if (!selectedFoodForDialog || !formDataForDialog.log_date) {
-      setDialogError("Selected food is missing or log date is not set. Please select a food from search results.");
-      return;
+    const isManualEntry = !selectedFoodForDialog;
+    if (!isManualEntry && (!selectedFoodForDialog || !selectedFoodForDialog.name)) {
+        setDialogError("Selected food is missing required details. Please re-select from search.");
+        return;
+    }
+    if (!formDataForDialog.log_date) {
+        setDialogError("Log date is not set.");
+        return;
     }
     if (formDataForDialog.logged_quantity == null || Number(formDataForDialog.logged_quantity) < 0.5) {
         setDialogError("Quantity must be at least 0.5.");
@@ -217,16 +251,27 @@ const FoodLog: React.FC = () => {
         setDialogError("Meal type is required.");
         return;
     }
+    if (isManualEntry && (
+        !formDataForDialog.food_name ||
+        formDataForDialog.base_calories === undefined ||
+        formDataForDialog.base_protein === undefined ||
+        formDataForDialog.base_carbs === undefined ||
+        formDataForDialog.base_fat === undefined ||
+        !formDataForDialog.reference_serving_description
+    )) {
+        setDialogError("For manual entry, please provide food name, reference serving description, and base nutritional values.");
+        return;
+    }
 
     const payload: CreateFoodLogEntryPayload = {
-      fatsecret_food_id: selectedFoodForDialog.id,
-      fatsecret_serving_id: selectedFoodForDialog.servingId,
-      reference_serving_description: selectedFoodForDialog.servingSize,
-      base_calories: selectedFoodForDialog.calories,
-      base_protein: selectedFoodForDialog.protein,
-      base_fat: selectedFoodForDialog.fat,
-      base_carbs: selectedFoodForDialog.carbs,
-      food_name: selectedFoodForDialog.name,
+      fatsecret_food_id: selectedFoodForDialog ? selectedFoodForDialog.id : "",
+      fatsecret_serving_id: selectedFoodForDialog ? selectedFoodForDialog.servingId : "",
+      reference_serving_description: selectedFoodForDialog ? selectedFoodForDialog.servingSize : formDataForDialog.reference_serving_description || '',
+      base_calories: selectedFoodForDialog ? selectedFoodForDialog.calories : formDataForDialog.base_calories || 0,
+      base_protein: selectedFoodForDialog ? selectedFoodForDialog.protein : formDataForDialog.base_protein || 0,
+      base_fat: selectedFoodForDialog ? selectedFoodForDialog.fat : formDataForDialog.base_fat || 0,
+      base_carbs: selectedFoodForDialog ? selectedFoodForDialog.carbs : formDataForDialog.base_carbs || 0,
+      food_name: selectedFoodForDialog ? selectedFoodForDialog.name : formDataForDialog.food_name || 'Manually Added Item',
       logged_quantity: Number(formDataForDialog.logged_quantity),
       meal_type: formDataForDialog.meal_type,
       log_date: formDataForDialog.log_date,
@@ -238,11 +283,18 @@ const FoodLog: React.FC = () => {
     try {
       await createFoodLogEntryAPI(payload, auth);
       handleCloseAddDialog();
-      console.log("Food logged successfully! Refresh will be implemented in Task 9.");
+      fetchLoggedEntries(currentDate);
       setSearchQuery(''); 
       setSearchResults([]);
+      setSnackbarMessage("Food logged successfully!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     } catch (err) {
-      setDialogError(err instanceof Error ? err.message : "Failed to log food entry.");
+      const errorMessage = err instanceof Error ? err.message : "Failed to log food entry.";
+      setDialogError(errorMessage);
+      setSnackbarMessage(errorMessage);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     } finally {
       setIsSubmittingLog(false);
     }
@@ -264,6 +316,49 @@ const FoodLog: React.FC = () => {
     setDialogError(null);
     setOpenAddDialog(true);
   };
+
+  const handleDeleteLogEntry = async (logEntryId: number) => {
+    if (!auth.token) {
+        setSnackbarMessage("Authentication token not found. Please log in.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
+    }
+    try {
+      await deleteFoodLogEntryAPI(logEntryId, auth);
+      fetchLoggedEntries(currentDate);
+      setSnackbarMessage("Log entry deleted.");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (err) {
+      console.error("Failed to delete log entry:", err);
+      setSnackbarMessage(err instanceof Error ? err.message : "Failed to delete entry.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
+  };
+
+  const groupedEntries = useMemo(() => {
+    return loggedEntries.reduce((acc, entry) => {
+      const mealType = entry.meal_type;
+      if (!acc[mealType]) {
+        acc[mealType] = [];
+      }
+      acc[mealType].push(entry);
+      return acc;
+    }, {} as Record<string, FoodLogEntry[]>);
+  }, [loggedEntries]);
+
+  const dailyTotals = useMemo(() => {
+    return loggedEntries.reduce((totals, entry) => {
+      return {
+        calories: totals.calories + entry.calories_consumed,
+        protein: totals.protein + (parseFloat(String(entry.protein_consumed)) || 0),
+        carbs: totals.carbs + (parseFloat(String(entry.carbs_consumed)) || 0),
+        fat: totals.fat + (parseFloat(String(entry.fat_consumed)) || 0),
+      };
+    }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  }, [loggedEntries]);
 
   return (
     <Box sx={{ padding: 3, backgroundColor: '#fff9e6', minHeight: '100vh' }}>
@@ -376,69 +471,82 @@ const FoodLog: React.FC = () => {
         <Grid container spacing={2}>
           <Grid item xs={6} sm={3}><Card sx={{ bgcolor: '#faf0e0' }}><CardContent>
             <Typography variant="subtitle2" color="textSecondary">Calories</Typography>
-            <Typography variant="h5" sx={{color: '#bc6c25ff'}}>{dailyTotals_mock.calories}</Typography>
+            <Typography variant="h5" sx={{color: '#bc6c25ff'}}>{dailyTotals.calories.toFixed(0)}</Typography>
           </CardContent></Card></Grid>
            <Grid item xs={6} sm={3}><Card sx={{ bgcolor: '#faf0e0' }}><CardContent>
             <Typography variant="subtitle2" color="textSecondary">Protein</Typography>
-            <Typography variant="h5" sx={{color: '#bc6c25ff'}}>{dailyTotals_mock.protein}g</Typography>
+            <Typography variant="h5" sx={{color: '#bc6c25ff'}}>{dailyTotals.protein.toFixed(1)}g</Typography>
           </CardContent></Card></Grid>
           <Grid item xs={6} sm={3}><Card sx={{ bgcolor: '#faf0e0' }}><CardContent>
             <Typography variant="subtitle2" color="textSecondary">Carbs</Typography>
-            <Typography variant="h5" sx={{color: '#bc6c25ff'}}>{dailyTotals_mock.carbs}g</Typography>
+            <Typography variant="h5" sx={{color: '#bc6c25ff'}}>{dailyTotals.carbs.toFixed(1)}g</Typography>
           </CardContent></Card></Grid>
           <Grid item xs={6} sm={3}><Card sx={{ bgcolor: '#faf0e0' }}><CardContent>
             <Typography variant="subtitle2" color="textSecondary">Fat</Typography>
-            <Typography variant="h5" sx={{color: '#bc6c25ff'}}>{dailyTotals_mock.fat}g</Typography>
+            <Typography variant="h5" sx={{color: '#bc6c25ff'}}>{dailyTotals.fat.toFixed(1)}g</Typography>
           </CardContent></Card></Grid>
         </Grid>
       </Paper>
 
-      {['breakfast', 'lunch', 'dinner', 'snack'].map((mealType) => (
-        <Paper elevation={1} sx={{ p: 2, mb: 2, backgroundColor: '#fefae0' }} key={mealType}>
-          <Typography variant="h6" sx={{ textTransform: 'capitalize', color: '#283618ff' }}>{mealType}</Typography>
-          <Divider sx={{ my: 1, borderColor: '#dda15eff' }} />
-          {groupedEntries_mock[mealType] && groupedEntries_mock[mealType].length > 0 ? (
+      {isLoadingLog && <Box sx={{display: 'flex', justifyContent: 'center', my: 3}}><CircularProgress sx={{color: '#bc6c25ff'}}/></Box>}
+      {logError && <Alert severity="error" sx={{my: 2}}>{logError}</Alert>}
+      {!isLoadingLog && !logError && loggedEntries.length === 0 && (
+          <Paper sx={{ p: 3, textAlign: 'center', my: 2, backgroundColor: '#fefae0' }}>
+              <Typography sx={{color: '#606c38ff'}}>No food logged for {currentDate}. Add some from the search above or add manually!</Typography>
+          </Paper>
+      )}
+      {!isLoadingLog && !logError && loggedEntries.length > 0 && ['breakfast', 'lunch', 'dinner', 'snack'].map((mealType) => (
+        (groupedEntries[mealType] && groupedEntries[mealType].length > 0) && (
+          <Paper elevation={1} sx={{ p: 2, mb: 2, backgroundColor: '#fefae0' }} key={mealType}>
+            <Typography variant="h6" sx={{ textTransform: 'capitalize', color: '#283618ff' }}>{mealType}</Typography>
+            <Divider sx={{ my: 1, borderColor: '#dda15eff' }} />
             <List>
-              {groupedEntries_mock[mealType].map((entry) => (
-                <ListItem key={entry.id} divider sx={{borderColor: 'rgba(221, 161, 94, 0.5)'}}>
-                  <Grid container alignItems="center">
-                    <Grid item xs={12} sm={4} md={3}><ListItemText primary={<Typography sx={{fontWeight: '500', color: '#606c38ff'}}>{entry.name}</Typography>} secondary={`${entry.time}`} /></Grid>
-                    <Grid item xs={12} sm={8} md={7}>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: {xs: 'flex-start', sm: 'space-around'}, alignItems: 'center', pl: {xs:0, sm:1}, gap: {xs: 1, sm: 0.5} }}>
-                          <Typography variant="body2" sx={{color: '#bc6c25ff'}}> {entry.calories} kcal</Typography>
-                          <Typography variant="body2" sx={{color: '#606c38ff'}}>P: {entry.protein}g</Typography>
-                          <Typography variant="body2" sx={{color: '#606c38ff'}}>C: {entry.carbs}g</Typography>
-                          <Typography variant="body2" sx={{color: '#606c38ff'}}>F: {entry.fat}g</Typography>
-                        </Box>
+              {groupedEntries[mealType].map((entry) => (
+                <ListItem key={entry.log_entry_id} divider sx={{borderColor: 'rgba(221, 161, 94, 0.5)'}}>
+                  <Grid container alignItems="center" spacing={1}>
+                    <Grid item xs={12} sm={4} md={3}>
+                      <ListItemText
+                        primary={<Typography sx={{fontWeight: '500', color: '#606c38ff'}}>{entry.food_name || "Unknown Food"}</Typography>}
+                        secondary={`${parseFloat(String(entry.logged_quantity)).toFixed(1)} x ${entry.logged_serving_description }`}
+                      />
                     </Grid>
-                    <Grid item xs={12} md={2} sx={{pt: {xs:1, md:0}}}>
-                        <ListItemSecondaryAction>
-                            <IconButton edge="end" aria-label="edit" size="small" sx={{color: '#606c38ff', '&:hover': {color: '#283618ff'}}}>
-                                <EditIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteFood_mock(entry.id)} size="small" sx={{color: '#bc6c25ff', '&:hover': {color: '#a05a2c'}}}>
-                                <DeleteIcon fontSize="small" />
-                            </IconButton>
-                        </ListItemSecondaryAction>
+                    <Grid item xs={10} sm={6} md={7}>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: {xs: 'flex-start', sm: 'space-around'}, alignItems: 'center', pl: {xs:0, sm:1}, gap: {xs: 1, sm: 0.5} }}>
+                        <Typography variant="body2" sx={{color: '#bc6c25ff', minWidth: '70px', textAlign: 'right'}}>{entry.calories_consumed.toFixed(0)} kcal</Typography>
+                        <Typography variant="body2" sx={{color: '#606c38ff', minWidth: '60px', textAlign: 'right'}}>P: {parseFloat(String(entry.protein_consumed)).toFixed(1)}g</Typography>
+                        <Typography variant="body2" sx={{color: '#606c38ff', minWidth: '60px', textAlign: 'right'}}>C: {parseFloat(String(entry.carbs_consumed)).toFixed(1)}g</Typography>
+                        <Typography variant="body2" sx={{color: '#606c38ff', minWidth: '60px', textAlign: 'right'}}>F: {parseFloat(String(entry.fat_consumed)).toFixed(1)}g</Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={2} sm={2} md={2} sx={{textAlign: 'right', pt: {xs:1, md:0}}}>
+                      <ListItemSecondaryAction>
+                        <IconButton
+                          edge="end"
+                          aria-label="delete"
+                          onClick={() => handleDeleteLogEntry(entry.log_entry_id)}
+                          size="small"
+                          sx={{color: '#bc6c25ff', '&:hover': {color: '#a05a2c'}}}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </ListItemSecondaryAction>
                     </Grid>
                   </Grid>
                 </ListItem>
               ))}
             </List>
-          ) : (
-            <Typography variant="body2" color="textSecondary" sx={{ py: 2, textAlign: 'center', color: '#606c38ff' }}>
-              No {mealType} entries yet. Add some food!
-            </Typography>
-          )}
-        </Paper>
+          </Paper>
+        )
       ))}
 
       <Dialog open={openAddDialog} onClose={handleCloseAddDialog} maxWidth="sm" fullWidth
         PaperProps={{ sx: { backgroundColor: '#fff9e6' } }}
       >
-        <DialogTitle sx={{color: '#283618ff'}}>Log "{selectedFoodForDialog?.name || 'Food Item'}"</DialogTitle>
+        <DialogTitle sx={{color: '#283618ff'}}>
+            Log "{selectedFoodForDialog?.name || (formDataForDialog.food_name || 'New Food Item')}"
+        </DialogTitle>
         <DialogContent>
-          {selectedFoodForDialog && (
+             {selectedFoodForDialog && (
             <Box sx={{ mb: 2, p: 1.5, backgroundColor: '#fefae0', borderRadius: 1, border: '1px solid #dda15eff' }}>
               <DialogContentText component="div" sx={{color: '#606c38ff'}}>
                 <strong>Reference:</strong> {selectedFoodForDialog.servingSize} ({selectedFoodForDialog.calories} {selectedFoodForDialog.calorieUnit || 'kcal'})
@@ -450,19 +558,32 @@ const FoodLog: React.FC = () => {
               </DialogContentText>
             </Box>
           )}
-
           <Grid container spacing={2} sx={{ mt: 0.5 }}>
+             {!selectedFoodForDialog && (
+                <Grid item xs={12}>
+                    <TextField
+                        fullWidth
+                        label="Food Name"
+                        name="food_name"
+                        value={formDataForDialog.food_name || ''}
+                        onChange={handleDialogFormChange}
+                        required
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                '& fieldset': { borderColor: '#dda15eff' },
+                                '&:hover fieldset': { borderColor: '#bc6c25ff' },
+                                '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                            },
+                            '& .MuiInputLabel-root': { color: '#606c38ff' }
+                        }}
+                    />
+                </Grid>
+            )}
             <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
-                label="Quantity (multiplier)"
-                type="number"
-                name="logged_quantity"
-                value={formDataForDialog.logged_quantity}
-                onChange={handleDialogFormChange}
-                InputProps={{ inputProps: { min: 0.5, step: 0.5 } }} 
-                required
-                autoFocus 
+                fullWidth label="Quantity (multiplier)" type="number" name="logged_quantity"
+                value={formDataForDialog.logged_quantity} onChange={handleDialogFormChange}
+                InputProps={{ inputProps: { min: 0.5, step: 0.5 } }} required autoFocus={!selectedFoodForDialog}
                 sx={{
                     '& .MuiOutlinedInput-root': {
                         '& fieldset': { borderColor: '#dda15eff' },
@@ -486,9 +607,7 @@ const FoodLog: React.FC = () => {
               >
                 <InputLabel>Meal Type</InputLabel>
                 <Select
-                  name="meal_type"
-                  value={formDataForDialog.meal_type}
-                  label="Meal Type"
+                  name="meal_type" value={formDataForDialog.meal_type} label="Meal Type"
                   onChange={handleDialogFormChange}
                   MenuProps={{ PaperProps: { sx: { backgroundColor: '#fff9e6' } }}}
                 >
@@ -501,14 +620,9 @@ const FoodLog: React.FC = () => {
             </Grid>
             <Grid item xs={12}>
               <TextField
-                fullWidth
-                label="Log Date"
-                type="date"
-                name="log_date"
-                value={formDataForDialog.log_date}
-                onChange={handleDialogFormChange}
-                InputLabelProps={{ shrink: true }}
-                required
+                fullWidth label="Log Date" type="date" name="log_date"
+                value={formDataForDialog.log_date} onChange={handleDialogFormChange}
+                InputLabelProps={{ shrink: true }} required
                 sx={{
                     '& .MuiOutlinedInput-root': {
                         '& fieldset': { borderColor: '#dda15eff' },
@@ -521,13 +635,8 @@ const FoodLog: React.FC = () => {
             </Grid>
             <Grid item xs={12}>
               <TextField
-                fullWidth
-                label="Notes (Optional)"
-                name="notes"
-                value={formDataForDialog.notes}
-                onChange={handleDialogFormChange}
-                multiline
-                rows={3}
+                fullWidth label="Notes (Optional)" name="notes" value={formDataForDialog.notes}
+                onChange={handleDialogFormChange} multiline rows={selectedFoodForDialog ? 2 : 3}
                 sx={{
                     '& .MuiOutlinedInput-root': {
                         '& fieldset': { borderColor: '#dda15eff' },
@@ -542,24 +651,59 @@ const FoodLog: React.FC = () => {
               <>
                 <Grid item xs={12}><Typography variant="caption" sx={{color: '#606c38ff'}}>Manually enter nutrition for the reference serving:</Typography></Grid>
                 <Grid item xs={12}>
-                    <TextField fullWidth label="Reference Serving Description (e.g., 1 cup, 100g)" name="reference_serving_description" value={formDataForDialog.reference_serving_description || ''} onChange={handleDialogFormChange} 
-                        sx={{ /* styles */ }} />
+                    <TextField fullWidth label="Reference Serving Description (e.g., 1 cup, 100g)" name="reference_serving_description" value={formDataForDialog.reference_serving_description || ''} onChange={handleDialogFormChange} required
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                '& fieldset': { borderColor: '#dda15eff' },
+                                '&:hover fieldset': { borderColor: '#bc6c25ff' },
+                                '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                            },
+                            '& .MuiInputLabel-root': { color: '#606c38ff' }
+                        }} />
                 </Grid>
                 <Grid item xs={6} sm={3}>
-                    <TextField fullWidth label="Calories (base)" type="number" name="base_calories" value={formDataForDialog.base_calories} onChange={handleDialogFormChange} 
-                        sx={{ /* styles */ }} InputLabelProps={{ shrink: true }}/>
+                    <TextField fullWidth label="Calories (base)" type="number" name="base_calories" value={formDataForDialog.base_calories} onChange={handleDialogFormChange} required InputProps={{ inputProps: { min: 0 } }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                '& fieldset': { borderColor: '#dda15eff' },
+                                '&:hover fieldset': { borderColor: '#bc6c25ff' },
+                                '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                            },
+                            '& .MuiInputLabel-root': { color: '#606c38ff' }
+                        }} InputLabelProps={{ shrink: true }}/>
                 </Grid>
                 <Grid item xs={6} sm={3}>
-                    <TextField fullWidth label="Protein (g, base)" type="number" name="base_protein" value={formDataForDialog.base_protein} onChange={handleDialogFormChange} 
-                        sx={{ /* styles */ }} InputLabelProps={{ shrink: true }}/>
+                    <TextField fullWidth label="Protein (g, base)" type="number" name="base_protein" value={formDataForDialog.base_protein} onChange={handleDialogFormChange} required InputProps={{ inputProps: { min: 0 } }}
+                        sx={{
+                             '& .MuiOutlinedInput-root': {
+                                '& fieldset': { borderColor: '#dda15eff' },
+                                '&:hover fieldset': { borderColor: '#bc6c25ff' },
+                                '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                            },
+                            '& .MuiInputLabel-root': { color: '#606c38ff' }
+                        }} InputLabelProps={{ shrink: true }}/>
                 </Grid>
                 <Grid item xs={6} sm={3}>
-                    <TextField fullWidth label="Carbs (g, base)" type="number" name="base_carbs" value={formDataForDialog.base_carbs} onChange={handleDialogFormChange} 
-                        sx={{ /* styles */ }} InputLabelProps={{ shrink: true }}/>
+                    <TextField fullWidth label="Carbs (g, base)" type="number" name="base_carbs" value={formDataForDialog.base_carbs} onChange={handleDialogFormChange} required InputProps={{ inputProps: { min: 0 } }}
+                        sx={{
+                             '& .MuiOutlinedInput-root': {
+                                '& fieldset': { borderColor: '#dda15eff' },
+                                '&:hover fieldset': { borderColor: '#bc6c25ff' },
+                                '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                            },
+                            '& .MuiInputLabel-root': { color: '#606c38ff' }
+                        }} InputLabelProps={{ shrink: true }}/>
                 </Grid>
                 <Grid item xs={6} sm={3}>
-                    <TextField fullWidth label="Fat (g, base)" type="number" name="base_fat" value={formDataForDialog.base_fat} onChange={handleDialogFormChange} 
-                        sx={{ /* styles */ }} InputLabelProps={{ shrink: true }}/>
+                    <TextField fullWidth label="Fat (g, base)" type="number" name="base_fat" value={formDataForDialog.base_fat} onChange={handleDialogFormChange} required InputProps={{ inputProps: { min: 0 } }}
+                        sx={{
+                             '& .MuiOutlinedInput-root': {
+                                '& fieldset': { borderColor: '#dda15eff' },
+                                '&:hover fieldset': { borderColor: '#bc6c25ff' },
+                                '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                            },
+                            '& .MuiInputLabel-root': { color: '#606c38ff' }
+                        }} InputLabelProps={{ shrink: true }}/>
                 </Grid>
               </>
             )}
@@ -573,6 +717,18 @@ const FoodLog: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+
     </Box>
   );
 };
