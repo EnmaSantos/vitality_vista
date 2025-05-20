@@ -48,10 +48,8 @@ const Navbar: React.FC = () => {
   // Check if we're on the dashboard page
   const isDashboard = location.pathname === '/' || location.pathname === '/dashboard';
   
-  // Set text color based on current page and theme
-  // Light text for dark backgrounds, dark text for light backgrounds
-  const textColor = isDashboard ? '#283618' : 
-                   (currentThemeColor === themeColors.cornsilk ? '#283618' : 'white');
+  // Set text color based on current page
+  const textColor = isDashboard ? '#283618' : 'white';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -65,15 +63,10 @@ const Navbar: React.FC = () => {
     setAnchorEl(null);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     handleProfileMenuClose();
-    try {
-      await logout();
-      console.log("Navbar: Logout successful, navigating to landing page.");
-      navigate('/landing');
-    } catch (error) {
-      console.error("Navbar: Error during logout operation:", error);
-    }
+    logout();
+    navigate('/landing');
   };
 
   // Active route styling
