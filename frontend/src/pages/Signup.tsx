@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Typography, 
   Box, 
@@ -10,10 +10,13 @@ import {
   InputAdornment,
   IconButton,
   Checkbox,
-  FormControlLabel
+  FormControlLabel,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { useAuth } from '../context/AuthContext';
 
 const Signup: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -26,6 +29,11 @@ const Signup: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  
+  const { register, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -36,14 +44,51 @@ const Signup: React.FC = () => {
   
   const navigate = useNavigate();
 
-  const handleSubmit = (event: React.FormEvent) => {
+  useEffect(() => {
+    if (!isAuthLoading && isAuthenticated) {
+      console.log('Signup Page: User already authenticated, navigating to /dashboard.');
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, isAuthLoading, navigate]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log('Signup attempt with:', formData);
-    // In a real app, you would register the user with your API
-    
-    // Simple navigation without authentication
-    navigate('/');
+    if (formData.password !== formData.confirmPassword) {
+      setSubmitError("Passwords don't match.");
+      return;
+    }
+    if (!agreeToTerms) {
+      setSubmitError("You must agree to the terms of service and privacy policy.");
+      return;
+    }
+
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    try {
+      console.log('Signup Page: Attempting registration via context...');
+      await register({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      });
+      console.log('Signup Page: Context registration reported success (auto-login).');
+    } catch (err) {
+      console.error('Signup Page: Context registration failed:', err);
+      setSubmitError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isAuthLoading || (!isAuthLoading && isAuthenticated)) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box 
@@ -74,6 +119,12 @@ const Signup: React.FC = () => {
           </Typography>
         </Box>
 
+        {submitError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {submitError}
+          </Alert>
+        )}
+
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
@@ -86,6 +137,7 @@ const Signup: React.FC = () => {
                 value={formData.firstName}
                 onChange={handleChange}
                 required
+                disabled={isSubmitting}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -98,6 +150,7 @@ const Signup: React.FC = () => {
                 value={formData.lastName}
                 onChange={handleChange}
                 required
+                disabled={isSubmitting}
               />
             </Grid>
 
@@ -113,6 +166,7 @@ const Signup: React.FC = () => {
                 onChange={handleChange}
                 required
                 autoComplete="email"
+                disabled={isSubmitting}
               />
             </Grid>
 
@@ -127,6 +181,7 @@ const Signup: React.FC = () => {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                disabled={isSubmitting}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -134,6 +189,7 @@ const Signup: React.FC = () => {
                         aria-label="toggle password visibility"
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
+                        disabled={isSubmitting}
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
@@ -154,6 +210,7 @@ const Signup: React.FC = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
+                disabled={isSubmitting}
                 error={formData.password !== formData.confirmPassword && formData.confirmPassword !== ''}
                 helperText={
                   formData.password !== formData.confirmPassword && formData.confirmPassword !== '' 
@@ -171,6 +228,7 @@ const Signup: React.FC = () => {
                     onChange={() => setAgreeToTerms(!agreeToTerms)}
                     color="primary"
                     required
+                    disabled={isSubmitting}
                   />
                 }
                 label={
@@ -180,6 +238,7 @@ const Signup: React.FC = () => {
                       component={RouterLink} 
                       to="/terms" 
                       sx={{ color: '#3c6e71' }}
+                      tabIndex={isSubmitting ? -1 : 0}
                     >
                       Terms of Service
                     </Link>
@@ -188,6 +247,7 @@ const Signup: React.FC = () => {
                       component={RouterLink} 
                       to="/privacy" 
                       sx={{ color: '#3c6e71' }}
+                      tabIndex={isSubmitting ? -1 : 0}
                     >
                       Privacy Policy
                     </Link>
@@ -201,16 +261,17 @@ const Signup: React.FC = () => {
                 type="submit" 
                 fullWidth 
                 variant="contained" 
-                disabled={!agreeToTerms || formData.password !== formData.confirmPassword}
+                disabled={!agreeToTerms || formData.password !== formData.confirmPassword || isSubmitting}
                 sx={{ 
                   py: 1.5, 
                   bgcolor: '#3c6e71',
                   '&:hover': {
                     bgcolor: '#2c5a5c'
-                  }
+                  },
+                  position: 'relative'
                 }}
               >
-                Sign Up
+                {isSubmitting ? <CircularProgress size={24} sx={{ color: 'white', position: 'absolute' }} /> : 'Sign Up'}
               </Button>
             </Grid>
 
@@ -219,7 +280,7 @@ const Signup: React.FC = () => {
                 Already have an account?{' '}
                 <Link 
                   component={RouterLink} 
-                  to="/Login" 
+                  to="/login"
                   sx={{ 
                     fontWeight: 'bold',
                     color: '#3c6e71',
@@ -228,6 +289,7 @@ const Signup: React.FC = () => {
                       textDecoration: 'underline'
                     }
                   }}
+                  tabIndex={isSubmitting ? -1 : 0}
                 >
                   Log In
                 </Link>

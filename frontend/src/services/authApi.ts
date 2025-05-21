@@ -28,7 +28,12 @@ interface User {
       password: string;
   }
   
-  // Type for other payload types if needed (e.g., RegisterCredentials)
+  // --- Added: Type for the register credentials payload ---
+  export interface RegisterCredentials extends LoginCredentials {
+      firstName: string;
+      lastName: string;
+  }
+  // --- End Added ---
   
   // Always use the direct Deno Deploy URL to avoid CORS issues
   const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api/auth";
@@ -91,19 +96,48 @@ interface User {
     }
   }
   
-  // --- Placeholder for Register function ---
-  /*
-  interface RegisterCredentials extends LoginCredentials {
-      firstName: string;
-      lastName: string;
-  }
-  
+  // --- Added: Register function ---
   export async function register(credentials: RegisterCredentials): Promise<AuthResponseData> {
-       // Similar fetch logic to POST /api/auth/register
-       console.log("Register function not implemented yet.");
-       throw new Error("Register not implemented");
+    console.log("authApi: Sending registration request...");
+    try {
+      const response = await fetch(`${API_BASE_URL}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      let responseData: AuthApiResponse;
+      try {
+        responseData = await response.json();
+      } catch (jsonError) {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        console.error("JSON parsing error during registration despite OK status:", jsonError);
+        throw new Error("Failed to parse server response during registration.");
+      }
+
+      if (!response.ok || !responseData.success || !responseData.data) {
+        console.log("authApi: Registration failed response:", responseData);
+        throw new Error(responseData.message || `Registration failed. Status: ${response.status}`);
+      }
+
+      console.log("authApi: Registration successful.");
+      return responseData.data;
+
+    } catch (error) {
+      console.error("authApi: Registration API call failed:", error);
+      if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error("An unknown error occurred during registration.");
+      }
+    }
   }
-  */
+  // --- End Added ---
   
   // --- Placeholder for Verify Token function ---
   /*

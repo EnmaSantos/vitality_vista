@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useContext, useEffect, useMemo, ReactNode } from 'react';
 import * as authApi from '../services/authApi';
+import { RegisterCredentials } from '../services/authApi';
 
 // Match the sanitized user data returned from your backend's /api/auth/login or /api/auth/me
 interface User {
@@ -19,7 +20,7 @@ export interface AuthContextType {
   isLoading: boolean; // To handle initial check for stored token
   login: (email: string, password: string) => Promise<void>; // Placeholder for now
   logout: () => void; // Placeholder for now
-  register?: (email: string, password: string, firstName: string, lastName: string) => Promise<void>; // Optional: Add register later
+  register: (credentials: RegisterCredentials) => Promise<void>; // Added register
 }
 
 // 2. Create the Context
@@ -31,6 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true, // Start as true until initial check is done
   login: async () => { throw new Error('Login function not implemented'); },
   logout: () => { throw new Error('Logout function not implemented'); },
+  register: async () => { throw new Error('Register function not implemented'); }, // Added default
 });
 
 // 3. Create the AuthProvider Component
@@ -121,6 +123,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // --- Added: Register Function ---
+  const register = async (credentials: RegisterCredentials): Promise<void> => {
+    console.log("AuthProvider: Attempting registration...");
+    try {
+      const responseData = await authApi.register(credentials);
+      console.log("AuthProvider: Registration successful, user auto-logged in.", responseData);
+      // Backend returns token and user upon successful registration
+      setToken(responseData.token);
+      setUser(responseData.user);
+      setIsAuthenticated(true);
+      localStorage.setItem('authToken', responseData.token);
+      localStorage.setItem('authUser', JSON.stringify(responseData.user));
+    } catch (error) {
+      console.error("AuthProvider: Registration failed.", error);
+      // Clear any potentially stale auth state/storage on failure
+      setToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authUser');
+      throw error; // Re-throw to be handled by the Signup component
+    }
+  };
+  // --- End Added ---
+
   // Memoize the context value to prevent unnecessary re-renders
   const value = useMemo(() => ({
     token,
@@ -128,7 +155,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAuthenticated,
     isLoading,
     login,
-    logout
+    logout,
+    register
   }), [token, user, isAuthenticated, isLoading]);
 
   return (

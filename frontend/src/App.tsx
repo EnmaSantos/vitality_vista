@@ -5,15 +5,18 @@ import React from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute"; // Import the ProtectedRoute component
-import Dashboard from "./pages/Dashboard";
-import ExercisesPage from "./pages/Exercises";
-import FoodLogPage from "./pages/FoodLog";
-import ProgressPage from "./pages/Progress";
-import RecipesPage from "./pages/Recipes";
-import Landing from "./pages/Landing";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import ForgotPassword from "./pages/ForgotPassword";
+import {
+  Dashboard,
+  ExercisesPage,
+  FoodLogPage,
+  ProgressPage,
+  RecipesPage,
+  Landing,
+  Login,
+  Signup,
+  ForgotPassword,
+  ProfilePage // Import ProfilePage
+} from "./pages"; // Import from index.ts
 import { ThemeProvider } from './context/ThemeContext'; // Assuming you also have ThemeProvider
 import "./App.css";
 
@@ -42,6 +45,8 @@ const AppLayout = () => {
           <Route path="/food-log" element={<ProtectedRoute><FoodLogPage /></ProtectedRoute>} />
           <Route path="/progress" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
           <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />
+          {/* Added Profile Page Route */}
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           
           {/* --- Fallback Route (Remains Unchanged) --- */}
           <Route path="*" element={<Navigate to="/landing" replace />} />

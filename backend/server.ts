@@ -1,3 +1,4 @@
+/// <reference types="https://deno.land/x/deno/cli/types/dts/index.d.ts" />
 // server.ts
 import { Application, oakCors, loadEnv, Router } from "./deps.ts";
 
@@ -12,6 +13,7 @@ import { handleSearchFatSecretRecipes, handleGetFatSecretRecipeById, handleGetFa
 // Food controller handlers are now imported by the specific routers
 import authRouter from "./routes/auth.ts";
 import workoutRouter from "./routes/workout.ts";
+import profileRouter from "./routes/profile.ts"; // Import the profile router
 // import { authMiddleware } from "./middleware/authMiddleware.ts"; // authMiddleware is used by routers internally
 
 // Import new specific routers
@@ -64,6 +66,12 @@ apiRouter.use("/food-logs", foodLogRouter.routes(), foodLogRouter.allowedMethods
 
 // Mount Workout routes 
 apiRouter.use("/workouts", workoutRouter.routes(), workoutRouter.allowedMethods());
+
+// Mount Profile routes
+// profileRouter has a prefix "/users/me/profile", so combined with apiRouter prefix "/api",
+// the routes will be /api/users/me/profile
+apiRouter.use(profileRouter.routes());
+apiRouter.use(profileRouter.allowedMethods());
 
 // Register the main API router with the application
 app.use(apiRouter.routes());
