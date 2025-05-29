@@ -288,6 +288,65 @@ const ProfilePage: React.FC = () => {
                 disabled={isLoading}
               />
             </Grid>
+
+            {/* Calculated Metabolic Data (Read-only) */}
+            {(profileData.age !== undefined || profileData.bmr !== undefined || profileData.tdee !== undefined) && (
+              <>
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2 }}><Typography variant="overline">Calculated Health Metrics</Typography></Divider>
+                </Grid>
+                
+                {profileData.age !== null && profileData.age !== undefined && (
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Age"
+                      value={`${profileData.age} years`}
+                      InputProps={{ readOnly: true }}
+                      variant="filled"
+                      sx={{ bgcolor: 'grey.100' }}
+                    />
+                  </Grid>
+                )}
+                
+                {profileData.bmr !== null && profileData.bmr !== undefined && (
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="BMR (Basal Metabolic Rate)"
+                      value={`${profileData.bmr} calories/day`}
+                      InputProps={{ readOnly: true }}
+                      variant="filled"
+                      sx={{ bgcolor: 'grey.100' }}
+                      helperText="Calories burned at rest"
+                    />
+                  </Grid>
+                )}
+                
+                {profileData.tdee !== null && profileData.tdee !== undefined && (
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="TDEE (Total Daily Energy)"
+                      value={`${profileData.tdee} calories/day`}
+                      InputProps={{ readOnly: true }}
+                      variant="filled"
+                      sx={{ bgcolor: 'grey.100' }}
+                      helperText="Total calories needed per day"
+                    />
+                  </Grid>
+                )}
+                
+                {(!profileData.age && !profileData.bmr && !profileData.tdee) && (
+                  <Grid item xs={12}>
+                    <Alert severity="info" sx={{ mt: 2 }}>
+                      Complete your profile information (date of birth, height, weight, gender, and activity level) to see calculated health metrics like BMR and TDEE.
+                    </Alert>
+                  </Grid>
+                )}
+              </>
+            )}
+
             <Grid item xs={12}>
               <TextField
                 fullWidth

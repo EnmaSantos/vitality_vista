@@ -1,6 +1,7 @@
 import { Context } from "../deps.ts";
 import dbClient from "../services/db.ts";
 import { UserProfileSchema, USER_PROFILES_TABLE_NAME } from "../models/userProfile.model.ts";
+import { calculateMetabolicData } from "../services/metabolicService.ts";
 
 // Payload for updating user profile
 interface UpdateUserProfileDTO {
@@ -11,6 +12,13 @@ interface UpdateUserProfileDTO {
   activity_level?: string | null;
   fitness_goals?: string | null;
   dietary_restrictions?: string | null;
+}
+
+// Extended response interface that includes calculated metabolic data
+interface UserProfileResponse extends UserProfileSchema {
+  age?: number | null;
+  bmr?: number | null;
+  tdee?: number | null;
 }
 
 /**
@@ -44,8 +52,54 @@ export async function getUserProfileHandler(ctx: Context) {
       return;
     }
 
+    const profileData = result.rows[0];
+
+    // Calculate metabolic data if all required fields are present
+    let metabolicData: { age: number | null; bmr: number | null; tdee: number | null } = { 
+      age: null, 
+      bmr: null, 
+      tdee: null 
+    };
+    
+    if (profileData.date_of_birth && 
+        profileData.weight_kg && 
+        profileData.height_cm && 
+        profileData.gender && 
+        profileData.activity_level) {
+      
+      try {
+        metabolicData = calculateMetabolicData({
+          date_of_birth: profileData.date_of_birth,
+          weight_kg: profileData.weight_kg,
+          height_cm: profileData.height_cm,
+          gender: profileData.gender,
+          activity_level: profileData.activity_level,
+        });
+        console.log(`Calculated metabolic data for user ${userId}:`, metabolicData);
+      } catch (error) {
+        console.error("Error calculating metabolic data:", error);
+        // Continue without metabolic data if calculation fails
+      }
+    } else {
+      console.log(`Insufficient data for metabolic calculations for user ${userId}. Missing fields:`, {
+        date_of_birth: !profileData.date_of_birth,
+        weight_kg: !profileData.weight_kg,
+        height_cm: !profileData.height_cm,
+        gender: !profileData.gender,
+        activity_level: !profileData.activity_level,
+      });
+    }
+
+    // Combine profile data with calculated metabolic data
+    const responseData: UserProfileResponse = {
+      ...profileData,
+      age: metabolicData.age,
+      bmr: metabolicData.bmr,
+      tdee: metabolicData.tdee,
+    };
+
     ctx.response.status = 200;
-    ctx.response.body = { success: true, data: result.rows[0] };
+    ctx.response.body = { success: true, data: responseData };
   } catch (error) {
     console.error("Error in getUserProfileHandler:", error);
     ctx.response.status = 500;

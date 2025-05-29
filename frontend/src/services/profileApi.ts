@@ -13,6 +13,10 @@ export interface UserProfileData {
   dietary_restrictions?: string | null;
   created_at?: string | Date;
   updated_at?: string | Date;
+  // Calculated metabolic data (read-only, calculated by backend)
+  age?: number | null;
+  bmr?: number | null;
+  tdee?: number | null;
 }
 
 // Standard API response structure (assuming your backend uses this)
