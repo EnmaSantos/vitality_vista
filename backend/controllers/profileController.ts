@@ -184,11 +184,56 @@ export async function updateUserProfileHandler(ctx: Context) {
       payload.dietary_restrictions || null,
     ]);
 
+    // After updating, calculate metabolic data and include in response
+    const updatedProfile = result.rows[0];
+    const responseData: UserProfileResponse = { ...updatedProfile };
+
+    // Calculate metabolic data if all required fields are present
+    if (
+      updatedProfile.date_of_birth &&
+      updatedProfile.weight_kg !== null && updatedProfile.weight_kg !== undefined && updatedProfile.weight_kg > 0 &&
+      updatedProfile.height_cm !== null && updatedProfile.height_cm !== undefined && updatedProfile.height_cm > 0 &&
+      updatedProfile.gender &&
+      updatedProfile.activity_level
+    ) {
+      try {
+        const metabolicInputs = {
+          date_of_birth: updatedProfile.date_of_birth,
+          weight_kg: updatedProfile.weight_kg,
+          height_cm: updatedProfile.height_cm,
+          gender: updatedProfile.gender,
+          activity_level: updatedProfile.activity_level,
+        };
+        const metabolicResults = calculateMetabolicData(metabolicInputs);
+        responseData.age = metabolicResults.age;
+        responseData.bmr = metabolicResults.bmr;
+        responseData.tdee = metabolicResults.tdee;
+        console.log(`Calculated metabolic data after update for user ${userId}:`, metabolicResults);
+      } catch (error) {
+        console.error("Error calculating metabolic data after update:", error);
+        // Continue without metabolic data if calculation fails
+        responseData.age = null;
+        responseData.bmr = null;
+        responseData.tdee = null;
+      }
+    } else {
+      responseData.age = null;
+      responseData.bmr = null;
+      responseData.tdee = null;
+      console.log(`Insufficient data for metabolic calculations after update for user ${userId}. Missing fields:`, {
+        date_of_birth: !updatedProfile.date_of_birth,
+        weight_kg: !updatedProfile.weight_kg,
+        height_cm: !updatedProfile.height_cm,
+        gender: !updatedProfile.gender,
+        activity_level: !updatedProfile.activity_level,
+      });
+    }
+
     ctx.response.status = 200;
     ctx.response.body = {
       success: true,
       message: "User profile updated successfully",
-      data: result.rows[0],
+      data: responseData, // Send back data including BMR/TDEE
     };
   } catch (error) {
     console.error("Error in updateUserProfileHandler:", error);
