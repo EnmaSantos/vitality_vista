@@ -7,6 +7,7 @@ export interface UserProfileData {
   date_of_birth?: string | null;
   height_cm?: number | null;
   weight_kg?: number | null;
+  gender?: string | null;
   activity_level?: string | null;
   fitness_goals?: string | null;
   dietary_restrictions?: string | null;

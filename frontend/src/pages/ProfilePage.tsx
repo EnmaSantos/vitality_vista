@@ -28,6 +28,13 @@ const activityLevels = [
   { value: 'extra_active', label: 'Extra active (very hard exercise/physical job)' },
 ];
 
+const genderOptions = [
+  { value: 'female', label: 'Female' },
+  { value: 'male', label: 'Male' },
+  { value: 'other', label: 'Other' },
+  { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+];
+
 const ProfilePage: React.FC = () => {
   const { user, token } = useAuth();
   const { setCurrentThemeColor } = useThemeContext();
@@ -36,6 +43,7 @@ const ProfilePage: React.FC = () => {
     date_of_birth: '',
     height_cm: null,
     weight_kg: null,
+    gender: '',
     activity_level: '',
     fitness_goals: '',
     dietary_restrictions: '',
@@ -59,6 +67,7 @@ const ProfilePage: React.FC = () => {
           date_of_birth: fetchedProfile.date_of_birth || '',
           height_cm: fetchedProfile.height_cm === undefined ? null : fetchedProfile.height_cm,
           weight_kg: fetchedProfile.weight_kg === undefined ? null : fetchedProfile.weight_kg,
+          gender: fetchedProfile.gender || '',
           activity_level: fetchedProfile.activity_level || '',
           fitness_goals: fetchedProfile.fitness_goals || '',
           dietary_restrictions: fetchedProfile.dietary_restrictions || '',
@@ -103,6 +112,7 @@ const ProfilePage: React.FC = () => {
         date_of_birth: profileData.date_of_birth || null,
         height_cm: profileData.height_cm,
         weight_kg: profileData.weight_kg,
+        gender: profileData.gender || null,
         activity_level: profileData.activity_level || null,
         fitness_goals: profileData.fitness_goals || null,
         dietary_restrictions: profileData.dietary_restrictions || null,
@@ -113,6 +123,7 @@ const ProfilePage: React.FC = () => {
           date_of_birth: updatedProfile.date_of_birth || '',
           height_cm: updatedProfile.height_cm === undefined ? null : updatedProfile.height_cm,
           weight_kg: updatedProfile.weight_kg === undefined ? null : updatedProfile.weight_kg,
+          gender: updatedProfile.gender || '',
           activity_level: updatedProfile.activity_level || '',
           fitness_goals: updatedProfile.fitness_goals || '',
           dietary_restrictions: updatedProfile.dietary_restrictions || '',
@@ -212,6 +223,25 @@ const ProfilePage: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 disabled={isLoading}
               />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth variant="outlined" disabled={isLoading}>
+                <InputLabel id="gender-label">Gender</InputLabel>
+                <Select
+                  labelId="gender-label"
+                  name="gender"
+                  value={profileData.gender || ''}
+                  onChange={handleChange}
+                  label="Gender"
+                >
+                  <MenuItem value=""><em>None</em></MenuItem>
+                  {genderOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
                <FormControl fullWidth variant="outlined" disabled={isLoading}>
