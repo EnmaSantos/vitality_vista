@@ -134,6 +134,23 @@ export async function updateUserProfileHandler(ctx: Context) {
     const payload = (await body.value) as UpdateUserProfileDTO;
 
     // Basic validation (can be expanded with a validation library)
+
+    // Attempt to parse height_cm if it's a string
+    if (payload.height_cm !== undefined && payload.height_cm !== null && typeof payload.height_cm === 'string') {
+      const parsedHeight = parseFloat(payload.height_cm);
+      if (!isNaN(parsedHeight)) {
+        payload.height_cm = parsedHeight;
+      }
+    }
+
+    // Attempt to parse weight_kg if it's a string
+    if (payload.weight_kg !== undefined && payload.weight_kg !== null && typeof payload.weight_kg === 'string') {
+      const parsedWeight = parseFloat(payload.weight_kg);
+      if (!isNaN(parsedWeight)) {
+        payload.weight_kg = parsedWeight;
+      }
+    }
+
     if (payload.date_of_birth && isNaN(new Date(payload.date_of_birth).getTime())) {
         ctx.response.status = 400;
         ctx.response.body = { success: false, message: "Invalid date_of_birth format." };
