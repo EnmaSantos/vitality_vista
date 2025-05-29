@@ -7,6 +7,7 @@ interface UpdateUserProfileDTO {
   date_of_birth?: string | null;
   height_cm?: number | null;
   weight_kg?: number | null;
+  gender?: string | null;
   activity_level?: string | null;
   fitness_goals?: string | null;
   dietary_restrictions?: string | null;
@@ -26,7 +27,7 @@ export async function getUserProfileHandler(ctx: Context) {
     }
 
     const result = await dbClient.queryObject<UserProfileSchema>(
-      `SELECT user_id, date_of_birth, height_cm, weight_kg, activity_level, fitness_goals, dietary_restrictions, created_at, updated_at
+      `SELECT user_id, date_of_birth, height_cm, weight_kg, gender, activity_level, fitness_goals, dietary_restrictions, created_at, updated_at
        FROM ${USER_PROFILES_TABLE_NAME}
        WHERE user_id = $1`,
       [userId]
@@ -94,25 +95,28 @@ export async function updateUserProfileHandler(ctx: Context) {
         ctx.response.body = { success: false, message: "Invalid weight_kg format." };
         return;
     }
+    // Add validation for gender if you have specific allowed values
+    // e.g., if (payload.gender && !['male', 'female', 'other'].includes(payload.gender)) { ... }
     // Add more validation as needed for activity_level, etc.
 
 
     // Upsert operation
     const upsertQuery = `
       INSERT INTO ${USER_PROFILES_TABLE_NAME} (
-        user_id, date_of_birth, height_cm, weight_kg, 
+        user_id, date_of_birth, height_cm, weight_kg, gender,
         activity_level, fitness_goals, dietary_restrictions
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       ON CONFLICT (user_id) DO UPDATE SET
         date_of_birth = EXCLUDED.date_of_birth,
         height_cm = EXCLUDED.height_cm,
         weight_kg = EXCLUDED.weight_kg,
+        gender = EXCLUDED.gender, 
         activity_level = EXCLUDED.activity_level,
         fitness_goals = EXCLUDED.fitness_goals,
         dietary_restrictions = EXCLUDED.dietary_restrictions,
         updated_at = CURRENT_TIMESTAMP
-      RETURNING user_id, date_of_birth, height_cm, weight_kg, activity_level, fitness_goals, dietary_restrictions, created_at, updated_at;
+      RETURNING user_id, date_of_birth, height_cm, weight_kg, gender, activity_level, fitness_goals, dietary_restrictions, created_at, updated_at;
     `;
 
     const result = await dbClient.queryObject<UserProfileSchema>(upsertQuery, [
@@ -120,6 +124,7 @@ export async function updateUserProfileHandler(ctx: Context) {
       payload.date_of_birth || null,
       payload.height_cm === undefined ? null : payload.height_cm,
       payload.weight_kg === undefined ? null : payload.weight_kg,
+      payload.gender || null,
       payload.activity_level || null,
       payload.fitness_goals || null,
       payload.dietary_restrictions || null,
