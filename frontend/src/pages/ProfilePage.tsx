@@ -14,11 +14,29 @@ import {
   Select,
   MenuItem,
   Divider,
+  InputAdornment,
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useAuth } from '../context/AuthContext';
 import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { getUserProfile, updateUserProfile, UserProfileData } from '../services/profileApi';
+
+interface ProfileFormState {
+  date_of_birth: string;
+  height_cm: string;
+  weight_kg: string;
+  gender: string;
+  activity_level: string;
+  fitness_goals: string;
+  dietary_restrictions: string;
+}
+
+// Separate state for calculated metabolic data
+interface MetabolicDataState {
+  age: number | null;
+  bmr: number | null;
+  tdee: number | null;
+}
 
 const activityLevels = [
   { value: 'sedentary', label: 'Sedentary (little or no exercise)' },
@@ -39,15 +57,23 @@ const ProfilePage: React.FC = () => {
   const { user, token } = useAuth();
   const { setCurrentThemeColor } = useThemeContext();
 
-  const [profileData, setProfileData] = useState<UserProfileData>({
+  const [profileData, setProfileData] = useState<ProfileFormState>({
     date_of_birth: '',
-    height_cm: null,
-    weight_kg: null,
+    height_cm: '',
+    weight_kg: '',
     gender: '',
     activity_level: '',
     fitness_goals: '',
     dietary_restrictions: '',
   });
+
+  // State for metabolic data
+  const [metabolicData, setMetabolicData] = useState<MetabolicDataState>({
+    age: null,
+    bmr: null,
+    tdee: null,
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingProfile, setIsFetchingProfile] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,21 +83,30 @@ const ProfilePage: React.FC = () => {
     setCurrentThemeColor(themeColors.pakistanGreen);
   }, [setCurrentThemeColor]);
 
+  const processFetchedProfile = (fetchedProfile: UserProfileData) => {
+    setProfileData({
+      date_of_birth: fetchedProfile.date_of_birth || '',
+      height_cm: fetchedProfile.height_cm?.toString() || '',
+      weight_kg: fetchedProfile.weight_kg?.toString() || '',
+      gender: fetchedProfile.gender || '',
+      activity_level: fetchedProfile.activity_level || '',
+      fitness_goals: fetchedProfile.fitness_goals || '',
+      dietary_restrictions: fetchedProfile.dietary_restrictions || '',
+    });
+    setMetabolicData({
+      age: fetchedProfile.age === undefined ? null : fetchedProfile.age,
+      bmr: fetchedProfile.bmr === undefined ? null : fetchedProfile.bmr,
+      tdee: fetchedProfile.tdee === undefined ? null : fetchedProfile.tdee,
+    });
+  };
+
   const fetchProfile = useCallback(async () => {
     if (token) {
       setIsFetchingProfile(true);
       setError(null);
       try {
         const fetchedProfile = await getUserProfile(token);
-        setProfileData({
-          date_of_birth: fetchedProfile.date_of_birth || '',
-          height_cm: fetchedProfile.height_cm === undefined ? null : fetchedProfile.height_cm,
-          weight_kg: fetchedProfile.weight_kg === undefined ? null : fetchedProfile.weight_kg,
-          gender: fetchedProfile.gender || '',
-          activity_level: fetchedProfile.activity_level || '',
-          fitness_goals: fetchedProfile.fitness_goals || '',
-          dietary_restrictions: fetchedProfile.dietary_restrictions || '',
-        });
+        processFetchedProfile(fetchedProfile);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch profile data.');
         console.error("Error fetching profile:", err);
@@ -79,7 +114,7 @@ const ProfilePage: React.FC = () => {
         setIsFetchingProfile(false);
       }
     } else {
-        setIsFetchingProfile(false);
+      setIsFetchingProfile(false);
     }
   }, [token]);
 
@@ -87,13 +122,13 @@ const ProfilePage: React.FC = () => {
     fetchProfile();
   }, [fetchProfile]);
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>) => {
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>
+  ) => {
     const { name, value } = event.target;
     setProfileData(prev => ({
       ...prev,
-      [name]: (name === 'height_cm' || name === 'weight_kg')
-                ? (value === '' ? null : parseFloat(value))
-                : value,
+      [name as string]: value,
     }));
   };
 
@@ -110,8 +145,8 @@ const ProfilePage: React.FC = () => {
     try {
       const payloadToSubmit: UserProfileData = {
         date_of_birth: profileData.date_of_birth || null,
-        height_cm: profileData.height_cm,
-        weight_kg: profileData.weight_kg,
+        height_cm: profileData.height_cm ? parseFloat(profileData.height_cm) : null,
+        weight_kg: profileData.weight_kg ? parseFloat(profileData.weight_kg) : null,
         gender: profileData.gender || null,
         activity_level: profileData.activity_level || null,
         fitness_goals: profileData.fitness_goals || null,
@@ -119,15 +154,7 @@ const ProfilePage: React.FC = () => {
       };
       console.log('Submitting profile data:', payloadToSubmit);
       const updatedProfile = await updateUserProfile(payloadToSubmit, token);
-      setProfileData({
-          date_of_birth: updatedProfile.date_of_birth || '',
-          height_cm: updatedProfile.height_cm === undefined ? null : updatedProfile.height_cm,
-          weight_kg: updatedProfile.weight_kg === undefined ? null : updatedProfile.weight_kg,
-          gender: updatedProfile.gender || '',
-          activity_level: updatedProfile.activity_level || '',
-          fitness_goals: updatedProfile.fitness_goals || '',
-          dietary_restrictions: updatedProfile.dietary_restrictions || '',
-      });
+      processFetchedProfile(updatedProfile); // Update form and metabolic data with response
       setSuccessMessage('Profile updated successfully!');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update profile.');
@@ -173,206 +200,190 @@ const ProfilePage: React.FC = () => {
         <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#283618ff', fontWeight: 'bold' }}>
           User Profile
         </Typography>
+
+        {/* Basic User Info (Read-Only from AuthContext) */}
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} sm={6}>
+              <TextField 
+                label="First Name" 
+                value={user.firstName || ''} 
+                fullWidth 
+                InputProps={{ readOnly: true }} 
+                variant="filled" 
+                sx={{ bgcolor: 'grey.200' }} 
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField 
+                label="Last Name" 
+                value={user.lastName || ''} 
+                fullWidth 
+                InputProps={{ readOnly: true }} 
+                variant="filled" 
+                sx={{ bgcolor: 'grey.200' }} 
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField 
+                label="Email" 
+                value={maskEmail(user.email)} 
+                fullWidth 
+                InputProps={{ readOnly: true }} 
+                variant="filled" 
+                sx={{ bgcolor: 'grey.200' }} 
+              />
+            </Grid>
+        </Grid>
         
+        <Divider sx={{ my: 3 }}><Typography variant="overline">Metabolic Estimates</Typography></Divider>
+        
+        {/* Metabolic Data Display */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Age"
+              value={metabolicData.age !== null ? `${metabolicData.age} years` : 'N/A'}
+              fullWidth
+              InputProps={{ readOnly: true }}
+              variant="filled"
+              sx={{ bgcolor: 'grey.200' }}
+              helperText={metabolicData.age === null ? "Enter date of birth to calculate" : ""}
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="BMR (Basal Metabolic Rate)"
+              value={metabolicData.bmr !== null ? metabolicData.bmr.toString() : 'N/A'}
+              fullWidth
+              InputProps={{ 
+                readOnly: true, 
+                endAdornment: metabolicData.bmr !== null ? <InputAdornment position="end">cal/day</InputAdornment> : null 
+              }}
+              variant="filled"
+              sx={{ bgcolor: 'grey.200' }}
+              helperText={metabolicData.bmr === null ? "Complete profile to calculate" : "Calories burned at rest"}
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="TDEE (Total Daily Energy)"
+              value={metabolicData.tdee !== null ? metabolicData.tdee.toString() : 'N/A'}
+              fullWidth
+              InputProps={{ 
+                readOnly: true, 
+                endAdornment: metabolicData.tdee !== null ? <InputAdornment position="end">cal/day</InputAdornment> : null 
+              }}
+              variant="filled"
+              sx={{ bgcolor: 'grey.200' }}
+              helperText={metabolicData.tdee === null ? "Complete profile to calculate" : "Total daily calories needed"}
+            />
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ my: 3 }}><Typography variant="overline">Profile Details</Typography></Divider>
+
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={3}>
+            {/* Profile Data (Editable) */}
             <Grid item xs={12} sm={6}>
-              <TextField
-                label="First Name"
-                value={user.firstName || ''}
-                fullWidth
-                InputProps={{ readOnly: true }}
-                variant="filled"
-                sx={{ bgcolor: 'grey.200' }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Last Name"
-                value={user.lastName || ''}
-                fullWidth
-                InputProps={{ readOnly: true }}
-                variant="filled"
-                sx={{ bgcolor: 'grey.200' }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Email"
-                value={maskEmail(user.email)}
-                fullWidth
-                InputProps={{ readOnly: true }}
-                variant="filled"
-                sx={{ bgcolor: 'grey.200' }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Divider sx={{ my: 2 }}><Typography variant="overline">Fitness Details</Typography></Divider>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                name="date_of_birth"
-                label="Date of Birth"
-                type="date"
-                variant="outlined"
-                value={profileData.date_of_birth || ''}
-                onChange={handleChange}
-                InputLabelProps={{ shrink: true }}
-                disabled={isLoading}
+              <TextField 
+                fullWidth 
+                name="date_of_birth" 
+                label="Date of Birth" 
+                type="date" 
+                variant="outlined" 
+                value={profileData.date_of_birth} 
+                onChange={handleChange} 
+                InputLabelProps={{ shrink: true }} 
+                disabled={isLoading} 
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth variant="outlined" disabled={isLoading}>
                 <InputLabel id="gender-label">Gender</InputLabel>
-                <Select
-                  labelId="gender-label"
-                  name="gender"
-                  value={profileData.gender || ''}
-                  onChange={handleChange}
+                <Select 
+                  labelId="gender-label" 
+                  name="gender" 
+                  value={profileData.gender} 
+                  onChange={handleChange} 
                   label="Gender"
                 >
                   <MenuItem value=""><em>None</em></MenuItem>
                   {genderOptions.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
+                    <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
+              <TextField 
+                fullWidth 
+                name="height_cm" 
+                label="Height (cm)" 
+                type="number" 
+                variant="outlined" 
+                value={profileData.height_cm} 
+                onChange={handleChange} 
+                InputProps={{ inputProps: { min: 0, step: "0.1" } }} 
+                disabled={isLoading} 
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField 
+                fullWidth 
+                name="weight_kg" 
+                label="Weight (kg)" 
+                type="number" 
+                variant="outlined" 
+                value={profileData.weight_kg} 
+                onChange={handleChange} 
+                InputProps={{ inputProps: { min: 0, step: "0.1" } }} 
+                disabled={isLoading} 
+              />
+            </Grid>
+            <Grid item xs={12}>
                <FormControl fullWidth variant="outlined" disabled={isLoading}>
                 <InputLabel id="activity-level-label">Activity Level</InputLabel>
-                <Select
-                  labelId="activity-level-label"
-                  name="activity_level"
-                  value={profileData.activity_level || ''}
-                  onChange={handleChange}
+                <Select 
+                  labelId="activity-level-label" 
+                  name="activity_level" 
+                  value={profileData.activity_level} 
+                  onChange={handleChange} 
                   label="Activity Level"
                 >
                   <MenuItem value=""><em>None</em></MenuItem>
                   {activityLevels.map((level) => (
-                    <MenuItem key={level.value} value={level.value}>
-                      {level.label}
-                    </MenuItem>
+                    <MenuItem key={level.value} value={level.value}>{level.label}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
-             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                name="height_cm"
-                label="Height (cm)"
-                type="number"
-                variant="outlined"
-                value={profileData.height_cm ?? ''}
-                onChange={handleChange}
-                InputProps={{ inputProps: { min: 0, step: "0.1" } }}
-                disabled={isLoading}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                name="weight_kg"
-                label="Weight (kg)"
-                type="number"
-                variant="outlined"
-                value={profileData.weight_kg ?? ''}
-                onChange={handleChange}
-                InputProps={{ inputProps: { min: 0, step: "0.1" } }}
-                disabled={isLoading}
-              />
-            </Grid>
-
-            {/* Calculated Metabolic Data (Read-only) */}
-            {(profileData.age !== undefined || profileData.bmr !== undefined || profileData.tdee !== undefined) && (
-              <>
-                <Grid item xs={12}>
-                  <Divider sx={{ my: 2 }}><Typography variant="overline">Calculated Health Metrics</Typography></Divider>
-                </Grid>
-                
-                {profileData.age !== null && profileData.age !== undefined && (
-                  <Grid item xs={12} sm={4}>
-                    <TextField
-                      fullWidth
-                      label="Age"
-                      value={`${profileData.age} years`}
-                      InputProps={{ readOnly: true }}
-                      variant="filled"
-                      sx={{ bgcolor: 'grey.100' }}
-                    />
-                  </Grid>
-                )}
-                
-                {profileData.bmr !== null && profileData.bmr !== undefined && (
-                  <Grid item xs={12} sm={4}>
-                    <TextField
-                      fullWidth
-                      label="BMR (Basal Metabolic Rate)"
-                      value={`${profileData.bmr} calories/day`}
-                      InputProps={{ readOnly: true }}
-                      variant="filled"
-                      sx={{ bgcolor: 'grey.100' }}
-                      helperText="Calories burned at rest"
-                    />
-                  </Grid>
-                )}
-                
-                {profileData.tdee !== null && profileData.tdee !== undefined && (
-                  <Grid item xs={12} sm={4}>
-                    <TextField
-                      fullWidth
-                      label="TDEE (Total Daily Energy)"
-                      value={`${profileData.tdee} calories/day`}
-                      InputProps={{ readOnly: true }}
-                      variant="filled"
-                      sx={{ bgcolor: 'grey.100' }}
-                      helperText="Total calories needed per day"
-                    />
-                  </Grid>
-                )}
-                
-                {(!profileData.age && !profileData.bmr && !profileData.tdee) && (
-                  <Grid item xs={12}>
-                    <Alert severity="info" sx={{ mt: 2 }}>
-                      Complete your profile information (date of birth, height, weight, gender, and activity level) to see calculated health metrics like BMR and TDEE.
-                    </Alert>
-                  </Grid>
-                )}
-              </>
-            )}
-
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                name="fitness_goals"
-                label="Fitness Goals"
-                multiline
-                rows={3}
-                variant="outlined"
-                value={profileData.fitness_goals || ''}
-                onChange={handleChange}
-                placeholder="e.g., lose 10kg, run a 5k, build muscle"
-                disabled={isLoading}
+              <TextField 
+                fullWidth 
+                name="fitness_goals" 
+                label="Fitness Goals" 
+                multiline 
+                rows={3} 
+                variant="outlined" 
+                value={profileData.fitness_goals} 
+                onChange={handleChange} 
+                placeholder="e.g., lose 10kg, run a 5k, build muscle" 
+                disabled={isLoading} 
               />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                name="dietary_restrictions"
-                label="Dietary Restrictions / Allergies"
-                multiline
-                rows={3}
-                variant="outlined"
-                value={profileData.dietary_restrictions || ''}
-                onChange={handleChange}
-                placeholder="e.g., vegetarian, gluten-free, peanut allergy"
-                disabled={isLoading}
+              <TextField 
+                fullWidth 
+                name="dietary_restrictions" 
+                label="Dietary Restrictions / Allergies" 
+                multiline 
+                rows={3} 
+                variant="outlined" 
+                value={profileData.dietary_restrictions} 
+                onChange={handleChange} 
+                placeholder="e.g., vegetarian, gluten-free, peanut allergy" 
+                disabled={isLoading} 
               />
             </Grid>
 
@@ -388,10 +399,10 @@ const ProfilePage: React.FC = () => {
             )}
 
             <Grid item xs={12} sx={{ textAlign: 'right' }}>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isLoading || isFetchingProfile}
+              <Button 
+                type="submit" 
+                variant="contained" 
+                disabled={isLoading || isFetchingProfile} 
                 sx={{ bgcolor: '#283618ff', '&:hover': { bgcolor: '#1e2a10ff' } }}
               >
                 {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Save Profile'}

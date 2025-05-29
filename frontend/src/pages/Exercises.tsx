@@ -18,9 +18,17 @@ import {
   Divider,
   CircularProgress,
   Alert,
-  Pagination
+  Pagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText
 } from '@mui/material';
-import { Search as SearchIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { getAllExercises, searchExercisesByName, Exercise } from '../services/exerciseApi';
 
@@ -38,6 +46,11 @@ const ExercisesPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]); // <-- State for dynamic categories (NEW)
+
+  // --- Added: State for Exercise Details Modal ---
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedExerciseForModal, setSelectedExerciseForModal] = useState<Exercise | null>(null);
+  // --- End Added ---
 
   // --- Effects ---
   useEffect(() => {
@@ -122,6 +135,18 @@ const ExercisesPage: React.FC = () => {
       setCurrentPage(1);
   }, [searchQuery, category]);
 
+  // --- Added: Handlers for Details Modal ---
+  const handleOpenDetailsModal = (exercise: Exercise) => {
+    setSelectedExerciseForModal(exercise);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false);
+    setSelectedExerciseForModal(null);
+  };
+  // --- End Added ---
+
   // --- Log before Render ---
   console.log('Filtered Exercises Count:', filteredExercises.length); // <-- ADD THIS LOG
   console.log('Current Page Exercises:', currentExercises); // <-- ADD THIS LOG
@@ -136,103 +161,278 @@ const ExercisesPage: React.FC = () => {
 
       {/* Search and Filter Controls */}
       <Paper elevation={1} sx={{ p: 2, mb: 3, borderLeft: '4px solid #606c38ff' }}>
-         <Grid container spacing={2} alignItems="center">
-           {/* TextField for Search (Keep as is) */}
-           <Grid item xs={12} md={6}>
-             <TextField
-               fullWidth
-               variant="outlined"
-               label="Search Exercises"
-               value={searchQuery}
-               onChange={(e) => {
-                 const newQuery = e.target.value;
-                 console.log('Search input changed:', newQuery); // <-- ADD THIS LOG
-                 setSearchQuery(newQuery);
-               }}
-               InputProps={{
-                 startAdornment: (
-                   <InputAdornment position="start">
-                     <SearchIcon sx={{ color: '#606c38ff' }} />
-                   </InputAdornment>
-                 ),
-                 sx: { /* Your existing sx props */ }
-               }}
-               sx={{ /* Your existing sx props */ }}
-             />
-           </Grid>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              label="Search Exercises"
+              value={searchQuery}
+              onChange={(e) => {
+                const newQuery = e.target.value;
+                console.log('Search input changed:', newQuery);
+                setSearchQuery(newQuery);
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: '#606c38ff' }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
 
-           {/* Select for Category (Modified options) */}
-           <Grid item xs={12} md={4}>
-             <FormControl fullWidth variant="outlined" disabled={isLoading || !!error}> {/* Disable while loading/error */}
-               <InputLabel sx={{ color: '#606c38ff' }}>Category</InputLabel>
-               <Select
-                 value={category}
-                 onChange={(e) => setCategory((e.target as HTMLSelectElement).value)}
-                 label="Category"
-                 sx={{ /* Your existing sx props */ }}
-               >
-                 {/* Static 'All' option */}
-                 <MenuItem value="all">All Categories</MenuItem>
-                 {/* Dynamic options from state (NEW) */}
-                 {availableCategories.map((catName) => (
-                   <MenuItem key={catName} value={catName}>
-                     {/* Capitalize for display */}
-                     {catName.charAt(0).toUpperCase() + catName.slice(1)}
-                   </MenuItem>
-                 ))}
-               </Select>
-             </FormControl>
-           </Grid>
-           {/* Filter Button (Keep as is, maybe repurpose/remove later) */}
-           <Grid item xs={12} md={2}> <Button /* ... */ > Filter </Button> </Grid>
-         </Grid>
+          <Grid item xs={12} md={4}>
+            <FormControl fullWidth variant="outlined" disabled={isLoading || !!error}>
+              <InputLabel sx={{ color: '#606c38ff' }}>Category</InputLabel>
+              <Select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as string)}
+                label="Category"
+              >
+                <MenuItem value="all">All Categories</MenuItem>
+                {availableCategories.map((catName) => (
+                  <MenuItem key={catName} value={catName}>
+                    {catName.charAt(0).toUpperCase() + catName.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <Button
+              variant="outlined"
+              sx={{
+                color: '#606c38ff',
+                borderColor: '#606c38ff',
+                '&:hover': {
+                  borderColor: '#283618ff',
+                  backgroundColor: 'rgba(96, 108, 56, 0.05)'
+                }
+              }}
+              fullWidth
+            >
+              Filter
+            </Button>
+          </Grid>
+        </Grid>
       </Paper>
 
-      {/* --- Conditional Rendering & Exercise List --- */}
-      {/* ... (Loading, Error, Exercise Grid, Pagination remain the same as previous step) ... */}      {isLoading ? ( <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}> <CircularProgress sx={{ color: '#606c38ff' }} /> </Box>
-       ) : error ? ( <Alert severity="error" sx={{ mt: 2 }}>Error: {error}</Alert>
-       ) : ( <> <Typography variant="h6" /* ... */ > {filteredExercises.length} Exercises Found </Typography>               
+      {/* Conditional Rendering & Exercise List */}
+      {isLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <CircularProgress sx={{ color: '#606c38ff' }} />
+        </Box>
+      ) : error ? (
+        <Alert severity="error" sx={{ mt: 2 }}>Error: {error}</Alert>
+      ) : (
+        <>
+          <Typography variant="h6" sx={{ color: '#283618ff', mb: 2 }}>
+            {filteredExercises.length} Exercises Found
+          </Typography>
           <Grid container spacing={2}>
             {currentExercises.map((exercise) => {
-              console.log('Rendering exercise:', exercise); // Keep this log              // Now using the original Card component
+              console.log('Rendering exercise:', exercise);
               return (
-                <Grid item xs={12} sm={6} md={4} key={exercise.id}>
-                  <Card sx={{ borderTop: '3px solid #606c38ff' }}>
-                    <CardContent>
+                <Grid item xs={12} sm={6} md={4} key={exercise.id || exercise.name}>
+                  <Card sx={{ borderTop: '3px solid #606c38ff', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <CardContent sx={{ flexGrow: 1 }}>
                       <Typography variant="h6" component="div" sx={{ color: '#283618ff' }}>
                         {exercise.name}
                       </Typography>
                       <Typography sx={{ color: '#606c38ff' }} gutterBottom>
-                        {exercise.category?.charAt(0).toUpperCase() + exercise.category?.slice(1)} • {exercise.level?.charAt(0).toUpperCase() + exercise.level?.slice(1)}
+                        {exercise.category?.charAt(0).toUpperCase() + (exercise.category?.slice(1) || '')}
+                        {exercise.level && ` • ${exercise.level.charAt(0).toUpperCase() + exercise.level.slice(1)}`}
                       </Typography>
                       <Divider sx={{ my: 1, bgcolor: '#dda15eff' }} />
                       <Typography variant="body2" sx={{ color: '#283618ff' }}>
-                        <strong>Target muscles:</strong> {exercise.primaryMuscles?.join(', ')}
+                        <strong>Target:</strong> {exercise.primaryMuscles?.join(', ')}
                       </Typography>
-                      {exercise.images && exercise.images.length > 0 && (
-                         <Box sx={{ mt: 2, textAlign: 'center' }}>
-                          <img src={exercise.images[0]} alt={exercise.name} style={{ maxWidth: '100%', height: 'auto', borderRadius: '4px' }} />
-                         </Box>
+                      {exercise.equipment && (
+                        <Typography variant="caption" display="block" sx={{ color: '#606c38ff', mt: 0.5 }}>
+                          Equipment: {exercise.equipment}
+                        </Typography>
                       )}
-                      <Box sx={{ mt: 2 }}>
-                        <Button size="small" variant="outlined" sx={{ borderColor: '#606c38ff', color: '#606c38ff', '&:hover': { borderColor: '#283618ff', backgroundColor: 'rgba(96, 108, 56, 0.1)' } }}>
-                          View Details
-                        </Button>
-                        <Button size="small" variant="text" sx={{ ml: 1, color: '#606c38ff', '&:hover': { backgroundColor: 'rgba(96, 108, 56, 0.1)' } }}>
-                          Add to Workout
-                        </Button>
-                      </Box>
                     </CardContent>
+                    <Box sx={{ p: 2, pt: 0, mt: 'auto' }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleOpenDetailsModal(exercise)}
+                        sx={{
+                          borderColor: '#606c38ff',
+                          color: '#606c38ff',
+                          '&:hover': {
+                            borderColor: '#283618ff',
+                            backgroundColor: 'rgba(96, 108, 56, 0.1)'
+                          }
+                        }}
+                      >
+                        View Details
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="text"
+                        sx={{
+                          ml: 1,
+                          color: '#606c38ff',
+                          '&:hover': {
+                            backgroundColor: 'rgba(96, 108, 56, 0.1)'
+                          }
+                        }}
+                      >
+                        Add to Workout
+                      </Button>
+                    </Box>
                   </Card>
                 </Grid>
               );
-
             })}
           </Grid>
-               {filteredExercises.length === 0 && ( <Paper sx={{ /* ... */ }} > {/* ... No exercises found message ... */} </Paper> )}
-               {totalPages > 1 && ( <Box sx={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}> <Pagination count={totalPages} page={currentPage} onChange={handlePageChange} /* ... sx props ... */ /> </Box> )}
-           </>
-       )}
+          {filteredExercises.length === 0 && (
+            <Paper sx={{ p: 3, textAlign: 'center', mt: 3, borderTop: '3px solid #606c38ff' }}>
+              <Typography variant="subtitle1" color="textSecondary">
+                No exercises found matching your criteria.
+              </Typography>
+            </Paper>
+          )}
+          {totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                sx={{
+                  '& .MuiPaginationItem-root': { color: '#606c38ff' },
+                  '& .Mui-selected': {
+                    backgroundColor: 'rgba(96, 108, 56, 0.2) !important',
+                    color: '#283618ff'
+                  }
+                }}
+              />
+            </Box>
+          )}
+        </>
+      )}
+
+      {/* --- Added: Exercise Details Modal --- */}
+      {selectedExerciseForModal && (
+        <Dialog open={isDetailsModalOpen} onClose={handleCloseDetailsModal} maxWidth="md" fullWidth scroll="paper">
+          <DialogTitle sx={{ backgroundColor: '#606c38ff', color: 'white', m: 0, p: 2 }}>
+            {selectedExerciseForModal.name}
+            <IconButton
+              aria-label="close"
+              onClick={handleCloseDetailsModal}
+              sx={{
+                position: 'absolute',
+                right: 8,
+                top: 8,
+                color: (theme) => theme.palette.grey[300]
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers sx={{ backgroundColor: '#fefae0' }}>
+            <Grid container spacing={2} sx={{ pt: 2 }}>
+              <Grid item xs={12} md={selectedExerciseForModal.images && selectedExerciseForModal.images.length > 0 ? 6 : 12}>
+                <Typography variant="subtitle1" gutterBottom sx={{ color: '#283618ff' }}>
+                  <strong>Category:</strong> {selectedExerciseForModal.category}
+                </Typography>
+                <Typography variant="body1" gutterBottom sx={{ color: '#283618ff' }}>
+                  <strong>Level:</strong> {selectedExerciseForModal.level}
+                </Typography>
+                {selectedExerciseForModal.force && (
+                  <Typography variant="body1" gutterBottom sx={{ color: '#283618ff' }}>
+                    <strong>Force:</strong> {selectedExerciseForModal.force}
+                  </Typography>
+                )}
+                {selectedExerciseForModal.mechanic && (
+                  <Typography variant="body1" gutterBottom sx={{ color: '#283618ff' }}>
+                    <strong>Mechanic:</strong> {selectedExerciseForModal.mechanic}
+                  </Typography>
+                )}
+                {selectedExerciseForModal.equipment && (
+                  <Typography variant="body1" gutterBottom sx={{ color: '#283618ff' }}>
+                    <strong>Equipment:</strong> {selectedExerciseForModal.equipment}
+                  </Typography>
+                )}
+                
+                <Divider sx={{ my: 2, borderColor: '#dda15eff' }} />
+                
+                <Typography variant="subtitle1" gutterBottom sx={{ color: '#283618ff' }}>
+                  <strong>Primary Muscles:</strong>
+                </Typography>
+                <Typography variant="body2" paragraph sx={{ color: '#606c38ff' }}>
+                  {selectedExerciseForModal.primaryMuscles.join(', ')}
+                </Typography>
+                
+                {selectedExerciseForModal.secondaryMuscles && selectedExerciseForModal.secondaryMuscles.length > 0 && (
+                  <>
+                    <Typography variant="subtitle1" gutterBottom sx={{ color: '#283618ff' }}>
+                      <strong>Secondary Muscles:</strong>
+                    </Typography>
+                    <Typography variant="body2" paragraph sx={{ color: '#606c38ff' }}>
+                      {selectedExerciseForModal.secondaryMuscles.join(', ')}
+                    </Typography>
+                  </>
+                )}
+              </Grid>
+              {selectedExerciseForModal.images && selectedExerciseForModal.images.length > 0 && (
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    {selectedExerciseForModal.images.slice(0, 2).map((imgSrc, index) => (
+                      <img 
+                        key={index}
+                        src={imgSrc.startsWith('http') ? imgSrc : `${process.env.PUBLIC_URL}${imgSrc}`}
+                        alt={`${selectedExerciseForModal.name} - view ${index + 1}`} 
+                        style={{
+                          maxWidth: '100%',
+                          height: 'auto',
+                          borderRadius: '4px',
+                          marginBottom: '10px',
+                          border: '1px solid #dda15eff'
+                        }} 
+                      />
+                    ))}
+                  </Box>
+                </Grid>
+              )}
+            </Grid>
+
+            <Divider sx={{ my: 2, borderColor: '#dda15eff' }} />
+
+            <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
+              Instructions:
+            </Typography>
+            <List dense sx={{ pl: 2 }}>
+              {selectedExerciseForModal.instructions.map((instruction, index) => (
+                <ListItem key={index} sx={{ display: 'list-item', listStyleType: 'decimal', pl: 1, color: '#283618ff' }}>
+                  <ListItemText primary={instruction} />
+                </ListItem>
+              ))}
+            </List>
+          </DialogContent>
+          <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff', p: '12px 16px' }}>
+            <Button 
+              onClick={() => {
+                console.log("Add to workout clicked for:", selectedExerciseForModal?.name);
+                handleCloseDetailsModal();
+              }}
+              variant="contained"
+              sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }}
+            >
+              Add to Workout
+            </Button>
+            <Button onClick={handleCloseDetailsModal} sx={{ color: '#bc6c25ff' }}>
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+      {/* --- End Added --- */}
     </Box>
   );
 };

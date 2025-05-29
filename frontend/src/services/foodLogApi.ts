@@ -72,6 +72,23 @@ export interface FoodLogEntry {
   updated_at: string; // Or Date
 }
 
+// Simplified interface for Dashboard consumption
+export interface LoggedFoodEntry {
+  log_entry_id: number;
+  user_id: string;
+  food_name: string;
+  calories: number;
+  protein: number;
+  fat: number;
+  carbohydrate: number; // Maps to carbs_consumed from backend
+  meal_type: string;
+  log_date: string;
+  quantity: number; // Maps to logged_quantity from backend
+  serving_description: string; // Maps to logged_serving_description from backend
+  notes?: string | null;
+  created_at: string;
+}
+
 // API Base URL - Make sure this is set in your frontend .env file (e.g., .env.local)
 // Example: VITE_API_BASE_URL=http://localhost:8000/api
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
@@ -201,3 +218,56 @@ export const deleteFoodLogEntryAPI = async (
    }
    return responseData; // This should be { success: true, message: "..." }
 };
+
+// Simplified function for Dashboard to get today's food logs with token only
+export async function getFoodLogsForDate(date: string, token: string): Promise<LoggedFoodEntry[]> {
+  console.log(`getFoodLogsForDate: Fetching food logs for date: ${date}`);
+  
+  const url = `${API_BASE_URL}/food-logs?date=${date}`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      },
+    });
+
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      throw new Error(`Failed to parse JSON response from ${url}`);
+    }
+
+    if (!response.ok || !responseData.success) {
+      console.error("getFoodLogsForDate: Get food logs failed response:", responseData);
+      throw new Error(responseData.message || `Failed to fetch food logs. Status: ${response.status}`);
+    }
+
+    // Transform FoodLogEntry[] to LoggedFoodEntry[] for Dashboard
+    const foodLogEntries: FoodLogEntry[] = responseData.data || [];
+    const loggedEntries: LoggedFoodEntry[] = foodLogEntries.map(entry => ({
+      log_entry_id: entry.log_entry_id,
+      user_id: entry.user_id,
+      food_name: entry.food_name || 'Unknown Food',
+      calories: Number(entry.calories_consumed) || 0,
+      protein: Number(entry.protein_consumed) || 0,
+      fat: Number(entry.fat_consumed) || 0,
+      carbohydrate: Number(entry.carbs_consumed) || 0,
+      meal_type: entry.meal_type,
+      log_date: entry.log_date,
+      quantity: Number(entry.logged_quantity) || 0,
+      serving_description: entry.logged_serving_description,
+      notes: entry.notes,
+      created_at: entry.created_at,
+    }));
+
+    console.log(`getFoodLogsForDate: Food logs for ${date} fetched successfully.`, loggedEntries);
+    return loggedEntries;
+  } catch (error) {
+    console.error(`getFoodLogsForDate: Get food logs API call failed for date ${date}:`, error);
+    throw error instanceof Error ? error : new Error("An unknown error occurred while fetching food logs.");
+  }
+}
