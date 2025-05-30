@@ -434,7 +434,7 @@ const ExercisesPage: React.FC = () => {
                       </Typography>
                       <Divider sx={{ my: 1, bgcolor: '#dda15eff' }} />
                       <Typography variant="body2" sx={{ color: '#283618ff' }}>
-                        <strong>Target:</strong> {exercise.primaryMuscles?.join(', ')}
+                        <strong>Target:</strong> {exercise.primaryMuscles?.join(', ') || 'N/A'}
                       </Typography>
                       {exercise.equipment && (
                         <Typography variant="caption" display="block" sx={{ color: '#606c38ff', mt: 0.5 }}>
@@ -564,7 +564,7 @@ const ExercisesPage: React.FC = () => {
                   <strong>Primary Muscles:</strong>
                 </Typography>
                 <Typography variant="body2" paragraph sx={{ color: '#606c38ff' }}>
-                  {selectedExerciseForModal.primaryMuscles.join(', ')}
+                  {selectedExerciseForModal.primaryMuscles?.join(', ') || 'N/A'}
                 </Typography>
                 
                 {selectedExerciseForModal.secondaryMuscles && selectedExerciseForModal.secondaryMuscles.length > 0 && (
@@ -606,11 +606,15 @@ const ExercisesPage: React.FC = () => {
               Instructions:
             </Typography>
             <List dense sx={{ pl: 2 }}>
-              {selectedExerciseForModal.instructions.map((instruction, index) => (
+              {selectedExerciseForModal.instructions?.map((instruction, index) => (
                 <ListItem key={index} sx={{ display: 'list-item', listStyleType: 'decimal', pl: 1, color: '#283618ff' }}>
                   <ListItemText primary={instruction} />
                 </ListItem>
-              ))}
+              )) || (
+                <ListItem sx={{ color: '#283618ff' }}>
+                  <ListItemText primary="No instructions available" />
+                </ListItem>
+              )}
             </List>
           </DialogContent>
           <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff', p: '12px 16px' }}>
