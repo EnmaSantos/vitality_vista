@@ -64,9 +64,6 @@ apiRouter.use("/fatsecret/foods", fatsecretProxyRouter.routes(), fatsecretProxyR
 // Mount Food Logging routes
 apiRouter.use("/food-logs", foodLogRouter.routes(), foodLogRouter.allowedMethods());
 
-// Mount Workout routes 
-apiRouter.use("/workouts", workoutRouter.routes(), workoutRouter.allowedMethods());
-
 // Mount Profile routes
 // profileRouter has a prefix "/users/me/profile", so combined with apiRouter prefix "/api",
 // the routes will be /api/users/me/profile
@@ -76,6 +73,10 @@ apiRouter.use(profileRouter.allowedMethods());
 // Register the main API router with the application
 app.use(apiRouter.routes());
 app.use(apiRouter.allowedMethods());
+
+// Mount Workout routes directly (workoutRouter already has /api/workout-plans prefix)
+app.use(workoutRouter.routes());
+app.use(workoutRouter.allowedMethods());
 
 // Default route (Handles requests that don't match any api routes)
 app.use((ctx) => {

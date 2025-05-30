@@ -27,11 +27,21 @@ import {
   List,
   ListItem,
   ListItemText,
-  Stack
+  Stack,
+  Snackbar
 } from '@mui/material';
-import { Search as SearchIcon, Close as CloseIcon, FitnessCenter as FitnessCenterIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Close as CloseIcon, FitnessCenter as FitnessCenterIcon, Add as AddIcon } from '@mui/icons-material';
 import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { getAllExercises, searchExercisesByName, Exercise } from '../services/exerciseApi';
+import { 
+  getUserWorkoutPlans, 
+  createWorkoutPlan, 
+  addExerciseToWorkoutPlan, 
+  WorkoutPlan, 
+  CreateWorkoutPlanRequest,
+  AddExerciseToPlanRequest 
+} from '../services/workoutApi';
+import { useAuth } from '../context/AuthContext';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -44,6 +54,12 @@ interface AddToWorkoutFormState {
   notes: string;
 }
 
+// Interface for new workout plan form
+interface NewWorkoutPlanForm {
+  name: string;
+  description: string;
+}
+
 const ExercisesPage: React.FC = () => {
   console.log('--- ExercisesPage Component Rendered ---'); // <-- ADD THIS LINE
 
@@ -51,6 +67,7 @@ const ExercisesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [category, setCategory] = useState('all'); // 'all' is still the default value
   const { setCurrentThemeColor } = useThemeContext();
+  const { token } = useAuth(); // Get authentication token
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +89,20 @@ const ExercisesPage: React.FC = () => {
     duration: '',
     notes: '',
   });
+
+  // Workout plan related state
+  const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState<number | 'new' | ''>('');
+  const [isLoadingPlans, setIsLoadingPlans] = useState(false);
+  const [newPlanForm, setNewPlanForm] = useState<NewWorkoutPlanForm>({ name: '', description: '' });
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Snackbar state for success/error messages
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({ open: false, message: '', severity: 'success' });
   // --- End Added ---
 
   // --- Effects ---
@@ -170,13 +201,38 @@ const ExercisesPage: React.FC = () => {
   };
   // --- End Added ---
 
+  // --- Added: Function to fetch workout plans ---
+  const fetchWorkoutPlans = async () => {
+    if (!token) return;
+    
+    setIsLoadingPlans(true);
+    try {
+      const plans = await getUserWorkoutPlans(token);
+      setWorkoutPlans(plans);
+    } catch (error) {
+      console.error('Error fetching workout plans:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to load workout plans',
+        severity: 'error'
+      });
+    } finally {
+      setIsLoadingPlans(false);
+    }
+  };
+
   // --- Added: Handlers for "Add to Workout" Modal ---
   const handleOpenAddToWorkoutModal = (exercise: Exercise) => {
     setExerciseToLog(exercise); // Store the exercise context
     // Reset form for the new exercise
     setAddToWorkoutForm({ sets: '', reps: '', weight: '', duration: '', notes: '' });
+    setSelectedPlanId('');
+    setNewPlanForm({ name: '', description: '' });
     setIsAddToWorkoutModalOpen(true);
     if (isDetailsModalOpen) handleCloseDetailsModal(); // Close details if open
+    
+    // Fetch workout plans when modal opens
+    fetchWorkoutPlans();
   };
 
   const handleCloseAddToWorkoutModal = () => {
@@ -189,13 +245,93 @@ const ExercisesPage: React.FC = () => {
     setAddToWorkoutForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveWorkoutEntry = () => {
-    console.log("--- Add to Workout ---");
-    console.log("Exercise:", exerciseToLog?.name, "(ID:", exerciseToLog?.id, ")");
-    console.log("Details:", addToWorkoutForm);
-    // TODO: Later, this will call an API to save to workout plan or log
-    handleCloseAddToWorkoutModal();
-    // Optionally, show a success message (Snackbar)
+  const handleNewPlanFormChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = event.target;
+    setNewPlanForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveWorkoutEntry = async () => {
+    if (!token || !exerciseToLog) {
+      setSnackbar({
+        open: true,
+        message: 'Authentication required',
+        severity: 'error'
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      let finalPlanId: number;
+
+      // Create new plan if "new" is selected
+      if (selectedPlanId === 'new') {
+        if (!newPlanForm.name.trim()) {
+          setSnackbar({
+            open: true,
+            message: 'Workout plan name is required',
+            severity: 'error'
+          });
+          return;
+        }
+        
+        const newPlan = await createWorkoutPlan({
+          name: newPlanForm.name.trim(),
+          description: newPlanForm.description.trim() || undefined
+        }, token);
+        
+        finalPlanId = newPlan.plan_id;
+        // Update the plans list with the new plan
+        setWorkoutPlans(prev => [newPlan, ...prev]);
+      } else if (typeof selectedPlanId === 'number') {
+        finalPlanId = selectedPlanId;
+      } else {
+        setSnackbar({
+          open: true,
+          message: 'Please select a workout plan',
+          severity: 'error'
+        });
+        return;
+      }
+
+      // Prepare exercise data
+      const exerciseData: AddExerciseToPlanRequest = {
+        exercise_id: exerciseToLog.id,
+        exercise_name: exerciseToLog.name,
+        sets: addToWorkoutForm.sets ? parseInt(addToWorkoutForm.sets) : undefined,
+        reps: addToWorkoutForm.reps || undefined,
+        weight_kg: addToWorkoutForm.weight ? parseFloat(addToWorkoutForm.weight) : undefined,
+        duration_minutes: addToWorkoutForm.duration ? parseInt(addToWorkoutForm.duration) : undefined,
+        notes: addToWorkoutForm.notes || undefined
+      };
+
+      // Add exercise to plan
+      const result = await addExerciseToWorkoutPlan(finalPlanId, exerciseData, token);
+      
+      console.log("Exercise added to workout plan:", result);
+      
+      setSnackbar({
+        open: true,
+        message: `${exerciseToLog.name} added to workout plan successfully!`,
+        severity: 'success'
+      });
+      
+      handleCloseAddToWorkoutModal();
+      
+    } catch (error) {
+      console.error('Error saving workout entry:', error);
+      setSnackbar({
+        open: true,
+        message: error instanceof Error ? error.message : 'Failed to add exercise to workout plan',
+        severity: 'error'
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
   // --- End Added ---
 
@@ -207,9 +343,8 @@ const ExercisesPage: React.FC = () => {
   return (
     <Box sx={{ padding: 3, backgroundColor: '#edf0e9', minHeight: '100vh' }}>
       {/* ... (Title Typography remains the same) ... */}
-       <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}> Exercise Library </Typography>
-       <Typography variant="subtitle1" sx={{ mb: 4, color: '#283618ff' }}> Browse and discover exercises to add to your routine. </Typography>
-
+      <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}> Exercise Library </Typography>
+      <Typography variant="subtitle1" sx={{ mb: 4, color: '#283618ff' }}> Browse and discover exercises to add to your routine. </Typography>
 
       {/* Search and Filter Controls */}
       <Paper elevation={1} sx={{ p: 2, mb: 3, borderLeft: '4px solid #606c38ff' }}>
@@ -515,6 +650,63 @@ const ExercisesPage: React.FC = () => {
           </DialogTitle>
           <DialogContent dividers sx={{ backgroundColor: '#fefae0' }}>
             <Stack spacing={2} sx={{ mt: 1 }}>
+              {/* Workout Plan Selection */}
+              <FormControl fullWidth variant="outlined">
+                <InputLabel>Select Workout Plan</InputLabel>
+                <Select
+                  value={selectedPlanId}
+                  onChange={(e) => setSelectedPlanId(e.target.value as number | 'new' | '')}
+                  label="Select Workout Plan"
+                  disabled={isLoadingPlans}
+                >
+                  <MenuItem value="">
+                    <em>Choose a workout plan...</em>
+                  </MenuItem>
+                  {workoutPlans.map((plan) => (
+                    <MenuItem key={plan.plan_id} value={plan.plan_id}>
+                      {plan.name}
+                    </MenuItem>
+                  ))}
+                  <MenuItem value="new">
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <AddIcon sx={{ mr: 1 }} />
+                      Create New Plan
+                    </Box>
+                  </MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* New Plan Form (shown when "new" is selected) */}
+              {selectedPlanId === 'new' && (
+                <>
+                  <TextField 
+                    label="New Plan Name" 
+                    name="name"
+                    value={newPlanForm.name} 
+                    onChange={handleNewPlanFormChange} 
+                    variant="outlined" 
+                    fullWidth 
+                    required
+                  />
+                  <TextField 
+                    label="Plan Description (optional)" 
+                    name="description"
+                    value={newPlanForm.description} 
+                    onChange={handleNewPlanFormChange} 
+                    variant="outlined" 
+                    fullWidth 
+                    multiline 
+                    rows={2} 
+                  />
+                </>
+              )}
+
+              <Divider />
+
+              {/* Exercise Details */}
+              <Typography variant="subtitle2" sx={{ color: '#283618ff', fontWeight: 'bold' }}>
+                Exercise Details:
+              </Typography>
               <TextField 
                 label="Sets" 
                 name="sets" 
@@ -573,13 +765,26 @@ const ExercisesPage: React.FC = () => {
               onClick={handleSaveWorkoutEntry} 
               variant="contained" 
               sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }}
+              disabled={isSaving || !selectedPlanId}
             >
-              Save Entry
+              {isSaving ? <CircularProgress size={20} /> : 'Save to Plan'}
             </Button>
           </DialogActions>
         </Dialog>
       )}
       {/* --- End Added --- */}
+
+      {/* Snackbar for success/error messages */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

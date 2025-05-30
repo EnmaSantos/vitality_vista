@@ -5,6 +5,7 @@ import { Router } from "../deps.ts"; // Import Router from Oak/deps
 import {
   createWorkoutPlanHandler,
   getUserWorkoutPlansHandler,
+  addExerciseToPlanHandler, // Import the new handler
   // Import other handlers here later as needed
 } from "../controllers/workoutController.ts";
 // Import the authentication middleware to protect these routes
@@ -27,11 +28,14 @@ workoutRouter.post("/", authMiddleware, createWorkoutPlanHandler);
 // Runs authMiddleware first, then the getUserWorkoutPlansHandler.
 workoutRouter.get("/", authMiddleware, getUserWorkoutPlansHandler);
 
+// POST /api/workout-plans/:planId/exercises
+// Adds an exercise to a specific workout plan for the authenticated user.
+workoutRouter.post("/:planId/exercises", authMiddleware, addExerciseToPlanHandler);
+
 // --- TODO: Add routes for other workout plan/log actions ---
 // e.g., GET /api/workout-plans/:planId -> getWorkoutPlanByIdHandler
 // e.g., PUT /api/workout-plans/:planId -> updateWorkoutPlanHandler
 // e.g., DELETE /api/workout-plans/:planId -> deleteWorkoutPlanHandler
-// e.g., POST /api/workout-plans/:planId/exercises -> addExerciseToPlanHandler
 // e.g., POST /api/workout-logs -> createWorkoutLogHandler
 // e.g., GET /api/workout-logs -> getUserWorkoutLogsHandler
 
