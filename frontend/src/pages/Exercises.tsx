@@ -666,7 +666,7 @@ const ExercisesPage: React.FC = () => {
                   <MenuItem value="">
                     <em>Choose a workout plan...</em>
                   </MenuItem>
-                  {workoutPlans.map((plan) => (
+                  {workoutPlans?.map((plan) => (
                     <MenuItem key={plan.plan_id} value={plan.plan_id}>
                       {plan.name}
                     </MenuItem>
