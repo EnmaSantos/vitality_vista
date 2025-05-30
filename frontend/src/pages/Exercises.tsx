@@ -26,13 +26,23 @@ import {
   IconButton,
   List,
   ListItem,
-  ListItemText
+  ListItemText,
+  Stack
 } from '@mui/material';
-import { Search as SearchIcon, Close as CloseIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Close as CloseIcon, FitnessCenter as FitnessCenterIcon } from '@mui/icons-material';
 import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { getAllExercises, searchExercisesByName, Exercise } from '../services/exerciseApi';
 
 const ITEMS_PER_PAGE = 9;
+
+// Interface for the "Add to Workout" form data
+interface AddToWorkoutFormState {
+  sets: string; // Keep as string for input, parse on submit
+  reps: string;
+  weight: string;
+  duration: string; // e.g., in minutes
+  notes: string;
+}
 
 const ExercisesPage: React.FC = () => {
   console.log('--- ExercisesPage Component Rendered ---'); // <-- ADD THIS LINE
@@ -50,6 +60,18 @@ const ExercisesPage: React.FC = () => {
   // --- Added: State for Exercise Details Modal ---
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedExerciseForModal, setSelectedExerciseForModal] = useState<Exercise | null>(null);
+  // --- End Added ---
+
+  // --- Added: State for "Add to Workout" Modal ---
+  const [isAddToWorkoutModalOpen, setIsAddToWorkoutModalOpen] = useState(false);
+  const [exerciseToLog, setExerciseToLog] = useState<Exercise | null>(null);
+  const [addToWorkoutForm, setAddToWorkoutForm] = useState<AddToWorkoutFormState>({
+    sets: '',
+    reps: '',
+    weight: '',
+    duration: '',
+    notes: '',
+  });
   // --- End Added ---
 
   // --- Effects ---
@@ -143,7 +165,37 @@ const ExercisesPage: React.FC = () => {
 
   const handleCloseDetailsModal = () => {
     setIsDetailsModalOpen(false);
-    setSelectedExerciseForModal(null);
+    // Delay clearing to allow modal to close gracefully if "Add to workout" was clicked from here
+    setTimeout(() => setSelectedExerciseForModal(null), 300);
+  };
+  // --- End Added ---
+
+  // --- Added: Handlers for "Add to Workout" Modal ---
+  const handleOpenAddToWorkoutModal = (exercise: Exercise) => {
+    setExerciseToLog(exercise); // Store the exercise context
+    // Reset form for the new exercise
+    setAddToWorkoutForm({ sets: '', reps: '', weight: '', duration: '', notes: '' });
+    setIsAddToWorkoutModalOpen(true);
+    if (isDetailsModalOpen) handleCloseDetailsModal(); // Close details if open
+  };
+
+  const handleCloseAddToWorkoutModal = () => {
+    setIsAddToWorkoutModalOpen(false);
+    setExerciseToLog(null); // Clear the exercise context
+  };
+
+  const handleAddToWorkoutFormChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = event.target;
+    setAddToWorkoutForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveWorkoutEntry = () => {
+    console.log("--- Add to Workout ---");
+    console.log("Exercise:", exerciseToLog?.name, "(ID:", exerciseToLog?.id, ")");
+    console.log("Details:", addToWorkoutForm);
+    // TODO: Later, this will call an API to save to workout plan or log
+    handleCloseAddToWorkoutModal();
+    // Optionally, show a success message (Snackbar)
   };
   // --- End Added ---
 
@@ -254,6 +306,21 @@ const ExercisesPage: React.FC = () => {
                           Equipment: {exercise.equipment}
                         </Typography>
                       )}
+                      {exercise.images && exercise.images.length > 0 && (
+                        <Box sx={{ mt: 2, textAlign: 'center' }}>
+                          <img 
+                            src={exercise.images[0].startsWith('http') ? exercise.images[0] : `${process.env.PUBLIC_URL}${exercise.images[0]}`} 
+                            alt={exercise.name} 
+                            style={{ 
+                              maxWidth: '100%', 
+                              height: 'auto', 
+                              borderRadius: '4px',
+                              maxHeight: '120px',
+                              objectFit: 'cover'
+                            }} 
+                          />
+                        </Box>
+                      )}
                     </CardContent>
                     <Box sx={{ p: 2, pt: 0, mt: 'auto' }}>
                       <Button
@@ -274,13 +341,9 @@ const ExercisesPage: React.FC = () => {
                       <Button
                         size="small"
                         variant="text"
-                        sx={{
-                          ml: 1,
-                          color: '#606c38ff',
-                          '&:hover': {
-                            backgroundColor: 'rgba(96, 108, 56, 0.1)'
-                          }
-                        }}
+                        onClick={() => handleOpenAddToWorkoutModal(exercise)}
+                        sx={{ ml: 1, color: '#606c38ff', '&:hover': { backgroundColor: 'rgba(96, 108, 56, 0.1)' } }}
+                        startIcon={<FitnessCenterIcon />}
                       >
                         Add to Workout
                       </Button>
@@ -417,17 +480,101 @@ const ExercisesPage: React.FC = () => {
           </DialogContent>
           <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff', p: '12px 16px' }}>
             <Button 
-              onClick={() => {
-                console.log("Add to workout clicked for:", selectedExerciseForModal?.name);
-                handleCloseDetailsModal();
-              }}
+              onClick={() => selectedExerciseForModal && handleOpenAddToWorkoutModal(selectedExerciseForModal)}
               variant="contained"
               sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }}
+              startIcon={<FitnessCenterIcon />}
             >
               Add to Workout
             </Button>
             <Button onClick={handleCloseDetailsModal} sx={{ color: '#bc6c25ff' }}>
               Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+      {/* --- End Added --- */}
+
+      {/* --- Added: "Add to Workout" Modal --- */}
+      {exerciseToLog && (
+        <Dialog open={isAddToWorkoutModalOpen} onClose={handleCloseAddToWorkoutModal} maxWidth="sm" fullWidth>
+          <DialogTitle sx={{ backgroundColor: '#606c38ff', color: 'white' }}>
+            Add "{exerciseToLog.name}" to Workout
+            <IconButton 
+              aria-label="close" 
+              onClick={handleCloseAddToWorkoutModal} 
+              sx={{ 
+                position: 'absolute', 
+                right: 8, 
+                top: 8, 
+                color: (theme) => theme.palette.grey[300] 
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers sx={{ backgroundColor: '#fefae0' }}>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <TextField 
+                label="Sets" 
+                name="sets" 
+                type="number" 
+                value={addToWorkoutForm.sets} 
+                onChange={handleAddToWorkoutFormChange} 
+                variant="outlined" 
+                fullWidth 
+                InputProps={{ inputProps: { min: 0 } }} 
+              />
+              <TextField 
+                label="Reps (e.g., 8-12, AMRAP)" 
+                name="reps" 
+                value={addToWorkoutForm.reps} 
+                onChange={handleAddToWorkoutFormChange} 
+                variant="outlined" 
+                fullWidth 
+              />
+              <TextField 
+                label="Weight (kg)" 
+                name="weight" 
+                type="number" 
+                value={addToWorkoutForm.weight} 
+                onChange={handleAddToWorkoutFormChange} 
+                variant="outlined" 
+                fullWidth 
+                InputProps={{ inputProps: { min: 0, step: "0.25" } }} 
+              />
+              <TextField 
+                label="Duration (minutes)" 
+                name="duration" 
+                type="number" 
+                value={addToWorkoutForm.duration} 
+                onChange={handleAddToWorkoutFormChange} 
+                variant="outlined" 
+                fullWidth 
+                InputProps={{ inputProps: { min: 0 } }} 
+              />
+              <TextField 
+                label="Notes" 
+                name="notes" 
+                value={addToWorkoutForm.notes} 
+                onChange={handleAddToWorkoutFormChange} 
+                variant="outlined" 
+                fullWidth 
+                multiline 
+                rows={3} 
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff' }}>
+            <Button onClick={handleCloseAddToWorkoutModal} sx={{ color: '#bc6c25ff' }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveWorkoutEntry} 
+              variant="contained" 
+              sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }}
+            >
+              Save Entry
             </Button>
           </DialogActions>
         </Dialog>
