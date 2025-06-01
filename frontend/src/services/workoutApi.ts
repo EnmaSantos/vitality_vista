@@ -47,7 +47,12 @@ export interface AddExerciseToPlanRequest {
  * Creates a new workout plan for the authenticated user
  */
 export async function createWorkoutPlan(planData: CreateWorkoutPlanRequest, token: string): Promise<WorkoutPlan> {
-  const response = await fetch(`${API_BASE_URL}workout-plans`, {
+  console.log('createWorkoutPlan called with:', planData);
+  
+  const url = `${API_BASE_URL}workout-plans`;
+  console.log('Making request to URL:', url);
+  
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -56,12 +61,25 @@ export async function createWorkoutPlan(planData: CreateWorkoutPlanRequest, toke
     body: JSON.stringify(planData),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || `Failed to create workout plan: ${response.status}`);
-  }
+  console.log('Response status:', response.status);
 
   const data = await response.json();
+  console.log('Create workout plan response:', data);
+  console.log('Response data type:', typeof data);
+  console.log('Response data keys:', data ? Object.keys(data) : 'data is null/undefined');
+
+  if (!response.ok) {
+    console.error('Create workout plan failed:', data);
+    throw new Error(data.message || `Failed to create workout plan: ${response.status}`);
+  }
+
+  console.log('data.data exists?', data && data.data);
+  
+  if (!data || !data.data) {
+    console.error('Invalid response structure. Expected {success, data: {...}}, got:', data);
+    throw new Error('Invalid response format from create workout plan API');
+  }
+  
   return data.data as WorkoutPlan;
 }
 
@@ -76,12 +94,12 @@ export async function getUserWorkoutPlans(token: string): Promise<WorkoutPlan[]>
     },
   });
 
+  const data = await response.json();
+  
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || `Failed to fetch workout plans: ${response.status}`);
+    throw new Error(data.message || `Failed to fetch workout plans: ${response.status}`);
   }
 
-  const data = await response.json();
   return data.data as WorkoutPlan[];
 }
 
@@ -102,11 +120,11 @@ export async function addExerciseToWorkoutPlan(
     body: JSON.stringify(exerciseData),
   });
 
+  const data = await response.json();
+  
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || `Failed to add exercise to plan: ${response.status}`);
+    throw new Error(data.message || `Failed to add exercise to plan: ${response.status}`);
   }
 
-  const data = await response.json();
   return data.data as PlanExercise;
 } 

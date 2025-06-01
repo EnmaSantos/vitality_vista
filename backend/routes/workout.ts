@@ -13,7 +13,7 @@ import { authMiddleware } from "../middleware/authMiddleware.ts";
 
 // Create a new router instance with a prefix for workout plan routes
 const workoutRouter = new Router({
-  prefix: "/api/workout-plans", // Using '/api/workout-plans' as the base path
+  prefix: "/workout-plans", // Using '/workout-plans' as the base path (without /api since it will be mounted under apiRouter)
 });
 
 // --- Define Workout Plan Routes ---

@@ -272,13 +272,21 @@ const ExercisesPage: React.FC = () => {
             message: 'Workout plan name is required',
             severity: 'error'
           });
+          setIsSaving(false);
           return;
         }
         
+        console.log('Creating new workout plan:', newPlanForm);
         const newPlan = await createWorkoutPlan({
           name: newPlanForm.name.trim(),
           description: newPlanForm.description.trim() || undefined
         }, token);
+        
+        console.log('New plan created:', newPlan);
+        
+        if (!newPlan || !newPlan.plan_id) {
+          throw new Error('Failed to create workout plan - invalid response');
+        }
         
         finalPlanId = newPlan.plan_id;
         // Update the plans list with the new plan
@@ -291,8 +299,11 @@ const ExercisesPage: React.FC = () => {
           message: 'Please select a workout plan',
           severity: 'error'
         });
+        setIsSaving(false);
         return;
       }
+
+      console.log('Using plan ID:', finalPlanId);
 
       // Prepare exercise data
       const exerciseData: AddExerciseToPlanRequest = {
@@ -304,6 +315,8 @@ const ExercisesPage: React.FC = () => {
         duration_minutes: addToWorkoutForm.duration ? parseInt(addToWorkoutForm.duration) : undefined,
         notes: addToWorkoutForm.notes || undefined
       };
+
+      console.log('Adding exercise to plan:', exerciseData);
 
       // Add exercise to plan
       const result = await addExerciseToWorkoutPlan(finalPlanId, exerciseData, token);
