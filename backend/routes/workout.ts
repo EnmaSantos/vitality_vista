@@ -9,6 +9,7 @@ import {
   createWorkoutLogHandler,
   getUserWorkoutLogsHandler,
   logExerciseDetailsHandler,
+  getPlanExercisesHandler,
 } from "../controllers/workoutController.ts";
 // Import the authentication middleware to protect these routes
 import { authMiddleware } from "../middleware/authMiddleware.ts";
@@ -29,6 +30,9 @@ workoutRouter.get("/workout-plans", authMiddleware, getUserWorkoutPlansHandler);
 // POST /api/workout-plans/:planId/exercises
 // Adds an exercise to a specific workout plan for the authenticated user.
 workoutRouter.post("/workout-plans/:planId/exercises", authMiddleware, addExerciseToPlanHandler);
+
+// GET /api/workout-plans/:planId/exercises (list exercises in a plan)
+workoutRouter.get("/workout-plans/:planId/exercises", authMiddleware, getPlanExercisesHandler);
 
 // --- Workout Log Routes ---
 

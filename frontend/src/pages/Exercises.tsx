@@ -116,7 +116,14 @@ const ExercisesPage: React.FC = () => {
     message: string;
     severity: 'success' | 'error';
   }>({ open: false, message: '', severity: 'success' });
-  // --- End Added ---
+
+  // --- Create Workout Plan Modal State ---
+  const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false);
+  const [planForm, setPlanForm] = useState({ name: '', description: '' });
+  const [planExercises, setPlanExercises] = useState<Exercise[]>([]);
+  const [planSearchQuery, setPlanSearchQuery] = useState('');
+  const [planSearchResults, setPlanSearchResults] = useState<Exercise[]>([]);
+  const [isSavingPlan, setIsSavingPlan] = useState(false);
 
   // --- Effects ---
   useEffect(() => {
@@ -175,8 +182,24 @@ const ExercisesPage: React.FC = () => {
     fetchExercises();
 
   }, [searchQuery]); // Re-run effect when searchQuery changes
-  // Note: We removed category from dependencies here to simplify; fetching all then filtering by category client-side first might be okay.
-  // Or, ideally, the backend API should support filtering by *both* search and category simultaneously.
+
+  // Effect: search exercises inside Create Plan modal
+  useEffect(() => {
+    const fetchSearch = async () => {
+      if (planSearchQuery.trim().length < 2) {
+        setPlanSearchResults([]);
+        return;
+      }
+      try {
+        const results = await searchExercisesByName(planSearchQuery.trim());
+        setPlanSearchResults(results.slice(0, 20));
+      } catch (err) {
+        console.error('Error searching exercises:', err);
+      }
+    };
+    fetchSearch();
+  }, [planSearchQuery]);
+
   // --- Filtering Logic (MODIFIED) ---
   // Apply only category filtering client-side now
   const filteredExercises = exercises.filter(exercise => {
@@ -453,6 +476,62 @@ const ExercisesPage: React.FC = () => {
     }
   };
 
+  // --- Handlers for Create Plan Modal ---
+  const handleOpenCreatePlanModal = () => {
+    setPlanForm({ name: '', description: '' });
+    setPlanExercises([]);
+    setPlanSearchQuery('');
+    setPlanSearchResults([]);
+    setIsCreatePlanModalOpen(true);
+  };
+
+  const handleCloseCreatePlanModal = () => {
+    setIsCreatePlanModalOpen(false);
+  };
+
+  const handlePlanFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPlanForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const addExerciseToPlanList = (ex: Exercise) => {
+    if (planExercises.find(pe => pe.id === ex.id)) return;
+    setPlanExercises(prev => [...prev, ex]);
+  };
+
+  const removeExerciseFromPlanList = (id: number) => {
+    setPlanExercises(prev => prev.filter(ex => ex.id !== id));
+  };
+
+  const handleSaveNewPlan = async () => {
+    if (!token) {
+      setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
+      return;
+    }
+    if (!planForm.name.trim()) {
+      setSnackbar({ open: true, message: 'Plan name is required', severity: 'error' });
+      return;
+    }
+    if (planExercises.length === 0) {
+      setSnackbar({ open: true, message: 'Add at least one exercise', severity: 'error' });
+      return;
+    }
+    setIsSavingPlan(true);
+    try {
+      const newPlan = await createWorkoutPlan({ name: planForm.name.trim(), description: planForm.description.trim() || undefined }, token);
+      for (const ex of planExercises) {
+        await addExerciseToWorkoutPlan(newPlan.plan_id, { exercise_id: ex.id, exercise_name: ex.name }, token);
+      }
+      setSnackbar({ open: true, message: 'Workout plan created!', severity: 'success' });
+      handleCloseCreatePlanModal();
+    } catch (err) {
+      console.error('Error saving plan:', err);
+      setSnackbar({ open: true, message: err instanceof Error ? err.message : 'Failed to save plan', severity: 'error' });
+    } finally {
+      setIsSavingPlan(false);
+    }
+  };
+
   // --- Log before Render ---
   console.log('Filtered Exercises Count:', filteredExercises.length); // <-- ADD THIS LOG
   console.log('Current Page Exercises:', currentExercises); // <-- ADD THIS LOG
@@ -460,9 +539,12 @@ const ExercisesPage: React.FC = () => {
   // --- Render Logic ---
   return (
     <Box sx={{ padding: 3, backgroundColor: '#edf0e9', minHeight: '100vh' }}>
-      {/* ... (Title Typography remains the same) ... */}
-      <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}> Exercise Library </Typography>
-      <Typography variant="subtitle1" sx={{ mb: 4, color: '#283618ff' }}> Browse and discover exercises to add to your routine. </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}> Exercise Library </Typography>
+        <Button variant="outlined" onClick={()=>window.location.assign('/my-plans')} sx={{ mr:1, color:'#606c38ff', borderColor:'#606c38ff', '&:hover':{ bgcolor:'rgba(96,108,56,0.05)'} }}>View My Plans</Button>
+        <Button variant="contained" onClick={handleOpenCreatePlanModal} sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }} startIcon={<AddIcon />}>Create Workout Plan</Button>
+      </Box>
+      <Typography variant="subtitle1" sx={{ mb: 4, color: '#283618ff' }}> Browse exercises to log workouts or build plans. </Typography>
 
       {/* Search and Filter Controls */}
       <Paper elevation={1} sx={{ p: 2, mb: 3, borderLeft: '4px solid #606c38ff' }}>
@@ -590,15 +672,6 @@ const ExercisesPage: React.FC = () => {
                         }}
                       >
                         View Details
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="text"
-                        onClick={() => handleOpenAddToWorkoutModal(exercise)}
-                        sx={{ ml: 1, color: '#606c38ff', '&:hover': { backgroundColor: 'rgba(96, 108, 56, 0.1)' } }}
-                        startIcon={<FitnessCenterIcon />}
-                      >
-                        Add to Plan
                       </Button>
                       <Button
                         size="small"
@@ -745,14 +818,6 @@ const ExercisesPage: React.FC = () => {
             </List>
           </DialogContent>
           <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff', p: '12px 16px' }}>
-            <Button 
-              onClick={() => selectedExerciseForModal && handleOpenAddToWorkoutModal(selectedExerciseForModal)}
-              variant="contained"
-              sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }}
-              startIcon={<FitnessCenterIcon />}
-            >
-              Add to Plan
-            </Button>
             <Button onClick={handleCloseDetailsModal} sx={{ color: '#bc6c25ff' }}>
               Close
             </Button>
@@ -996,6 +1061,64 @@ const ExercisesPage: React.FC = () => {
         </Dialog>
       )}
       {/* --- End Added --- */}
+
+      {/* --- Create Workout Plan Modal --- */}
+      {isCreatePlanModalOpen && (
+        <Dialog open={isCreatePlanModalOpen} onClose={handleCloseCreatePlanModal} maxWidth="md" fullWidth>
+          <DialogTitle sx={{ backgroundColor: '#606c38ff', color: 'white' }}>
+            Create Workout Plan
+            <IconButton
+              aria-label="close"
+              onClick={handleCloseCreatePlanModal}
+              sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[300] }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers sx={{ backgroundColor: '#fefae0' }}>
+            <Stack spacing={2}>
+              <TextField label="Plan Name" name="name" value={planForm.name} onChange={handlePlanFormChange} fullWidth required />
+              <TextField label="Description" name="description" value={planForm.description} onChange={handlePlanFormChange} fullWidth multiline rows={3} />
+              <Divider />
+              <TextField label="Search Exercises" value={planSearchQuery} onChange={(e)=>setPlanSearchQuery(e.target.value)} fullWidth InputProps={{ endAdornment: <SearchIcon /> }} />
+              {/* Search results */}
+              {planSearchResults.length > 0 && (
+                <Paper variant="outlined" sx={{ maxHeight: 200, overflowY: 'auto' }}>
+                  <List dense>
+                    {planSearchResults.map(ex => (
+                      <ListItem key={ex.id} button onClick={()=>addExerciseToPlanList(ex)}>
+                        <ListItemText primary={ex.name} secondary={ex.category} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              )}
+              <Divider />
+              <Typography variant="subtitle2">Selected Exercises ({planExercises.length})</Typography>
+              {planExercises.length === 0 ? (
+                <Typography variant="body2">No exercises added yet.</Typography>
+              ) : (
+                <Paper variant="outlined" sx={{ maxHeight: 200, overflowY: 'auto' }}>
+                  <List dense>
+                    {planExercises.map(ex => (
+                      <ListItem key={ex.id} secondaryAction={<IconButton edge="end" onClick={()=>removeExerciseFromPlanList(ex.id)}><CloseIcon fontSize="small" /></IconButton>}>
+                        <ListItemText primary={ex.name} secondary={ex.category} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              )}
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff' }}>
+            <Button onClick={handleCloseCreatePlanModal} sx={{ color: '#bc6c25ff' }}>Cancel</Button>
+            <Button variant="contained" onClick={handleSaveNewPlan} sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }} disabled={isSavingPlan || !planForm.name.trim() || planExercises.length===0}>
+              {isSavingPlan ? 'Saving...' : 'Save Plan'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+      {/* --- End Create Plan Modal --- */}
 
       {/* Snackbar for success/error messages */}
       <Snackbar

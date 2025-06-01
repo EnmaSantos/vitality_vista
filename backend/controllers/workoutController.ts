@@ -534,6 +534,56 @@ export async function getUserWorkoutLogsHandler(ctx: Context) {
   }
 }
 
+// --- New: Get exercises for a specific plan ---
+export async function getPlanExercisesHandler(ctx: Context) {
+  const response: ApiResponse<PlanExerciseSchema[]> = { success: false };
+  try {
+    await ensureConnection();
+    const userId = ctx.state.userId as string;
+    if (!userId) {
+      ctx.response.status = 401;
+      response.error = "User not authenticated";
+      ctx.response.body = response;
+      return;
+    }
+
+    const planId = parseInt(ctx.params.planId);
+    if (isNaN(planId)) {
+      ctx.response.status = 400;
+      response.error = "Invalid plan ID";
+      ctx.response.body = response;
+      return;
+    }
+
+    // Ensure the plan belongs to the user
+    const planRows = await dbClient.queryObject<{ plan_id: number }>(
+      "SELECT plan_id FROM workout_plans WHERE plan_id = $1 AND user_id = $2",
+      [planId, userId]
+    );
+    if (planRows.rows.length === 0) {
+      ctx.response.status = 404;
+      response.error = "Workout plan not found or access denied";
+      ctx.response.body = response;
+      return;
+    }
+
+    const result = await dbClient.queryObject<PlanExerciseSchema>(
+      `SELECT * FROM plan_exercises WHERE plan_id = $1 ORDER BY order_in_plan`,
+      [planId]
+    );
+
+    response.success = true;
+    response.data = result.rows;
+    ctx.response.status = 200;
+    ctx.response.body = response;
+  } catch (error) {
+    console.error("Error in getPlanExercisesHandler:", error);
+    response.error = error instanceof Error ? error.message : "Unknown error";
+    ctx.response.status = 500;
+    ctx.response.body = response;
+  }
+}
+
 // --- TODO: Add handlers for other workout management actions ---
 // export async function getWorkoutPlanByIdHandler(ctx: Context) { ... }
 // export async function updateWorkoutPlanHandler(ctx: Context) { ... }

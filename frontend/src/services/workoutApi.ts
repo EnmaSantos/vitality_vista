@@ -159,4 +159,15 @@ export async function addExerciseToWorkoutPlan(
     console.error('Error adding exercise to plan:', error);
     throw error;
   }
+}
+
+export async function getPlanExercises(planId: number, token: string): Promise<PlanExercise[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}workout-plans/${planId}/exercises`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const result: ApiResponse<PlanExercise[]> = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.error || result.message || 'Failed');
+    return result.data || [];
+  } catch(err) { console.error('getPlanExercises error', err); throw err; }
 } 
