@@ -1,7 +1,7 @@
 // backend/controllers/workoutController.ts
 
 import { Context } from "../deps.ts"; // Import Oak Context
-import dbClient from "../services/db.ts"; // Import the database client
+import dbClient, { ensureConnection } from "../services/db.ts"; // Import the database client
 import { WorkoutPlanSchema } from "../models/workoutPlan.model.ts"; // Import the model interface
 import { PlanExerciseSchema } from "../models/planExercise.model.ts"; // Import the plan exercise model
 import { WorkoutLogSchema } from "../models/workoutLog.model.ts"; // Import the workout log model
@@ -39,6 +39,9 @@ export async function createWorkoutPlanHandler(ctx: Context) {
   const response: ApiResponse<WorkoutPlanSchema> = { success: false };
   
   try {
+    // Ensure database connection is alive
+    await ensureConnection();
+    
     // 1. Validate authentication
     const userId = ctx.state.userId as string;
     if (!userId) {

@@ -92,7 +92,6 @@ if (connectionString) {
 }
 
 // --- Connection Test Function ---
-// (Keep the test function as corrected in the previous step)
 async function testDbConnection() {
   try {
     console.log(`Attempting to connect to database...`);
@@ -109,7 +108,14 @@ async function testDbConnection() {
     }
     await dbClient.connect();
     console.log("✅ Database connection pool established successfully!");
-    // await dbClient.end(); // Optional: Uncomment only if you want the test to disconnect immediately.
+    
+    // Test the connection with a simple query
+    try {
+      await dbClient.queryArray("SELECT 1");
+      console.log("✅ Database connection test query successful!");
+    } catch (queryError) {
+      console.error("❌ Database connection test query failed:", queryError);
+    }
   } catch (err) {
     console.error("❌ Database connection failed:");
     if (!connectionString) {
@@ -128,7 +134,28 @@ async function testDbConnection() {
     }
   }
 }
-testDbConnection(); // Call the test function
+
+// Run the connection test
+await testDbConnection();
+
+// --- Connection Health Check ---
+// Add a function to check and reconnect if needed
+export async function ensureConnection() {
+  try {
+    // Try a simple query to check if connection is alive
+    await dbClient.queryArray("SELECT 1");
+  } catch (error) {
+    console.error("Database connection lost, attempting to reconnect:", error);
+    try {
+      // Try to reconnect
+      await dbClient.connect();
+      console.log("Database reconnection successful");
+    } catch (reconnectError) {
+      console.error("Database reconnection failed:", reconnectError);
+      throw reconnectError;
+    }
+  }
+}
 
 // --- Export the Client ---
 export default dbClient;
