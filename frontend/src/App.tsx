@@ -15,7 +15,8 @@ import {
   Login,
   Signup,
   ForgotPassword,
-  ProfilePage // Import ProfilePage
+  ProfilePage,
+  MyPlans
 } from "./pages"; // Import from index.ts
 import { ThemeProvider } from './context/ThemeContext'; // Assuming you also have ThemeProvider
 import "./App.css";
@@ -47,6 +48,7 @@ const AppLayout = () => {
           <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />
           {/* Added Profile Page Route */}
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/my-plans" element={<ProtectedRoute><MyPlans /></ProtectedRoute>} />
           
           {/* --- Fallback Route (Remains Unchanged) --- */}
           <Route path="*" element={<Navigate to="/landing" replace />} />

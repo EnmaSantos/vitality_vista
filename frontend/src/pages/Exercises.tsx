@@ -43,6 +43,7 @@ import {
 } from '../services/workoutApi';
 import { useAuth } from '../context/AuthContext';
 import { createWorkoutLog, logExerciseDetail } from '../services/workoutLogApi';
+import { useNavigate } from 'react-router-dom';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -124,6 +125,8 @@ const ExercisesPage: React.FC = () => {
   const [planSearchQuery, setPlanSearchQuery] = useState('');
   const [planSearchResults, setPlanSearchResults] = useState<Exercise[]>([]);
   const [isSavingPlan, setIsSavingPlan] = useState(false);
+
+  const navigate = useNavigate();
 
   // --- Effects ---
   useEffect(() => {
@@ -541,7 +544,7 @@ const ExercisesPage: React.FC = () => {
     <Box sx={{ padding: 3, backgroundColor: '#edf0e9', minHeight: '100vh' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}> Exercise Library </Typography>
-        <Button variant="outlined" onClick={()=>window.location.assign('/my-plans')} sx={{ mr:1, color:'#606c38ff', borderColor:'#606c38ff', '&:hover':{ bgcolor:'rgba(96,108,56,0.05)'} }}>View My Plans</Button>
+        <Button variant="outlined" onClick={()=>navigate('/my-plans')} sx={{ mr:1, color:'#606c38ff', borderColor:'#606c38ff', '&:hover':{ bgcolor:'rgba(96,108,56,0.05)'} }}>View My Plans</Button>
         <Button variant="contained" onClick={handleOpenCreatePlanModal} sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }} startIcon={<AddIcon />}>Create Workout Plan</Button>
       </Box>
       <Typography variant="subtitle1" sx={{ mb: 4, color: '#283618ff' }}> Browse exercises to log workouts or build plans. </Typography>
