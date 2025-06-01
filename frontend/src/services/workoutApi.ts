@@ -73,11 +73,20 @@ export async function createWorkoutPlan(planData: CreateWorkoutPlanRequest, toke
     throw new Error(data.message || `Failed to create workout plan: ${response.status}`);
   }
 
-  console.log('data.data exists?', data && data.data);
+  console.log('data.data exists?', data && data.data); // Keep this log for now
+
+  // Check if data itself or data.data (the plan object) is missing or not an object
+  if (!data || typeof data.data !== 'object' || data.data === null) {
+    console.error('Invalid response structure: data.data is missing or not an object. Expected structure like {success: true, data: {plan object}}, got:', data);
+    throw new Error('Invalid response format from create workout plan API: plan data is missing or not an object.');
+  }
   
-  if (!data || !data.data) {
-    console.error('Invalid response structure. Expected {success, data: {...}}, got:', data);
-    throw new Error('Invalid response format from create workout plan API');
+  // Check if plan_id is missing or not a number within data.data
+  // We need to cast data.data to 'any' or a partial type for this check if properties are not certain yet
+  const planCandidate = data.data as any;
+  if (typeof planCandidate.plan_id !== 'number') {
+    console.error('Invalid plan object: plan_id is missing or not a number. Received plan object (data.data):', data.data);
+    throw new Error('Invalid plan data from API: plan_id is missing or is not a number.');
   }
   
   return data.data as WorkoutPlan;
@@ -124,6 +133,19 @@ export async function addExerciseToWorkoutPlan(
   
   if (!response.ok) {
     throw new Error(data.message || `Failed to add exercise to plan: ${response.status}`);
+  }
+
+  // Add detailed checks for data.data, similar to createWorkoutPlan
+  if (!data || typeof data.data !== 'object' || data.data === null) {
+    console.error('Invalid response structure from addExerciseToWorkoutPlan: data.data is missing or not an object. Expected {success: true, data: {plan exercise object}}, got:', data);
+    throw new Error('Invalid response format from add exercise to plan API: plan exercise data is missing or not an object.');
+  }
+
+  // Check if plan_exercise_id is missing or not a number within data.data
+  const planExerciseCandidate = data.data as any; // Cast to any for property check
+  if (typeof planExerciseCandidate.plan_exercise_id !== 'number') {
+    console.error('Invalid plan exercise object: plan_exercise_id is missing or not a number. Received object (data.data):', data.data);
+    throw new Error('Invalid plan exercise data from API: plan_exercise_id is missing or is not a number.');
   }
 
   return data.data as PlanExercise;
