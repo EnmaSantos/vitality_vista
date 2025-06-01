@@ -79,19 +79,16 @@ app.use(apiRouter.allowedMethods());
 
 // Default route (Handles requests that don't match any api routes)
 app.use((ctx) => {
-  // Check if it looks like an API request that wasn't caught
+  // Log the path that made it here to understand why it wasn't routed.
+  console.log(`Default handler reached for path: ${ctx.request.method} ${ctx.request.url.pathname}`);
+
+  // For any unhandled request, it's effectively a 404.
+  ctx.response.status = 404;
   if (ctx.request.url.pathname.startsWith('/api/')) {
-      ctx.response.status = 404;
-      ctx.response.body = { success: false, message: "API endpoint not found." };
+    ctx.response.body = { success: false, message: `API endpoint ${ctx.request.url.pathname} not found.` };
   } else {
-     // Handle non-API routes (e.g., potentially serving frontend static files later)
-     // For now, keep the welcome message or send a 404
-     ctx.response.body = {
-       success: true,
-       message: "Welcome to Vitality Vista API",
-       timestamp: new Date().toISOString(),
-     };
-     // Or ctx.response.status = 404;
+    // For non-API paths, a simpler message or different 404 page.
+    ctx.response.body = { success: false, message: `Resource ${ctx.request.url.pathname} not found.` };
   }
 });
 

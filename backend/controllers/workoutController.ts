@@ -76,11 +76,7 @@ export async function createWorkoutPlanHandler(ctx: Context) {
 
     // 5. Send Response
     ctx.response.status = 201; // Created
-    ctx.response.body = {
-      success: true,
-      message: "Workout plan created successfully",
-      data: newPlan,
-    };
+    ctx.response.body = newPlan; // Return the newPlan object directly
 
   } catch (error) {
     console.error("Error in createWorkoutPlanHandler:", error);
@@ -128,10 +124,7 @@ export async function getUserWorkoutPlansHandler(ctx: Context) {
 
     // 3. Send Response
     ctx.response.status = 200; // OK
-    ctx.response.body = {
-      success: true,
-      data: userPlans, // Return the array of plans (will be empty if none found)
-    };
+    ctx.response.body = userPlans; // Return the array of plans directly
 
   } catch (error) {
     console.error("Error in getUserWorkoutPlansHandler:", error);
@@ -245,11 +238,7 @@ export async function addExerciseToPlanHandler(ctx: Context) {
 
     // 9. Send Response
     ctx.response.status = 201;
-    ctx.response.body = {
-      success: true,
-      message: "Exercise added to workout plan successfully",
-      data: newPlanExercise,
-    };
+    ctx.response.body = newPlanExercise; // Return the newPlanExercise object directly
 
   } catch (error) {
     console.error("Error in addExerciseToPlanHandler:", error);
