@@ -1,4 +1,8 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/';
+// Determine API base URL: if running on localhost, point to local backend; otherwise use env var
+const API_BASE_URL =
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+    ? 'http://localhost:8000/api/'
+    : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/');
 
 // Interfaces
 export interface WorkoutLog {
