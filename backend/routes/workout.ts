@@ -10,6 +10,8 @@ import {
   getUserWorkoutLogsHandler,
   logExerciseDetailsHandler,
   getPlanExercisesHandler,
+  deleteWorkoutPlanHandler,
+  removeExerciseFromPlanHandler,
 } from "../controllers/workoutController.ts";
 // Import the authentication middleware to protect these routes
 import { authMiddleware } from "../middleware/authMiddleware.ts";
@@ -34,6 +36,14 @@ workoutRouter.post("/workout-plans/:planId/exercises", authMiddleware, addExerci
 // GET /api/workout-plans/:planId/exercises (list exercises in a plan)
 workoutRouter.get("/workout-plans/:planId/exercises", authMiddleware, getPlanExercisesHandler);
 
+// DELETE /api/workout-plans/:planId
+// Deletes a workout plan for the authenticated user.
+workoutRouter.delete("/workout-plans/:planId", authMiddleware, deleteWorkoutPlanHandler);
+
+// POST /api/workout-plans/:planId/exercises/:planExerciseId
+// Removes an exercise from a specific workout plan for the authenticated user.
+workoutRouter.delete("/workout-plans/:planId/exercises/:planExerciseId", authMiddleware, removeExerciseFromPlanHandler);
+
 // --- Workout Log Routes ---
 
 // POST /api/workout-logs
@@ -51,7 +61,6 @@ workoutRouter.post("/workout-logs/:logId/exercises", authMiddleware, logExercise
 // --- TODO: Add routes for other workout plan/log actions ---
 // e.g., GET /api/workout-plans/:planId -> getWorkoutPlanByIdHandler
 // e.g., PUT /api/workout-plans/:planId -> updateWorkoutPlanHandler
-// e.g., DELETE /api/workout-plans/:planId -> deleteWorkoutPlanHandler
 
 // Export the configured router
 export default workoutRouter;

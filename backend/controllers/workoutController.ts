@@ -584,6 +584,69 @@ export async function getPlanExercisesHandler(ctx: Context) {
   }
 }
 
+export async function deleteWorkoutPlanHandler(ctx: Context) {
+  const response: ApiResponse = { success: false };
+  try {
+    await ensureConnection();
+    const userId = ctx.state.userId as string;
+    if (!userId) { ctx.response.status=401; response.error="User not authenticated"; ctx.response.body=response; return; }
+
+    const planId = parseInt(ctx.params.planId);
+    if (isNaN(planId)) { ctx.response.status=400; response.error="Invalid plan ID"; ctx.response.body=response; return; }
+
+    // Check ownership
+    const plan = await dbClient.queryObject<{user_id:string}>("SELECT user_id FROM workout_plans WHERE plan_id=$1", [planId]);
+    if (plan.rows.length === 0 || plan.rows[0].user_id !== userId) { ctx.response.status=404; response.error="Plan not found or access denied"; ctx.response.body=response; return; }
+
+    // Delete associated exercises first (due to foreign key constraints)
+    await dbClient.queryObject("DELETE FROM plan_exercises WHERE plan_id=$1", [planId]);
+    // Then delete the plan itself
+    await dbClient.queryObject("DELETE FROM workout_plans WHERE plan_id=$1 AND user_id=$2", [planId, userId]);
+
+    response.success = true;
+    response.message = "Workout plan deleted successfully.";
+    ctx.response.status = 200;
+    ctx.response.body = response;
+  } catch (error) {
+    console.error("Error in deleteWorkoutPlanHandler:", error);
+    response.error = error instanceof Error ? error.message : "Unknown error";
+    ctx.response.status = 500;
+    ctx.response.body = response;
+  }
+}
+
+export async function removeExerciseFromPlanHandler(ctx: Context) {
+  const response: ApiResponse = { success: false };
+  try {
+    await ensureConnection();
+    const userId = ctx.state.userId as string;
+    if (!userId) { ctx.response.status=401; response.error="User not authenticated"; ctx.response.body=response; return; }
+
+    const planId = parseInt(ctx.params.planId);
+    const planExerciseId = parseInt(ctx.params.planExerciseId);
+    if (isNaN(planId) || isNaN(planExerciseId)) { ctx.response.status=400; response.error="Invalid ID(s)"; ctx.response.body=response; return; }
+
+    // Check plan ownership before allowing exercise removal
+    const plan = await dbClient.queryObject<{user_id:string}>(
+      "SELECT wp.user_id FROM workout_plans wp JOIN plan_exercises pe ON wp.plan_id = pe.plan_id WHERE pe.plan_exercise_id=$1 AND wp.plan_id=$2", 
+      [planExerciseId, planId]
+    );
+    if (plan.rows.length === 0 || plan.rows[0].user_id !== userId) { ctx.response.status=404; response.error="Exercise not found in plan or access denied"; ctx.response.body=response; return; }
+
+    await dbClient.queryObject("DELETE FROM plan_exercises WHERE plan_exercise_id=$1 AND plan_id=$2", [planExerciseId, planId]);
+    
+    response.success = true;
+    response.message = "Exercise removed from plan.";
+    ctx.response.status = 200;
+    ctx.response.body = response;
+  } catch (error) {
+    console.error("Error in removeExerciseFromPlanHandler:", error);
+    response.error = error instanceof Error ? error.message : "Unknown error";
+    ctx.response.status = 500;
+    ctx.response.body = response;
+  }
+}
+
 // --- TODO: Add handlers for other workout management actions ---
 // export async function getWorkoutPlanByIdHandler(ctx: Context) { ... }
 // export async function updateWorkoutPlanHandler(ctx: Context) { ... }

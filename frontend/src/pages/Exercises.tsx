@@ -44,6 +44,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { createWorkoutLog, logExerciseDetail } from '../services/workoutLogApi';
 import { useNavigate } from 'react-router-dom';
+import LogWorkoutModal from '../components/LogWorkoutModal';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -973,97 +974,12 @@ const ExercisesPage: React.FC = () => {
       )}
       {/* --- End Added --- */}
 
-      {/* --- Added: Log Workout Modal --- */}
-      {isLogWorkoutModalOpen && exerciseToLog && (
-        <Dialog open={isLogWorkoutModalOpen} onClose={handleCloseLogWorkoutModal} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{ backgroundColor: '#606c38ff', color: 'white' }}>
-            Log "{exerciseToLog.name}" Workout
-            <IconButton 
-              aria-label="close" 
-              onClick={handleCloseLogWorkoutModal} 
-              sx={{ 
-                position: 'absolute', 
-                right: 8, 
-                top: 8, 
-                color: (theme) => theme.palette.grey[300] 
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent dividers sx={{ backgroundColor: '#fefae0' }}>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <Typography variant="body2" sx={{ color: '#283618ff' }}>
-                Log your actual performance for this exercise
-              </Typography>
-              <TextField 
-                label="Sets Completed" 
-                name="sets" 
-                type="number" 
-                value={logWorkoutForm.sets} 
-                onChange={(e) => setLogWorkoutForm(prev => ({ ...prev, sets: e.target.value }))} 
-                variant="outlined" 
-                fullWidth 
-                InputProps={{ inputProps: { min: 1 } }} 
-              />
-              <TextField 
-                label="Reps Achieved" 
-                name="reps" 
-                type="number" 
-                value={logWorkoutForm.reps} 
-                onChange={(e) => setLogWorkoutForm(prev => ({ ...prev, reps: e.target.value }))} 
-                variant="outlined" 
-                fullWidth 
-                InputProps={{ inputProps: { min: 0 } }} 
-              />
-              <TextField 
-                label="Weight Used (kg)" 
-                name="weight" 
-                type="number" 
-                value={logWorkoutForm.weight} 
-                onChange={(e) => setLogWorkoutForm(prev => ({ ...prev, weight: e.target.value }))} 
-                variant="outlined" 
-                fullWidth 
-                InputProps={{ inputProps: { min: 0, step: "0.25" } }} 
-              />
-              <TextField 
-                label="Duration (seconds)" 
-                name="duration" 
-                type="number" 
-                value={logWorkoutForm.duration} 
-                onChange={(e) => setLogWorkoutForm(prev => ({ ...prev, duration: e.target.value }))} 
-                variant="outlined" 
-                fullWidth 
-                InputProps={{ inputProps: { min: 0 } }} 
-              />
-              <TextField 
-                label="Notes" 
-                name="notes" 
-                value={logWorkoutForm.notes} 
-                onChange={(e) => setLogWorkoutForm(prev => ({ ...prev, notes: e.target.value }))} 
-                variant="outlined" 
-                fullWidth 
-                multiline 
-                rows={3} 
-              />
-            </Stack>
-          </DialogContent>
-          <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff' }}>
-            <Button onClick={handleCloseLogWorkoutModal} sx={{ color: '#bc6c25ff' }}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSaveWorkoutLog}
-              variant="contained" 
-              sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }}
-              disabled={isSaving || !logWorkoutForm.sets}
-            >
-              {isSaving ? 'Saving...' : 'Save Workout'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
-      {/* --- End Added --- */}
+      <LogWorkoutModal
+        open={isLogWorkoutModalOpen}
+        exercise={exerciseToLog}
+        token={token}
+        onClose={handleCloseLogWorkoutModal}
+      />
 
       {/* --- Create Workout Plan Modal --- */}
       {isCreatePlanModalOpen && (
