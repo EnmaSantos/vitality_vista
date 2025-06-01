@@ -43,73 +43,80 @@ export interface AddExerciseToPlanRequest {
   notes?: string;
 }
 
+// Standard API response format
+interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
 /**
  * Creates a new workout plan for the authenticated user
  */
 export async function createWorkoutPlan(planData: CreateWorkoutPlanRequest, token: string): Promise<WorkoutPlan> {
-  console.log('createWorkoutPlan called with:', planData);
+  console.log('Creating workout plan with data:', planData);
   
   const url = `${API_BASE_URL}workout-plans`;
-  console.log('Making request to URL:', url);
+  console.log('Request URL:', url);
   
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(planData),
-  });
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(planData),
+    });
 
-  console.log('Response status:', response.status);
+    const result: ApiResponse<WorkoutPlan> = await response.json();
+    console.log('API Response:', result);
 
-  const data = await response.json();
-  console.log('Create workout plan response:', data);
-  console.log('Response data type:', typeof data);
-  console.log('Response data keys:', data ? Object.keys(data) : 'data is null/undefined');
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || result.message || `Failed to create workout plan: ${response.status}`);
+    }
 
-  if (!response.ok) {
-    console.error('Create workout plan failed:', data);
-    throw new Error(data.message || `Failed to create workout plan: ${response.status}`);
+    if (!result.data) {
+      throw new Error('No data returned from create workout plan API');
+    }
+
+    // Validate the response data
+    if (typeof result.data.plan_id !== 'number') {
+      console.error('Invalid plan_id in response:', result.data);
+      throw new Error(`Invalid plan data: plan_id is ${typeof result.data.plan_id}, expected number`);
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Error creating workout plan:', error);
+    throw error;
   }
-
-  // The log 'data.data exists?' is no longer relevant here if 'data' is the plan itself. Can be removed or commented out.
-  // console.log('data.data exists?', data && data.data);
-
-  // Check if data (the plan object itself) is missing or not an object
-  if (!data || typeof data !== 'object' || data === null) {
-    console.error('Invalid response structure: response data is missing or not an object. Expected plan object, got:', data);
-    throw new Error('Invalid response format from create workout plan API: plan data is missing or not an object.');
-  }
-  
-  // Check if plan_id is missing or not a number within data (the plan object)
-  const planCandidate = data as any; // data is now the plan candidate
-  if (typeof planCandidate.plan_id !== 'number') {
-    console.error('Invalid plan object: plan_id is missing or not a number. Received plan object:', data);
-    throw new Error('Invalid plan data from API: plan_id is missing or is not a number.');
-  }
-  
-  return data as WorkoutPlan; // Return data directly
 }
 
 /**
  * Gets all workout plans for the authenticated user
  */
 export async function getUserWorkoutPlans(token: string): Promise<WorkoutPlan[]> {
-  const response = await fetch(`${API_BASE_URL}workout-plans`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}workout-plans`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.message || `Failed to fetch workout plans: ${response.status}`);
+    const result: ApiResponse<WorkoutPlan[]> = await response.json();
+    
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || result.message || `Failed to fetch workout plans: ${response.status}`);
+    }
+
+    return result.data || [];
+  } catch (error) {
+    console.error('Error fetching workout plans:', error);
+    throw error;
   }
-
-  return data.data as WorkoutPlan[];
 }
 
 /**
@@ -120,33 +127,32 @@ export async function addExerciseToWorkoutPlan(
   exerciseData: AddExerciseToPlanRequest, 
   token: string
 ): Promise<PlanExercise> {
-  const response = await fetch(`${API_BASE_URL}workout-plans/${planId}/exercises`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(exerciseData),
-  });
-
-  const data = await response.json();
+  console.log('Adding exercise to plan:', { planId, exerciseData });
   
-  if (!response.ok) {
-    throw new Error(data.message || `Failed to add exercise to plan: ${response.status}`);
-  }
+  try {
+    const response = await fetch(`${API_BASE_URL}workout-plans/${planId}/exercises`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(exerciseData),
+    });
 
-  // Check if data (the plan exercise object itself) is missing or not an object
-  if (!data || typeof data !== 'object' || data === null) {
-    console.error('Invalid response structure from addExerciseToWorkoutPlan: response data is missing or not an object. Expected plan exercise object, got:', data);
-    throw new Error('Invalid response format from add exercise to plan API: plan exercise data is missing or not an object.');
-  }
+    const result: ApiResponse<PlanExercise> = await response.json();
+    console.log('API Response:', result);
+    
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || result.message || `Failed to add exercise to plan: ${response.status}`);
+    }
 
-  // Check if plan_exercise_id is missing or not a number within data (the plan exercise object)
-  const planExerciseCandidate = data as any; // data is now the plan exercise candidate
-  if (typeof planExerciseCandidate.plan_exercise_id !== 'number') {
-    console.error('Invalid plan exercise object: plan_exercise_id is missing or not a number. Received object:', data);
-    throw new Error('Invalid plan exercise data from API: plan_exercise_id is missing or is not a number.');
-  }
+    if (!result.data) {
+      throw new Error('No data returned from add exercise API');
+    }
 
-  return data as PlanExercise; // Return data directly
+    return result.data;
+  } catch (error) {
+    console.error('Error adding exercise to plan:', error);
+    throw error;
+  }
 } 

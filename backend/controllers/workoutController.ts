@@ -5,14 +5,21 @@ import dbClient from "../services/db.ts"; // Import the database client
 import { WorkoutPlanSchema } from "../models/workoutPlan.model.ts"; // Import the model interface
 import { PlanExerciseSchema } from "../models/planExercise.model.ts"; // Import the plan exercise model
 
-// Interface for the expected request body when creating a plan
-interface CreateWorkoutPlanPayload {
-  name: string;
-  description?: string; // Optional description
+// Consistent API Response Format
+interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
 }
 
-// Interface for adding an exercise to a workout plan
-interface AddExerciseToPlanPayload {
+// Request/Response DTOs
+interface CreateWorkoutPlanRequest {
+  name: string;
+  description?: string;
+}
+
+interface AddExerciseToPlanRequest {
   exercise_id: number;
   exercise_name: string;
   sets?: number;
@@ -24,143 +31,158 @@ interface AddExerciseToPlanPayload {
 }
 
 /**
- * Handles requests to create a new workout plan for the authenticated user.
+ * Creates a new workout plan for the authenticated user
  */
 export async function createWorkoutPlanHandler(ctx: Context) {
+  const response: ApiResponse<WorkoutPlanSchema> = { success: false };
+  
   try {
-    // 1. Get Authenticated User ID (Assumes authMiddleware runs before this)
-    //    authMiddleware should place userId in ctx.state
-    const userId = ctx.state.userId as string | undefined;
-
+    // 1. Validate authentication
+    const userId = ctx.state.userId as string;
     if (!userId) {
-      ctx.response.status = 401; // Unauthorized
-      ctx.response.body = { success: false, message: "User not authenticated" };
-      console.error("Error: userId missing from context state in createWorkoutPlanHandler");
+      ctx.response.status = 401;
+      response.error = "User not authenticated";
+      ctx.response.body = response;
       return;
     }
 
-    // 2. Get Request Body
+    // 2. Parse and validate request body
     if (!ctx.request.hasBody) {
-        ctx.response.status = 400; // Bad Request
-        ctx.response.body = { success: false, message: "Request body is missing" };
-        return;
+      ctx.response.status = 400;
+      response.error = "Request body is required";
+      ctx.response.body = response;
+      return;
     }
+
     const body = ctx.request.body({ type: 'json' });
-    const value = await body.value as CreateWorkoutPlanPayload;
+    const payload = await body.value as CreateWorkoutPlanRequest;
 
-    // 3. Basic Validation
-    if (!value.name || typeof value.name !== 'string' || value.name.trim() === '') {
-        ctx.response.status = 400;
-        ctx.response.body = { success: false, message: "Plan 'name' is required and must be a non-empty string" };
-        return;
-    }
-    if (value.description && typeof value.description !== 'string') {
-         ctx.response.status = 400;
-         ctx.response.body = { success: false, message: "Plan 'description' must be a string" };
-         return;
+    // 3. Validate required fields
+    if (!payload.name || payload.name.trim().length === 0) {
+      ctx.response.status = 400;
+      response.error = "Plan name is required";
+      ctx.response.body = response;
+      return;
     }
 
-    // 4. Insert into Database
+    // 4. Create the workout plan
     const insertQuery = `
       INSERT INTO workout_plans (user_id, name, description)
       VALUES ($1, $2, $3)
-      RETURNING plan_id, user_id, name, description, created_at, updated_at;
-    `; // RETURNING * gets the full new row
+      RETURNING plan_id, user_id, name, description, created_at, updated_at
+    `;
 
     const result = await dbClient.queryObject<WorkoutPlanSchema>(
-        insertQuery,
-        [userId, value.name.trim(), value.description?.trim() || null] // Use null if description is empty/missing
+      insertQuery,
+      [userId, payload.name.trim(), payload.description?.trim() || null]
     );
 
-    const newPlan = result.rows[0]; // Get the newly created plan record
+    const newPlan = result.rows[0];
+    
+    if (!newPlan) {
+      throw new Error("Failed to create workout plan - no data returned from database");
+    }
 
-    // 5. Send Response
-    ctx.response.status = 201; // Created
-    ctx.response.body = newPlan; // Return the newPlan object directly
+    // Log for debugging
+    console.log("Created workout plan:", {
+      plan_id: newPlan.plan_id,
+      plan_id_type: typeof newPlan.plan_id,
+      full_plan: newPlan
+    });
+
+    // 5. Send success response
+    response.success = true;
+    response.data = newPlan;
+    response.message = "Workout plan created successfully";
+    
+    ctx.response.status = 201;
+    ctx.response.body = response;
 
   } catch (error) {
     console.error("Error in createWorkoutPlanHandler:", error);
-    // Check for specific DB errors if needed (e.g., unique constraints)
-    ctx.response.status = 500; // Internal Server Error
-    ctx.response.body = {
-      success: false,
-      message: "Server error creating workout plan",
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    
+    response.success = false;
+    response.error = error instanceof Error ? error.message : "Unknown error occurred";
+    
+    ctx.response.status = 500;
+    ctx.response.body = response;
   }
 }
 
-// --- NEW Handler Function ---
-
 /**
- * Handles requests to get all workout plans for the authenticated user.
+ * Gets all workout plans for the authenticated user
  */
 export async function getUserWorkoutPlansHandler(ctx: Context) {
+  const response: ApiResponse<WorkoutPlanSchema[]> = { success: false };
+  
   try {
-    // 1. Get Authenticated User ID
-    const userId = ctx.state.userId as string | undefined;
-
+    // 1. Validate authentication
+    const userId = ctx.state.userId as string;
     if (!userId) {
-      ctx.response.status = 401; // Unauthorized
-      ctx.response.body = { success: false, message: "User not authenticated" };
-      console.error("Error: userId missing from context state in getUserWorkoutPlansHandler");
+      ctx.response.status = 401;
+      response.error = "User not authenticated";
+      ctx.response.body = response;
       return;
     }
 
-    // 2. Fetch plans from Database
+    // 2. Fetch workout plans
     const selectQuery = `
       SELECT plan_id, user_id, name, description, created_at, updated_at
       FROM workout_plans
       WHERE user_id = $1
-      ORDER BY updated_at DESC; -- Order by most recently updated
+      ORDER BY updated_at DESC
     `;
 
     const result = await dbClient.queryObject<WorkoutPlanSchema>(
-        selectQuery,
-        [userId]
+      selectQuery,
+      [userId]
     );
 
-    const userPlans = result.rows; // Get the array of plans
-
-    // 3. Send Response
-    ctx.response.status = 200; // OK
-    ctx.response.body = userPlans; // Return the array of plans directly
+    // 3. Send success response
+    response.success = true;
+    response.data = result.rows;
+    response.message = `Found ${result.rows.length} workout plans`;
+    
+    ctx.response.status = 200;
+    ctx.response.body = response;
 
   } catch (error) {
     console.error("Error in getUserWorkoutPlansHandler:", error);
-    ctx.response.status = 500; // Internal Server Error
-    ctx.response.body = {
-      success: false,
-      message: "Server error retrieving workout plans",
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    
+    response.success = false;
+    response.error = error instanceof Error ? error.message : "Unknown error occurred";
+    
+    ctx.response.status = 500;
+    ctx.response.body = response;
   }
 }
 
 /**
- * Handles requests to add an exercise to a specific workout plan.
- * POST /api/workout-plans/:planId/exercises
+ * Adds an exercise to a specific workout plan
  */
 export async function addExerciseToPlanHandler(ctx: Context) {
+  const response: ApiResponse<PlanExerciseSchema> = { success: false };
+  
   try {
-    // 1. Get Authenticated User ID
-    const userId = ctx.state.userId as string | undefined;
+    // 1. Validate authentication
+    const userId = ctx.state.userId as string;
     if (!userId) {
       ctx.response.status = 401;
-      ctx.response.body = { success: false, message: "User not authenticated" };
-      console.error("Error: userId missing from context state in addExerciseToPlanHandler");
+      response.error = "User not authenticated";
+      ctx.response.body = response;
       return;
     }
 
-    // 2. Get plan ID from URL parameters
+    // 2. Validate plan ID
     const planId = parseInt(ctx.params.planId);
     if (isNaN(planId)) {
       ctx.response.status = 400;
-      ctx.response.body = { success: false, message: "Invalid plan ID" };
+      response.error = "Invalid plan ID";
+      ctx.response.body = response;
       return;
     }
 
-    // 3. Verify the plan belongs to the user
+    // 3. Verify plan ownership
     const planCheckQuery = `
       SELECT plan_id FROM workout_plans 
       WHERE plan_id = $1 AND user_id = $2
@@ -169,42 +191,43 @@ export async function addExerciseToPlanHandler(ctx: Context) {
     
     if (planCheckResult.rows.length === 0) {
       ctx.response.status = 404;
-      ctx.response.body = { success: false, message: "Workout plan not found or access denied" };
+      response.error = "Workout plan not found or access denied";
+      ctx.response.body = response;
       return;
     }
 
-    // 4. Get Request Body
+    // 4. Parse and validate request body
     if (!ctx.request.hasBody) {
       ctx.response.status = 400;
-      ctx.response.body = { success: false, message: "Request body is missing" };
+      response.error = "Request body is required";
+      ctx.response.body = response;
       return;
     }
 
     const body = ctx.request.body({ type: 'json' });
-    const payload = await body.value as AddExerciseToPlanPayload;
+    const payload = await body.value as AddExerciseToPlanRequest;
 
-    // 5. Basic Validation
-    if (!payload.exercise_id || typeof payload.exercise_id !== 'number') {
+    // 5. Validate required fields
+    if (!payload.exercise_id || !payload.exercise_name) {
       ctx.response.status = 400;
-      ctx.response.body = { success: false, message: "exercise_id is required and must be a number" };
-      return;
-    }
-    if (!payload.exercise_name || typeof payload.exercise_name !== 'string' || payload.exercise_name.trim() === '') {
-      ctx.response.status = 400;
-      ctx.response.body = { success: false, message: "exercise_name is required and must be a non-empty string" };
+      response.error = "Exercise ID and name are required";
+      ctx.response.body = response;
       return;
     }
 
-    // 6. Get the next order for this plan
+    // 6. Get next order number
     const orderQuery = `
       SELECT COALESCE(MAX(order_in_plan), 0) + 1 as next_order
       FROM plan_exercises 
       WHERE plan_id = $1
     `;
-    const orderResult = await dbClient.queryObject<{ next_order: number }>(orderQuery, [planId]);
+    const orderResult = await dbClient.queryObject<{ next_order: number }>(
+      orderQuery, 
+      [planId]
+    );
     const nextOrder = orderResult.rows[0]?.next_order || 1;
 
-    // 7. Insert the exercise into the plan
+    // 7. Insert the exercise
     const insertQuery = `
       INSERT INTO plan_exercises (
         plan_id, exercise_id, exercise_name, order_in_plan,
@@ -212,7 +235,7 @@ export async function addExerciseToPlanHandler(ctx: Context) {
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING plan_exercise_id, plan_id, exercise_id, exercise_name, order_in_plan,
-                sets, reps, weight_kg, duration_minutes, rest_period_seconds, notes;
+                sets, reps, weight_kg, duration_minutes, rest_period_seconds, notes
     `;
 
     const result = await dbClient.queryObject<PlanExerciseSchema>(insertQuery, [
@@ -229,25 +252,33 @@ export async function addExerciseToPlanHandler(ctx: Context) {
     ]);
 
     const newPlanExercise = result.rows[0];
+    
+    if (!newPlanExercise) {
+      throw new Error("Failed to add exercise - no data returned from database");
+    }
 
-    // 8. Update the workout plan's updated_at timestamp
+    // 8. Update workout plan timestamp
     await dbClient.queryObject(
       `UPDATE workout_plans SET updated_at = CURRENT_TIMESTAMP WHERE plan_id = $1`,
       [planId]
     );
 
-    // 9. Send Response
+    // 9. Send success response
+    response.success = true;
+    response.data = newPlanExercise;
+    response.message = "Exercise added to workout plan successfully";
+    
     ctx.response.status = 201;
-    ctx.response.body = newPlanExercise; // Return the newPlanExercise object directly
+    ctx.response.body = response;
 
   } catch (error) {
     console.error("Error in addExerciseToPlanHandler:", error);
+    
+    response.success = false;
+    response.error = error instanceof Error ? error.message : "Unknown error occurred";
+    
     ctx.response.status = 500;
-    ctx.response.body = {
-      success: false,
-      message: "Server error adding exercise to plan",
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    ctx.response.body = response;
   }
 }
 

@@ -1,4 +1,3 @@
-/// <reference types="https://deno.land/x/deno/cli/types/dts/index.d.ts" />
 // server.ts
 import { Application, oakCors, loadEnv, Router } from "./deps.ts";
 
