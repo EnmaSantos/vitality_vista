@@ -42,6 +42,7 @@ import {
   AddExerciseToPlanRequest 
 } from '../services/workoutApi';
 import { useAuth } from '../context/AuthContext';
+import { createWorkoutLog, logExerciseDetail } from '../services/workoutLogApi';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -82,20 +83,32 @@ const ExercisesPage: React.FC = () => {
   // --- Added: State for "Add to Workout" Modal ---
   const [isAddToWorkoutModalOpen, setIsAddToWorkoutModalOpen] = useState(false);
   const [exerciseToLog, setExerciseToLog] = useState<Exercise | null>(null);
+  const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<number | 'new' | ''>('');
+  const [newPlanForm, setNewPlanForm] = useState<NewWorkoutPlanForm>({
+    name: '',
+    description: ''
+  });
   const [addToWorkoutForm, setAddToWorkoutForm] = useState<AddToWorkoutFormState>({
     sets: '',
     reps: '',
     weight: '',
     duration: '',
-    notes: '',
+    notes: ''
   });
-
-  // Workout plan related state
-  const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
-  const [selectedPlanId, setSelectedPlanId] = useState<number | 'new' | ''>('');
-  const [isLoadingPlans, setIsLoadingPlans] = useState(false);
-  const [newPlanForm, setNewPlanForm] = useState<NewWorkoutPlanForm>({ name: '', description: '' });
   const [isSaving, setIsSaving] = useState(false);
+
+  // --- Added: State for Log Workout Modal ---
+  const [isLogWorkoutModalOpen, setIsLogWorkoutModalOpen] = useState(false);
+  const [currentWorkoutLog, setCurrentWorkoutLog] = useState<number | null>(null);
+  const [logWorkoutForm, setLogWorkoutForm] = useState({
+    sets: '',
+    reps: '',
+    weight: '',
+    duration: '',
+    notes: ''
+  });
 
   // Snackbar state for success/error messages
   const [snackbar, setSnackbar] = useState<{
@@ -237,7 +250,10 @@ const ExercisesPage: React.FC = () => {
 
   const handleCloseAddToWorkoutModal = () => {
     setIsAddToWorkoutModalOpen(false);
-    setExerciseToLog(null); // Clear the exercise context
+    setExerciseToLog(null);
+    setSelectedPlanId('');
+    setNewPlanForm({ name: '', description: '' });
+    setAddToWorkoutForm({ sets: '', reps: '', weight: '', duration: '', notes: '' });
   };
 
   const handleAddToWorkoutFormChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -346,7 +362,96 @@ const ExercisesPage: React.FC = () => {
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
-  // --- End Added ---
+
+  const handleOpenLogWorkoutModal = (exercise: Exercise) => {
+    setExerciseToLog(exercise);
+    setIsLogWorkoutModalOpen(true);
+    setLogWorkoutForm({ sets: '', reps: '', weight: '', duration: '', notes: '' });
+  };
+
+  const handleCloseLogWorkoutModal = () => {
+    setIsLogWorkoutModalOpen(false);
+    setExerciseToLog(null);
+    setLogWorkoutForm({ sets: '', reps: '', weight: '', duration: '', notes: '' });
+  };
+
+  const handleSaveWorkoutLog = async () => {
+    if (!token || !exerciseToLog) {
+      setSnackbar({
+        open: true,
+        message: 'Authentication required',
+        severity: 'error'
+      });
+      return;
+    }
+
+    if (!logWorkoutForm.sets) {
+      setSnackbar({
+        open: true,
+        message: 'Please enter the number of sets',
+        severity: 'error'
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      // First, create a workout log if we don't have one
+      if (!currentWorkoutLog) {
+        const newLog = await createWorkoutLog({}, token);
+        setCurrentWorkoutLog(newLog.log_id);
+        
+        // Log the exercise detail
+        await logExerciseDetail(
+          newLog.log_id,
+          {
+            exercise_id: exerciseToLog.id,
+            exercise_name: exerciseToLog.name,
+            set_number: parseInt(logWorkoutForm.sets),
+            reps_achieved: logWorkoutForm.reps ? parseInt(logWorkoutForm.reps) : undefined,
+            weight_kg_used: logWorkoutForm.weight ? parseFloat(logWorkoutForm.weight) : undefined,
+            duration_achieved_seconds: logWorkoutForm.duration ? parseInt(logWorkoutForm.duration) : undefined,
+            notes: logWorkoutForm.notes || undefined
+          },
+          token
+        );
+      } else {
+        // Use existing workout log
+        await logExerciseDetail(
+          currentWorkoutLog,
+          {
+            exercise_id: exerciseToLog.id,
+            exercise_name: exerciseToLog.name,
+            set_number: parseInt(logWorkoutForm.sets),
+            reps_achieved: logWorkoutForm.reps ? parseInt(logWorkoutForm.reps) : undefined,
+            weight_kg_used: logWorkoutForm.weight ? parseFloat(logWorkoutForm.weight) : undefined,
+            duration_achieved_seconds: logWorkoutForm.duration ? parseInt(logWorkoutForm.duration) : undefined,
+            notes: logWorkoutForm.notes || undefined
+          },
+          token
+        );
+      }
+      
+      setSnackbar({
+        open: true,
+        message: `${exerciseToLog.name} logged successfully!`,
+        severity: 'success'
+      });
+      
+      handleCloseLogWorkoutModal();
+      
+    } catch (error) {
+      console.error('Error logging workout:', error);
+      setSnackbar({
+        open: true,
+        message: error instanceof Error ? error.message : 'Failed to log workout',
+        severity: 'error'
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // --- Log before Render ---
   console.log('Filtered Exercises Count:', filteredExercises.length); // <-- ADD THIS LOG
@@ -493,7 +598,16 @@ const ExercisesPage: React.FC = () => {
                         sx={{ ml: 1, color: '#606c38ff', '&:hover': { backgroundColor: 'rgba(96, 108, 56, 0.1)' } }}
                         startIcon={<FitnessCenterIcon />}
                       >
-                        Add to Workout
+                        Add to Plan
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="text"
+                        onClick={() => handleOpenLogWorkoutModal(exercise)}
+                        sx={{ ml: 1, color: '#bc6c25ff', '&:hover': { backgroundColor: 'rgba(188, 108, 37, 0.1)' } }}
+                        startIcon={<FitnessCenterIcon />}
+                      >
+                        Log Workout
                       </Button>
                     </Box>
                   </Card>
@@ -637,7 +751,7 @@ const ExercisesPage: React.FC = () => {
               sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }}
               startIcon={<FitnessCenterIcon />}
             >
-              Add to Workout
+              Add to Plan
             </Button>
             <Button onClick={handleCloseDetailsModal} sx={{ color: '#bc6c25ff' }}>
               Close
@@ -785,6 +899,98 @@ const ExercisesPage: React.FC = () => {
               disabled={isSaving || !selectedPlanId}
             >
               {isSaving ? <CircularProgress size={20} /> : 'Save to Plan'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+      {/* --- End Added --- */}
+
+      {/* --- Added: Log Workout Modal --- */}
+      {isLogWorkoutModalOpen && exerciseToLog && (
+        <Dialog open={isLogWorkoutModalOpen} onClose={handleCloseLogWorkoutModal} maxWidth="sm" fullWidth>
+          <DialogTitle sx={{ backgroundColor: '#606c38ff', color: 'white' }}>
+            Log "{exerciseToLog.name}" Workout
+            <IconButton 
+              aria-label="close" 
+              onClick={handleCloseLogWorkoutModal} 
+              sx={{ 
+                position: 'absolute', 
+                right: 8, 
+                top: 8, 
+                color: (theme) => theme.palette.grey[300] 
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers sx={{ backgroundColor: '#fefae0' }}>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <Typography variant="body2" sx={{ color: '#283618ff' }}>
+                Log your actual performance for this exercise
+              </Typography>
+              <TextField 
+                label="Sets Completed" 
+                name="sets" 
+                type="number" 
+                value={logWorkoutForm.sets} 
+                onChange={(e) => setLogWorkoutForm(prev => ({ ...prev, sets: e.target.value }))} 
+                variant="outlined" 
+                fullWidth 
+                InputProps={{ inputProps: { min: 1 } }} 
+              />
+              <TextField 
+                label="Reps Achieved" 
+                name="reps" 
+                type="number" 
+                value={logWorkoutForm.reps} 
+                onChange={(e) => setLogWorkoutForm(prev => ({ ...prev, reps: e.target.value }))} 
+                variant="outlined" 
+                fullWidth 
+                InputProps={{ inputProps: { min: 0 } }} 
+              />
+              <TextField 
+                label="Weight Used (kg)" 
+                name="weight" 
+                type="number" 
+                value={logWorkoutForm.weight} 
+                onChange={(e) => setLogWorkoutForm(prev => ({ ...prev, weight: e.target.value }))} 
+                variant="outlined" 
+                fullWidth 
+                InputProps={{ inputProps: { min: 0, step: "0.25" } }} 
+              />
+              <TextField 
+                label="Duration (seconds)" 
+                name="duration" 
+                type="number" 
+                value={logWorkoutForm.duration} 
+                onChange={(e) => setLogWorkoutForm(prev => ({ ...prev, duration: e.target.value }))} 
+                variant="outlined" 
+                fullWidth 
+                InputProps={{ inputProps: { min: 0 } }} 
+              />
+              <TextField 
+                label="Notes" 
+                name="notes" 
+                value={logWorkoutForm.notes} 
+                onChange={(e) => setLogWorkoutForm(prev => ({ ...prev, notes: e.target.value }))} 
+                variant="outlined" 
+                fullWidth 
+                multiline 
+                rows={3} 
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff' }}>
+            <Button onClick={handleCloseLogWorkoutModal} sx={{ color: '#bc6c25ff' }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveWorkoutLog}
+              variant="contained" 
+              sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }}
+              disabled={isSaving || !logWorkoutForm.sets}
+            >
+              {isSaving ? 'Saving...' : 'Save Workout'}
             </Button>
           </DialogActions>
         </Dialog>
