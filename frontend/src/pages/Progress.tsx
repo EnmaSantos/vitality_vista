@@ -18,6 +18,30 @@ import {
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useThemeContext, themeColors } from '../context/ThemeContext';
 
+// Import Chart.js components
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -93,6 +117,47 @@ const ProgressPage: React.FC = () => {
     ]
   };
 
+  // Chart options (can be customized further)
+  const lineChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: true,
+        text: 'Chart Title Placeholder', // Generic placeholder, will be overridden per chart
+      },
+    },
+    scales: {
+        x: {
+            grid: {
+                display: false // Hides X-axis grid lines
+            }
+        },
+        y: {
+            grid: {
+                color: '#e0e0e0' // Light grey Y-axis grid lines
+            }
+        }
+    }
+  };
+
+  // Placeholder data for Weight Trend chart
+  const weightTrendData = {
+    labels: [], // Will be populated with dates
+    datasets: [
+      {
+        label: 'Weight (lbs)',
+        data: [], // Will be populated with weight values
+        borderColor: themeColors.pakistanGreen, 
+        backgroundColor: `${themeColors.pakistanGreen}66`, // Added alpha for ~40% transparency
+        tension: 0.1,
+      },
+    ],
+  };
+
   return (
     <Box sx={{ padding: 3, backgroundColor: '#edf0e4', minHeight: '100vh' }}>
       <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}>
@@ -111,10 +176,10 @@ const ProgressPage: React.FC = () => {
                 Current Weight
               </Typography>
               <Typography variant="h4" component="div" sx={{ color: '#283618ff' }}>
-                173 lbs
+                N/A 
               </Typography>
               <Typography color="primary" variant="body2" sx={{ color: '#606c38ff' }}>
-                -7 lbs overall
+                Loading...
               </Typography>
             </CardContent>
           </Card>
@@ -126,10 +191,10 @@ const ProgressPage: React.FC = () => {
                 Body Fat %
               </Typography>
               <Typography variant="h4" component="div" sx={{ color: '#283618ff' }}>
-                20.5%
+                N/A
               </Typography>
               <Typography color="primary" variant="body2" sx={{ color: '#606c38ff' }}>
-                -1.5% overall
+                Loading...
               </Typography>
             </CardContent>
           </Card>
@@ -141,10 +206,10 @@ const ProgressPage: React.FC = () => {
                 Avg. Daily Calories
               </Typography>
               <Typography variant="h4" component="div" sx={{ color: '#283618ff' }}>
-                2,250
+                N/A
               </Typography>
               <Typography color="primary" variant="body2" sx={{ color: '#606c38ff' }}>
-                Last 7 days
+                Loading...
               </Typography>
             </CardContent>
           </Card>
@@ -156,10 +221,10 @@ const ProgressPage: React.FC = () => {
                 Workout Frequency
               </Typography>
               <Typography variant="h4" component="div" sx={{ color: '#283618ff' }}>
-                4
+                N/A
               </Typography>
               <Typography color="primary" variant="body2" sx={{ color: '#606c38ff' }}>
-                Sessions this week
+                Loading...
               </Typography>
             </CardContent>
           </Card>
@@ -207,16 +272,25 @@ const ProgressPage: React.FC = () => {
               <Paper 
                 sx={{ 
                   height: 300, 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  alignItems: 'center',
+                  p: 2, // Added padding for the chart area
                   bgcolor: '#f5f5f5',
-                  border: '1px dashed #ccc'
+                  border: '1px solid #e0e0e0' // Changed from dashed to solid for a cleaner look
                 }}
               >
-                <Typography color="textSecondary">
-                  Weight chart will appear here
-                </Typography>
+                {/* Specific options for this chart instance, overriding generic title */}
+                <Line 
+                  options={{
+                    ...lineChartOptions,
+                    plugins: {
+                      ...lineChartOptions.plugins,
+                      title: {
+                        ...lineChartOptions.plugins.title,
+                        text: 'Weight Trend',
+                      },
+                    },
+                  }}
+                  data={weightTrendData} 
+                />
               </Paper>
             </Grid>
             <Grid item xs={12} md={6}>
