@@ -36,14 +36,14 @@ import { getAllExercises, searchExercisesByName, Exercise } from '../services/ex
 import { 
   getUserWorkoutPlans, 
   createWorkoutPlan, 
-  addExerciseToWorkoutPlan, 
+  addExerciseToPlan,
   WorkoutPlan, 
-  CreateWorkoutPlanRequest,
-  AddExerciseToPlanRequest 
-} from '../services/workoutApi';
+  CreateWorkoutPlanPayload,
+  AddExerciseToPlanPayload 
+} from '../api/workoutApi';
 import { useAuth } from '../context/AuthContext';
 import { createWorkoutLog, logExerciseDetail } from '../services/workoutLogApi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import LogWorkoutModal from '../components/LogWorkoutModal';
 
 const ITEMS_PER_PAGE = 9;
@@ -128,11 +128,21 @@ const ExercisesPage: React.FC = () => {
   const [isSavingPlan, setIsSavingPlan] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation(); // Get location object
 
   // --- Effects ---
   useEffect(() => {
     setCurrentThemeColor(themeColors.darkMossGreen);
   }, [setCurrentThemeColor]);
+
+  // Effect to automatically open Create Plan Modal if signaled by navigation state
+  useEffect(() => {
+    if (location.state?.openCreatePlanModal) {
+      handleOpenCreatePlanModal();
+      // Clear the state from history so modal doesn't reopen on refresh/back
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate]); // Added navigate to dependency array
 
   // Effect for fetching exercises data (MODIFIED for Search)
   useEffect(() => {
@@ -349,7 +359,7 @@ const ExercisesPage: React.FC = () => {
       console.log('Using plan ID:', finalPlanId);
 
       // Prepare exercise data
-      const exerciseData: AddExerciseToPlanRequest = {
+      const exerciseData: AddExerciseToPlanPayload = {
         exercise_id: exerciseToLog.id,
         exercise_name: exerciseToLog.name,
         sets: addToWorkoutForm.sets ? parseInt(addToWorkoutForm.sets) : undefined,
@@ -362,7 +372,7 @@ const ExercisesPage: React.FC = () => {
       console.log('Adding exercise to plan:', exerciseData);
 
       // Add exercise to plan
-      const result = await addExerciseToWorkoutPlan(finalPlanId, exerciseData, token);
+      const result = await addExerciseToPlan(finalPlanId, exerciseData, token);
       
       console.log("Exercise added to workout plan:", result);
       
@@ -522,12 +532,41 @@ const ExercisesPage: React.FC = () => {
     }
     setIsSavingPlan(true);
     try {
-      const newPlan = await createWorkoutPlan({ name: planForm.name.trim(), description: planForm.description.trim() || undefined }, token);
-      for (const ex of planExercises) {
-        await addExerciseToWorkoutPlan(newPlan.plan_id, { exercise_id: ex.id, exercise_name: ex.name }, token);
+      const newPlanResponse = await createWorkoutPlan(
+        { name: planForm.name.trim(), description: planForm.description.trim() || undefined }, 
+        token
+      );
+
+      if (newPlanResponse && newPlanResponse.success && newPlanResponse.data) {
+        const createdPlanId = newPlanResponse.data.plan_id;
+
+        if (createdPlanId === undefined || createdPlanId === null) {
+            console.error('Error saving plan: plan_id is missing from createWorkoutPlan response', newPlanResponse);
+            setSnackbar({ open: true, message: 'Error: Could not get new plan ID.', severity: 'error' });
+            setIsSavingPlan(false);
+            return;
+        }
+        
+        console.log(`Successfully created plan with ID: ${createdPlanId}. Now adding exercises.`);
+
+        for (const ex of planExercises) {
+          // Ensure you are passing all required fields for AddExerciseToPlanPayload if any
+          // For now, just exercise_id and exercise_name as per previous structure
+          const exercisePayload: AddExerciseToPlanPayload = {
+            exercise_id: ex.id, 
+            exercise_name: ex.name 
+            // Populate other fields like sets, reps, notes if they are part of the modal 
+            // and meant to be saved with the initial plan creation here.
+            // This example assumes they are not, and only id/name are added initially.
+          };
+          await addExerciseToPlan(createdPlanId, exercisePayload, token);
+        }
+        setSnackbar({ open: true, message: 'Workout plan created!', severity: 'success' });
+        handleCloseCreatePlanModal();
+      } else {
+        console.error('Error creating plan:', newPlanResponse?.error || 'Unknown error during plan creation');
+        setSnackbar({ open: true, message: newPlanResponse?.error || 'Failed to create plan base', severity: 'error' });
       }
-      setSnackbar({ open: true, message: 'Workout plan created!', severity: 'success' });
-      handleCloseCreatePlanModal();
     } catch (err) {
       console.error('Error saving plan:', err);
       setSnackbar({ open: true, message: err instanceof Error ? err.message : 'Failed to save plan', severity: 'error' });

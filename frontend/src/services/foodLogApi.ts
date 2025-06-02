@@ -89,9 +89,11 @@ export interface LoggedFoodEntry {
   created_at: string;
 }
 
-// API Base URL - Make sure this is set in your frontend .env file (e.g., .env.local)
-// Example: VITE_API_BASE_URL=http://localhost:8000/api
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// API Base URL - Updated to be consistent with other API services
+const API_BASE_URL =
+ (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+   ? 'http://localhost:8000/api/' // Backend running locally (ends with /)
+   : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/'); // Default (ends with /)
 
 /**
  * A helper function to make authenticated API calls.
@@ -152,7 +154,7 @@ export const searchFoodsAPI = async (
   auth: AuthContextType,
   maxResults = 10
 ): Promise<NutritionData[]> => {
-  const url = `${API_BASE_URL}/fatsecret/foods/search?query=${encodeURIComponent(query)}&max_results=${maxResults}`;
+  const url = `${API_BASE_URL}fatsecret/foods/search?query=${encodeURIComponent(query)}&max_results=${maxResults}`;
   return fetchWithAuth(url, { method: 'GET' }, auth);
 };
 
@@ -160,7 +162,7 @@ export const getFoodDetailsAPI = async (
   foodId: string,
   auth: AuthContextType
 ): Promise<NutritionData | null> => {
-  const url = `${API_BASE_URL}/fatsecret/foods/${foodId}`;
+  const url = `${API_BASE_URL}fatsecret/foods/${foodId}`;
   return fetchWithAuth(url, { method: 'GET' }, auth);
 };
 
@@ -168,7 +170,7 @@ export const searchFoodsAutocompleteAPI = async (
   expression: string,
   auth: AuthContextType
 ): Promise<AutocompleteSuggestion[]> => {
-  const url = `${API_BASE_URL}/fatsecret/foods/autocomplete?expression=${encodeURIComponent(expression)}`;
+  const url = `${API_BASE_URL}fatsecret/foods/autocomplete?expression=${encodeURIComponent(expression)}`;
   return fetchWithAuth(url, { method: 'GET' }, auth);
 };
 
@@ -179,7 +181,7 @@ export const createFoodLogEntryAPI = async (
   payload: CreateFoodLogEntryPayload,
   auth: AuthContextType
 ): Promise<FoodLogEntry> => {
-  const url = `${API_BASE_URL}/food-logs`;
+  const url = `${API_BASE_URL}food-logs`;
   return fetchWithAuth(url, {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -190,7 +192,7 @@ export const getFoodLogEntriesAPI = async (
   date: string, // YYYY-MM-DD
   auth: AuthContextType
 ): Promise<FoodLogEntry[]> => {
-  const url = `${API_BASE_URL}/food-logs?date=${date}`;
+  const url = `${API_BASE_URL}food-logs?date=${date}`;
   return fetchWithAuth(url, { method: 'GET' }, auth);
 };
 
@@ -198,7 +200,7 @@ export const deleteFoodLogEntryAPI = async (
   logEntryId: number,
   auth: AuthContextType
 ): Promise<{ success: boolean, message: string }> => { // Backend returns specific message object for delete
-  const url = `${API_BASE_URL}/food-logs/${logEntryId}`;
+  const url = `${API_BASE_URL}food-logs/${logEntryId}`;
   
   // Re-implement fetch directly for DELETE if fetchWithAuth isn't flexible enough for non-data responses
    const headers = new Headers();
@@ -223,7 +225,7 @@ export const deleteFoodLogEntryAPI = async (
 export async function getFoodLogsForDate(date: string, token: string): Promise<LoggedFoodEntry[]> {
   console.log(`getFoodLogsForDate: Fetching food logs for date: ${date}`);
   
-  const url = `${API_BASE_URL}/food-logs?date=${date}`;
+  const url = `${API_BASE_URL}food-logs?date=${date}`;
   
   try {
     const response = await fetch(url, {

@@ -32,6 +32,17 @@ interface AddExerciseToPlanRequest {
   notes?: string;
 }
 
+// New DTO for updating a plan exercise
+interface UpdatePlanExerciseRequest {
+  sets?: number;
+  reps?: string;
+  weight_kg?: number;
+  duration_minutes?: number;
+  rest_period_seconds?: number;
+  notes?: string;
+  order_in_plan?: number; // Optional: if we want to allow reordering later
+}
+
 /**
  * Creates a new workout plan for the authenticated user
  */
@@ -585,24 +596,42 @@ export async function getPlanExercisesHandler(ctx: Context) {
 }
 
 export async function deleteWorkoutPlanHandler(ctx: Context) {
+  console.log("[deleteWorkoutPlanHandler] Handler called");
+  console.log("[deleteWorkoutPlanHandler] Plan ID from params:", ctx.params.planId);
+  console.log("[deleteWorkoutPlanHandler] User ID from state:", ctx.state.userId);
+  
   const response: ApiResponse = { success: false };
   try {
     await ensureConnection();
     const userId = ctx.state.userId as string;
-    if (!userId) { ctx.response.status=401; response.error="User not authenticated"; ctx.response.body=response; return; }
+    if (!userId) { 
+      console.log("[deleteWorkoutPlanHandler] No userId found in state");
+      ctx.response.status=401; response.error="User not authenticated"; ctx.response.body=response; return; 
+    }
 
     const planId = parseInt(ctx.params.planId);
-    if (isNaN(planId)) { ctx.response.status=400; response.error="Invalid plan ID"; ctx.response.body=response; return; }
+    if (isNaN(planId)) { 
+      console.log("[deleteWorkoutPlanHandler] Invalid plan ID:", ctx.params.planId);
+      ctx.response.status=400; response.error="Invalid plan ID"; ctx.response.body=response; return; 
+    }
 
+    console.log("[deleteWorkoutPlanHandler] Checking plan ownership for planId:", planId, "userId:", userId);
     // Check ownership
     const plan = await dbClient.queryObject<{user_id:string}>("SELECT user_id FROM workout_plans WHERE plan_id=$1", [planId]);
-    if (plan.rows.length === 0 || plan.rows[0].user_id !== userId) { ctx.response.status=404; response.error="Plan not found or access denied"; ctx.response.body=response; return; }
+    if (plan.rows.length === 0 || plan.rows[0].user_id !== userId) { 
+      console.log("[deleteWorkoutPlanHandler] Plan not found or user mismatch. Found rows:", plan.rows.length);
+      ctx.response.status=404; response.error="Plan not found or access denied"; ctx.response.body=response; return; 
+    }
 
+    console.log("[deleteWorkoutPlanHandler] Deleting plan exercises...");
     // Delete associated exercises first (due to foreign key constraints)
     await dbClient.queryObject("DELETE FROM plan_exercises WHERE plan_id=$1", [planId]);
+    
+    console.log("[deleteWorkoutPlanHandler] Deleting workout plan...");
     // Then delete the plan itself
     await dbClient.queryObject("DELETE FROM workout_plans WHERE plan_id=$1 AND user_id=$2", [planId, userId]);
 
+    console.log("[deleteWorkoutPlanHandler] Deletion successful");
     response.success = true;
     response.message = "Workout plan deleted successfully.";
     ctx.response.status = 200;
@@ -647,9 +676,122 @@ export async function removeExerciseFromPlanHandler(ctx: Context) {
   }
 }
 
+// --- New: Update a specific exercise within a workout plan ---
+export async function updatePlanExerciseHandler(ctx: Context) {
+  console.log("[updatePlanExerciseHandler] Handler called");
+  const response: ApiResponse<PlanExerciseSchema> = { success: false };
+
+  try {
+    await ensureConnection();
+    const userId = ctx.state.userId as string;
+    const planId = parseInt(ctx.params.planId);
+    const planExerciseId = parseInt(ctx.params.planExerciseId);
+
+    console.log(`[updatePlanExerciseHandler] Plan ID: ${planId}, PlanExercise ID: ${planExerciseId}, User ID: ${userId}`);
+
+    if (!userId) {
+      ctx.response.status = 401;
+      response.error = "User not authenticated";
+      ctx.response.body = response;
+      return;
+    }
+    if (isNaN(planId) || isNaN(planExerciseId)) {
+      ctx.response.status = 400;
+      response.error = "Invalid plan ID or plan exercise ID";
+      ctx.response.body = response;
+      return;
+    }
+
+    // Verify plan ownership and that the plan_exercise belongs to the plan
+    const ownershipCheckQuery = `
+      SELECT pe.plan_exercise_id
+      FROM plan_exercises pe
+      JOIN workout_plans wp ON pe.plan_id = wp.plan_id
+      WHERE pe.plan_exercise_id = $1 AND wp.plan_id = $2 AND wp.user_id = $3
+    `;
+    const ownershipResult = await dbClient.queryObject(ownershipCheckQuery, [planExerciseId, planId, userId]);
+
+    if (ownershipResult.rows.length === 0) {
+      ctx.response.status = 404;
+      response.error = "Exercise not found in plan, or plan access denied.";
+      ctx.response.body = response;
+      return;
+    }
+
+    if (!ctx.request.hasBody) {
+      ctx.response.status = 400;
+      response.error = "Request body is required for update";
+      ctx.response.body = response;
+      return;
+    }
+
+    const body = ctx.request.body({ type: 'json' });
+    const payload = await body.value as UpdatePlanExerciseRequest;
+
+    // Build the update query dynamically based on provided fields
+    const updateFields: string[] = [];
+    const updateValues: (string | number | null)[] = [];
+    let valueCounter = 1;
+
+    if (payload.sets !== undefined) { updateFields.push(`sets = $${valueCounter++}`); updateValues.push(payload.sets); }
+    if (payload.reps !== undefined) { updateFields.push(`reps = $${valueCounter++}`); updateValues.push(payload.reps); }
+    if (payload.weight_kg !== undefined) { updateFields.push(`weight_kg = $${valueCounter++}`); updateValues.push(payload.weight_kg); }
+    if (payload.duration_minutes !== undefined) { updateFields.push(`duration_minutes = $${valueCounter++}`); updateValues.push(payload.duration_minutes); }
+    if (payload.rest_period_seconds !== undefined) { updateFields.push(`rest_period_seconds = $${valueCounter++}`); updateValues.push(payload.rest_period_seconds); }
+    if (payload.notes !== undefined) { updateFields.push(`notes = $${valueCounter++}`); updateValues.push(payload.notes); }
+    // Add order_in_plan if you implement reordering
+    // if (payload.order_in_plan !== undefined) { updateFields.push(`order_in_plan = $${valueCounter++}`); updateValues.push(payload.order_in_plan); }
+
+    if (updateFields.length === 0) {
+      ctx.response.status = 400;
+      response.error = "No fields provided to update";
+      ctx.response.body = response;
+      return;
+    }
+
+    // Add plan_id and plan_exercise_id to the end of updateValues for the WHERE clause
+    updateValues.push(planExerciseId);
+    updateValues.push(planId);
+
+    // Construct the SET part of the query. If updateFields is not empty, join them.
+    // If it is empty, this will result in an error later, which is fine as we check updateFields.length.
+    const setClause = updateFields.length > 0 ? updateFields.join(", ") : ""; 
+
+    const updateQuery = `
+      UPDATE plan_exercises
+      SET ${setClause}
+      WHERE plan_exercise_id = $${valueCounter++} AND plan_id = $${valueCounter++}
+      RETURNING plan_exercise_id, plan_id, exercise_id, exercise_name, order_in_plan, sets, reps, weight_kg, duration_minutes, rest_period_seconds, notes
+    `;
+    
+    // Ensure that if setClause is not empty, we are not trying to add a comma before an empty string
+    // This is implicitly handled by the check `if (updateFields.length === 0)` before this.
+    // However, if updated_at was the *only* thing being set, and updateFields was empty, 
+    // the previous query `SET , updated_at =` would be invalid.
+    // The current logic correctly handles if updateFields is empty.
+
+    console.log("[updatePlanExerciseHandler] Update Query:", updateQuery);
+    console.log("[updatePlanExerciseHandler] Update Values:", updateValues);
+
+    const result = await dbClient.queryObject<PlanExerciseSchema>(updateQuery, updateValues);
+
+    if (result.rows.length === 0) {
+      throw new Error("Failed to update plan exercise - no data returned from database or IDs did not match");
+    }
+
+    response.success = true;
+    response.data = result.rows[0];
+    response.message = "Exercise in plan updated successfully";
+    ctx.response.status = 200;
+    ctx.response.body = response;
+
+  } catch (error) {
+    console.error("Error in updatePlanExerciseHandler:", error);
+    response.success = false;
+    response.error = error instanceof Error ? error.message : "Unknown error occurred";
+    ctx.response.status = 500;
+    ctx.response.body = response;
+  }
+}
+
 // --- TODO: Add handlers for other workout management actions ---
-// export async function getWorkoutPlanByIdHandler(ctx: Context) { ... }
-// export async function updateWorkoutPlanHandler(ctx: Context) { ... }
-// export async function deleteWorkoutPlanHandler(ctx: Context) { ... }
-// export async function createWorkoutLogHandler(ctx: Context) { ... }
-// ... etc ...

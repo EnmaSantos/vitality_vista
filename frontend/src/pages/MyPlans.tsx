@@ -7,14 +7,45 @@ import {
   WorkoutPlan, 
   PlanExercise, 
   deleteWorkoutPlan,
-  removeExerciseFromPlan
+  removeExerciseFromPlan,
+  updatePlanExercise,
+  UpdatePlanExerciseData
 } from '../api/workoutApi';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, Button, List, ListItem, ListItemText, IconButton, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, Button, List, ListItem, ListItemText, IconButton, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Stack } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
 import LogWorkoutModal from '../components/LogWorkoutModal';
-import { ExerciseDetail } from '../api/exercisesApi';
+
+// Placeholder for ExerciseDetail until exercisesApi.ts is created/fixed
+// This interface should ideally match the Exercise type expected by LogWorkoutModal
+interface ExerciseForModal {
+  id: number;
+  name: string;
+  description: string;
+  category: string; // Changed from number to string
+  equipment: string; // Changed from number[] to string
+  language: number; // Changed from optional to required
+  muscles: number[]; // Changed from optional to required
+  muscles_secondary: number[]; // Changed from optional to required
+  force: string; // Changed from string | null to string
+  level: string; // Changed from string | null to string
+  mechanic: string; // Changed from string | null to string
+  primaryMuscles: string[]; // Changed from optional to required
+  secondaryMuscles: string[]; // Changed from optional to required
+  creation_date: string; // Changed from optional to required
+  uuid: string; // Changed from optional to required
+  variations: number; // Changed from optional to required
+  license_author: string; // Changed from optional to required
+  license: number; // Changed from optional to required
+  // Added based on new linter errors
+  instructions: string[]; // Changed from string to string[]
+  images: string[]; // Changed from { image: string; is_main: boolean; }[] to string[]
+  calories_per_hour: number; // Changed from optional to required
+  duration_minutes: number; // Changed from optional to required
+  total_calories: number; // Changed from optional to required
+}
 
 const MyPlans: React.FC = () => {
   const { token } = useAuth();
@@ -28,7 +59,7 @@ const MyPlans: React.FC = () => {
 
   // State for LogWorkoutModal
   const [logModalOpen, setLogModalOpen] = useState(false);
-  const [selectedExerciseForLog, setSelectedExerciseForLog] = useState<ExerciseDetail | null>(null);
+  const [selectedExerciseForLog, setSelectedExerciseForLog] = useState<ExerciseForModal | null>(null);
   const [currentPlanIdForLog, setCurrentPlanIdForLog] = useState<number | null>(null);
 
   // State for delete confirmation
@@ -37,10 +68,12 @@ const MyPlans: React.FC = () => {
   const [removeExerciseModalOpen, setRemoveExerciseModalOpen] = useState(false);
   const [exerciseToRemove, setExerciseToRemove] = useState<{planId: number, planExerciseId: number, exerciseName: string} | null>(null);
   
-  // TODO: Edit plan state (for future implementation)
-  // const [editPlanModalOpen, setEditPlanModalOpen] = useState(false);
-  // const [planToEdit, setPlanToEdit] = useState<WorkoutPlan | null>(null);
-
+  // --- State for Edit Exercise Modal ---
+  const [editExerciseModalOpen, setEditExerciseModalOpen] = useState(false);
+  const [exerciseToEdit, setExerciseToEdit] = useState<PlanExercise | null>(null);
+  const [editExerciseForm, setEditExerciseForm] = useState<UpdatePlanExerciseData>({});
+  const [isUpdatingExercise, setIsUpdatingExercise] = useState(false);
+  
   const fetchUserPlans = useCallback(async () => {
     if (!token) { setError("Authentication token not found."); setLoadingPlans(false); return; }
     setLoadingPlans(true);
@@ -51,10 +84,12 @@ const MyPlans: React.FC = () => {
         setPlans(response.data);
       } else {
         setError(response.error || 'Failed to fetch workout plans');
+        setPlans([]); // Ensure plans is empty on error too
       }
     } catch (err) {
       setError('An unexpected error occurred while fetching plans.');
       console.error(err);
+      setPlans([]); // Ensure plans is empty on error
     }
     setLoadingPlans(false);
   }, [token]);
@@ -93,12 +128,31 @@ const MyPlans: React.FC = () => {
   };
 
   const handleLogWorkout = (exercise: PlanExercise, planId: number) => {
-    const exerciseDetailForModal: ExerciseDetail = {
+    const exerciseDetailForModal: ExerciseForModal = {
         id: exercise.exercise_id, 
         name: exercise.exercise_name,
-        description: exercise.notes || '', 
-        category: 0, // Placeholder - this might need to come from PlanExercise if available or fetched
-        equipment: [], // Placeholder - same as category
+        description: exercise.notes || 'Exercise from plan',
+        category: 'Unknown Category', // Changed to a placeholder string
+        equipment: 'various',
+        language: 2,
+        muscles: [],
+        muscles_secondary: [],
+        force: 'unknown',
+        level: 'any',
+        mechanic: 'unknown',
+        primaryMuscles: [], 
+        secondaryMuscles: [],
+        creation_date: new Date().toISOString().split('T')[0],
+        uuid: 'placeholder-uuid-' + exercise.exercise_id,
+        variations: 0,
+        license_author: 'Placeholder Author',
+        license: 1,
+        // Added based on new linter errors
+        instructions: ["Perform as per plan."],
+        images: [], // Set to an empty array of strings
+        calories_per_hour: 0, 
+        duration_minutes: exercise.duration_minutes || 0,
+        total_calories: 0,
     };
     setSelectedExerciseForLog(exerciseDetailForModal);
     setCurrentPlanIdForLog(planId);
@@ -111,12 +165,12 @@ const MyPlans: React.FC = () => {
   };
 
   const handleConfirmDeletePlan = async () => {
-    if (!planToDelete || !token) { 
-        setError("Cannot delete plan: Missing plan data or authentication token."); 
+    if (!planToDelete) { 
+        setError("Cannot delete plan: Missing plan data."); 
         setDeletePlanModalOpen(false);
         return; 
     }
-    const response = await deleteWorkoutPlan(planToDelete.plan_id, token);
+    const response = await deleteWorkoutPlan(planToDelete.plan_id);
     if (response.success) {
       setPlans(prevPlans => prevPlans.filter(p => p.plan_id !== planToDelete.plan_id));
       setPlanExercises(prevExercises => {
@@ -140,13 +194,13 @@ const MyPlans: React.FC = () => {
   };
 
   const handleConfirmRemoveExercise = async () => {
-    if (!exerciseToRemove || !token) { 
-        setError("Cannot remove exercise: Missing exercise data or authentication token.");
+    if (!exerciseToRemove) { 
+        setError("Cannot remove exercise: Missing exercise data.");
         setRemoveExerciseModalOpen(false);
         return; 
     }
     const { planId, planExerciseId } = exerciseToRemove;
-    const response = await removeExerciseFromPlan(planId, planExerciseId, token);
+    const response = await removeExerciseFromPlan(planId, planExerciseId);
     if (response.success) {
       fetchPlanExercisesForPlan(planId); 
     } else {
@@ -155,14 +209,66 @@ const MyPlans: React.FC = () => {
     setRemoveExerciseModalOpen(false);
     setExerciseToRemove(null);
   };
-  
-  // TODO: Placeholder for edit plan functionality
-  // const handleOpenEditPlanModal = (plan: WorkoutPlan) => { 
-  //   setPlanToEdit(plan); 
-  //   setEditPlanModalOpen(true); 
-  // };
-  // const handleSaveEditedPlan = async (editedPlanData) => { /* ... API call ... */ };
 
+  // --- Handlers for Edit Exercise Modal ---
+  const handleOpenEditExerciseModal = (exercise: PlanExercise) => {
+    setExerciseToEdit(exercise);
+    setEditExerciseForm({
+      sets: exercise.sets,
+      reps: exercise.reps,
+      weight_kg: exercise.weight_kg,
+      duration_minutes: exercise.duration_minutes,
+      rest_period_seconds: exercise.rest_period_seconds,
+      notes: exercise.notes
+    });
+    setEditExerciseModalOpen(true);
+  };
+
+  const handleEditExerciseFormChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = event.target;
+    setEditExerciseForm(prev => ({
+      ...prev,
+      // Convert to number if the field is numeric, otherwise keep as string
+      [name]: (name === 'sets' || name === 'weight_kg' || name === 'duration_minutes' || name === 'rest_period_seconds') && value !== '' ? Number(value) : value
+    }));
+  };
+
+  const handleConfirmUpdateExercise = async () => {
+    if (!exerciseToEdit || !token) {
+      setError("Cannot update exercise: Missing data or token.");
+      return;
+    }
+    setIsUpdatingExercise(true);
+    setError(null);
+    try {
+      // Create the payload, ensuring undefined is not sent for empty optional fields
+      const payload: UpdatePlanExerciseData = {};
+      if (editExerciseForm.sets !== undefined && editExerciseForm.sets !== null) payload.sets = Number(editExerciseForm.sets) || undefined;
+      if (editExerciseForm.reps !== undefined && editExerciseForm.reps !== null) payload.reps = String(editExerciseForm.reps) || undefined;
+      if (editExerciseForm.weight_kg !== undefined && editExerciseForm.weight_kg !== null) payload.weight_kg = Number(editExerciseForm.weight_kg) || undefined;
+      if (editExerciseForm.duration_minutes !== undefined && editExerciseForm.duration_minutes !== null) payload.duration_minutes = Number(editExerciseForm.duration_minutes) || undefined;
+      if (editExerciseForm.rest_period_seconds !== undefined && editExerciseForm.rest_period_seconds !== null) payload.rest_period_seconds = Number(editExerciseForm.rest_period_seconds) || undefined;
+      if (editExerciseForm.notes !== undefined && editExerciseForm.notes !== null) payload.notes = String(editExerciseForm.notes) || undefined;
+
+      const response = await updatePlanExercise(exerciseToEdit.plan_id, exerciseToEdit.plan_exercise_id, payload);
+      if (response.success) {
+        fetchPlanExercisesForPlan(exerciseToEdit.plan_id); // Refresh exercises for the current plan
+        setEditExerciseModalOpen(false);
+        setExerciseToEdit(null);
+      } else {
+        setError(response.error || response.message || 'Failed to update exercise.');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred while updating the exercise.');
+      console.error(err);
+    }
+    setIsUpdatingExercise(false);
+  };
+  
+  const handleNavigateToCreatePlan = () => {
+    navigate('/exercises', { state: { openCreatePlanModal: true } });
+  };
+  
   if (loadingPlans) {
     return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
   }
@@ -175,8 +281,11 @@ const MyPlans: React.FC = () => {
     return (
       <Box sx={{ textAlign: 'center', mt: 4 }}>
         <Typography variant="h6">No workout plans created yet.</Typography>
-        <Button variant="contained" sx={{ mt: 2 }} onClick={() => navigate('/')}>
-          Create a Plan
+        <Typography variant="subtitle1" sx={{ mb: 2, color: 'text.secondary' }}>
+          Let's create your first one!
+        </Typography>
+        <Button variant="contained" sx={{ mt: 2 }} onClick={handleNavigateToCreatePlan}>
+          Create Your First Plan
         </Button>
       </Box>
     );
@@ -184,7 +293,19 @@ const MyPlans: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 800, margin: 'auto', padding: 2 }}>
-      <Typography variant="h4" gutterBottom sx={{ textAlign: 'center' }}>My Workout Plans</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
+        <Typography variant="h4" gutterBottom sx={{ textAlign: 'left', flexGrow: 1 }}>
+            My Workout Plans
+        </Typography>
+        <Button 
+            variant="contained" 
+            color="primary" 
+            startIcon={<AddIcon />} 
+            onClick={handleNavigateToCreatePlan}
+        >
+            Create New Plan
+        </Button>
+      </Box>
       {plans.map((plan) => (
         <Accordion 
           key={plan.plan_id} 
@@ -195,7 +316,6 @@ const MyPlans: React.FC = () => {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
               <Typography variant="h6">{plan.name}</Typography>
               <Box>
-                {/* Exercise count display - refined to show only when loaded */}
                 {planExercises[plan.plan_id] && planExercises[plan.plan_id].length > 0 && (
                     <Typography variant="caption" sx={{ mr: 2 }}>
                         {planExercises[plan.plan_id].length} exercise(s)
@@ -212,9 +332,8 @@ const MyPlans: React.FC = () => {
                 <IconButton 
                   size="small" 
                   onClick={(e) => { 
-                    e.stopPropagation(); // Prevent accordion toggle
-                    // handleOpenEditPlanModal(plan); // TODO: Implement edit functionality
-                    alert('Edit functionality coming soon!');
+                    e.stopPropagation(); 
+                    alert('Plan Edit functionality coming soon!'); // Placeholder for Plan Edit
                   }}
                   sx={{ mr: 1 }}
                 >
@@ -223,7 +342,7 @@ const MyPlans: React.FC = () => {
                 <IconButton 
                   size="small" 
                   onClick={(e) => { 
-                    e.stopPropagation(); // Prevent accordion toggle
+                    e.stopPropagation(); 
                     handleOpenDeletePlanModal(plan);
                   }}
                 >
@@ -243,20 +362,28 @@ const MyPlans: React.FC = () => {
                         divider
                         secondaryAction={
                             <Box>
+                                <IconButton 
+                                    edge="end" 
+                                    aria-label="edit exercise"
+                                    onClick={() => handleOpenEditExerciseModal(exercise)} // Open edit modal
+                                    sx={{ mr: 0.5 }}
+                                >
+                                    <EditIcon fontSize="small" />
+                                </IconButton>
                                 <Button 
                                     variant="outlined" 
                                     size="small"
                                     onClick={() => handleLogWorkout(exercise, plan.plan_id)}
-                                    sx={{ mr: 1 }}
+                                    sx={{ mr: 0.5 }}
                                 >
-                                    Log This Exercise
+                                    Log
                                 </Button>
                                 <IconButton 
                                     edge="end" 
                                     aria-label="remove exercise"
                                     onClick={() => handleOpenRemoveExerciseModal(plan.plan_id, exercise.plan_exercise_id, exercise.exercise_name)}
                                 >
-                                    <DeleteIcon />
+                                    <DeleteIcon fontSize="small"/>
                                 </IconButton>
                             </Box>
                         }
@@ -283,18 +410,16 @@ const MyPlans: React.FC = () => {
         </Accordion>
       ))}
 
-      {/* Log Workout Modal */}
       {selectedExerciseForLog && (
         <LogWorkoutModal
           open={logModalOpen}
           onClose={() => setLogModalOpen(false)}
           exercise={selectedExerciseForLog}
-          planId={currentPlanIdForLog}
           token={token}
+          // planId={currentPlanIdForLog} // Pass if needed
         />
       )}
 
-      {/* Delete Plan Confirmation Modal */}
       <Dialog open={deletePlanModalOpen} onClose={() => setDeletePlanModalOpen(false)}>
         <DialogTitle>Delete Workout Plan</DialogTitle>
         <DialogContent>
@@ -308,7 +433,6 @@ const MyPlans: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Remove Exercise from Plan Confirmation Modal */}
       <Dialog open={removeExerciseModalOpen} onClose={() => setRemoveExerciseModalOpen(false)}>
         <DialogTitle>Remove Exercise</DialogTitle>
         <DialogContent>
@@ -322,18 +446,80 @@ const MyPlans: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* TODO: Edit Plan Modal (Future) */}
-      {/* <Dialog open={editPlanModalOpen} onClose={() => setEditPlanModalOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>Edit Workout Plan</DialogTitle>
-        <DialogContent>
-          <TextField autoFocus margin="dense" label="Plan Name" type="text" fullWidth variant="standard" defaultValue={planToEdit?.name} />
-          <TextField margin="dense" label="Description" type="text" fullWidth multiline rows={3} variant="standard" defaultValue={planToEdit?.description} />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditPlanModalOpen(false)}>Cancel</Button>
-          <Button onClick={() => { /* handleSaveEditedPlan */ alert('Save edit coming soon!'); setEditPlanModalOpen(false); } }>Save</Button>
-        </DialogActions>
-      </Dialog> */}
+      {/* --- Edit Exercise Modal --- */}
+      {exerciseToEdit && (
+        <Dialog open={editExerciseModalOpen} onClose={() => setEditExerciseModalOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Edit Exercise: {exerciseToEdit.exercise_name}</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <TextField 
+                label="Sets" 
+                name="sets" 
+                type="number" 
+                value={editExerciseForm.sets ?? ''} 
+                onChange={handleEditExerciseFormChange} 
+                variant="outlined" 
+                fullWidth 
+                InputProps={{ inputProps: { min: 0 } }} 
+              />
+              <TextField 
+                label="Reps (e.g., 8-12, AMRAP)" 
+                name="reps" 
+                value={editExerciseForm.reps ?? ''} 
+                onChange={handleEditExerciseFormChange} 
+                variant="outlined" 
+                fullWidth 
+              />
+              <TextField 
+                label="Weight (kg)" 
+                name="weight_kg" 
+                type="number" 
+                value={editExerciseForm.weight_kg ?? ''} 
+                onChange={handleEditExerciseFormChange} 
+                variant="outlined" 
+                fullWidth 
+                InputProps={{ inputProps: { min: 0, step: "0.25" } }} 
+              />
+              <TextField 
+                label="Duration (minutes)" 
+                name="duration_minutes" 
+                type="number" 
+                value={editExerciseForm.duration_minutes ?? ''} 
+                onChange={handleEditExerciseFormChange} 
+                variant="outlined" 
+                fullWidth 
+                InputProps={{ inputProps: { min: 0 } }} 
+              />
+              <TextField 
+                label="Rest Period (seconds)" 
+                name="rest_period_seconds" 
+                type="number" 
+                value={editExerciseForm.rest_period_seconds ?? ''} 
+                onChange={handleEditExerciseFormChange} 
+                variant="outlined" 
+                fullWidth 
+                InputProps={{ inputProps: { min: 0 } }} 
+              />
+              <TextField 
+                label="Notes" 
+                name="notes" 
+                value={editExerciseForm.notes ?? ''} 
+                onChange={handleEditExerciseFormChange} 
+                variant="outlined" 
+                fullWidth 
+                multiline 
+                rows={3} 
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEditExerciseModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleConfirmUpdateExercise} color="primary" disabled={isUpdatingExercise}>
+              {isUpdatingExercise ? <CircularProgress size={24} /> : 'Save Changes'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
 
     </Box>
   );
