@@ -500,22 +500,22 @@ const MyPlans: React.FC = () => {
                 fullWidth 
                 InputProps={{ inputProps: { min: 0 } }} 
               />
-              <TextField 
-                label="Notes" 
-                name="notes" 
-                value={editExerciseForm.notes ?? ''} 
-                onChange={handleEditExerciseFormChange} 
-                variant="outlined" 
-                fullWidth 
-                multiline 
-                rows={3} 
+              <TextField
+                label="Notes"
+                name="notes"
+                multiline
+                rows={3}
+                value={editExerciseForm.notes ?? ''}
+                onChange={handleEditExerciseFormChange}
+                variant="outlined"
+                fullWidth
               />
             </Stack>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setEditExerciseModalOpen(false)}>Cancel</Button>
             <Button onClick={handleConfirmUpdateExercise} color="primary" disabled={isUpdatingExercise}>
-              {isUpdatingExercise ? <CircularProgress size={24} /> : 'Save Changes'}
+              {isUpdatingExercise ? <CircularProgress size={24} /> : 'Update'}
             </Button>
           </DialogActions>
         </Dialog>
