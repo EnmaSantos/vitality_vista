@@ -36,12 +36,15 @@ import { getAllExercises, searchExercisesByName, Exercise } from '../services/ex
 import { 
   getUserWorkoutPlans, 
   createWorkoutPlan, 
-  addExerciseToWorkoutPlan, 
+  addExerciseToPlan,
   WorkoutPlan, 
-  CreateWorkoutPlanRequest,
-  AddExerciseToPlanRequest 
-} from '../services/workoutApi';
+  CreateWorkoutPlanPayload,
+  AddExerciseToPlanPayload 
+} from '../api/workoutApi';
 import { useAuth } from '../context/AuthContext';
+import { createWorkoutLog, logExerciseDetail } from '../services/workoutLogApi';
+import { useNavigate, useLocation } from 'react-router-dom';
+import LogWorkoutModal from '../components/LogWorkoutModal';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -82,20 +85,32 @@ const ExercisesPage: React.FC = () => {
   // --- Added: State for "Add to Workout" Modal ---
   const [isAddToWorkoutModalOpen, setIsAddToWorkoutModalOpen] = useState(false);
   const [exerciseToLog, setExerciseToLog] = useState<Exercise | null>(null);
+  const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<number | 'new' | ''>('');
+  const [newPlanForm, setNewPlanForm] = useState<NewWorkoutPlanForm>({
+    name: '',
+    description: ''
+  });
   const [addToWorkoutForm, setAddToWorkoutForm] = useState<AddToWorkoutFormState>({
     sets: '',
     reps: '',
     weight: '',
     duration: '',
-    notes: '',
+    notes: ''
   });
-
-  // Workout plan related state
-  const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
-  const [selectedPlanId, setSelectedPlanId] = useState<number | 'new' | ''>('');
-  const [isLoadingPlans, setIsLoadingPlans] = useState(false);
-  const [newPlanForm, setNewPlanForm] = useState<NewWorkoutPlanForm>({ name: '', description: '' });
   const [isSaving, setIsSaving] = useState(false);
+
+  // --- Added: State for Log Workout Modal ---
+  const [isLogWorkoutModalOpen, setIsLogWorkoutModalOpen] = useState(false);
+  const [currentWorkoutLog, setCurrentWorkoutLog] = useState<number | null>(null);
+  const [logWorkoutForm, setLogWorkoutForm] = useState({
+    sets: '',
+    reps: '',
+    weight: '',
+    duration: '',
+    notes: ''
+  });
 
   // Snackbar state for success/error messages
   const [snackbar, setSnackbar] = useState<{
@@ -103,12 +118,31 @@ const ExercisesPage: React.FC = () => {
     message: string;
     severity: 'success' | 'error';
   }>({ open: false, message: '', severity: 'success' });
-  // --- End Added ---
+
+  // --- Create Workout Plan Modal State ---
+  const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false);
+  const [planForm, setPlanForm] = useState({ name: '', description: '' });
+  const [planExercises, setPlanExercises] = useState<Exercise[]>([]);
+  const [planSearchQuery, setPlanSearchQuery] = useState('');
+  const [planSearchResults, setPlanSearchResults] = useState<Exercise[]>([]);
+  const [isSavingPlan, setIsSavingPlan] = useState(false);
+
+  const navigate = useNavigate();
+  const location = useLocation(); // Get location object
 
   // --- Effects ---
   useEffect(() => {
     setCurrentThemeColor(themeColors.darkMossGreen);
   }, [setCurrentThemeColor]);
+
+  // Effect to automatically open Create Plan Modal if signaled by navigation state
+  useEffect(() => {
+    if (location.state?.openCreatePlanModal) {
+      handleOpenCreatePlanModal();
+      // Clear the state from history so modal doesn't reopen on refresh/back
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate]); // Added navigate to dependency array
 
   // Effect for fetching exercises data (MODIFIED for Search)
   useEffect(() => {
@@ -162,8 +196,24 @@ const ExercisesPage: React.FC = () => {
     fetchExercises();
 
   }, [searchQuery]); // Re-run effect when searchQuery changes
-  // Note: We removed category from dependencies here to simplify; fetching all then filtering by category client-side first might be okay.
-  // Or, ideally, the backend API should support filtering by *both* search and category simultaneously.
+
+  // Effect: search exercises inside Create Plan modal
+  useEffect(() => {
+    const fetchSearch = async () => {
+      if (planSearchQuery.trim().length < 2) {
+        setPlanSearchResults([]);
+        return;
+      }
+      try {
+        const results = await searchExercisesByName(planSearchQuery.trim());
+        setPlanSearchResults(results.slice(0, 20));
+      } catch (err) {
+        console.error('Error searching exercises:', err);
+      }
+    };
+    fetchSearch();
+  }, [planSearchQuery]);
+
   // --- Filtering Logic (MODIFIED) ---
   // Apply only category filtering client-side now
   const filteredExercises = exercises.filter(exercise => {
@@ -237,7 +287,10 @@ const ExercisesPage: React.FC = () => {
 
   const handleCloseAddToWorkoutModal = () => {
     setIsAddToWorkoutModalOpen(false);
-    setExerciseToLog(null); // Clear the exercise context
+    setExerciseToLog(null);
+    setSelectedPlanId('');
+    setNewPlanForm({ name: '', description: '' });
+    setAddToWorkoutForm({ sets: '', reps: '', weight: '', duration: '', notes: '' });
   };
 
   const handleAddToWorkoutFormChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -306,7 +359,7 @@ const ExercisesPage: React.FC = () => {
       console.log('Using plan ID:', finalPlanId);
 
       // Prepare exercise data
-      const exerciseData: AddExerciseToPlanRequest = {
+      const exerciseData: AddExerciseToPlanPayload = {
         exercise_id: exerciseToLog.id,
         exercise_name: exerciseToLog.name,
         sets: addToWorkoutForm.sets ? parseInt(addToWorkoutForm.sets) : undefined,
@@ -319,7 +372,7 @@ const ExercisesPage: React.FC = () => {
       console.log('Adding exercise to plan:', exerciseData);
 
       // Add exercise to plan
-      const result = await addExerciseToWorkoutPlan(finalPlanId, exerciseData, token);
+      const result = await addExerciseToPlan(finalPlanId, exerciseData, token);
       
       console.log("Exercise added to workout plan:", result);
       
@@ -346,7 +399,181 @@ const ExercisesPage: React.FC = () => {
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
-  // --- End Added ---
+
+  const handleOpenLogWorkoutModal = (exercise: Exercise) => {
+    setExerciseToLog(exercise);
+    setIsLogWorkoutModalOpen(true);
+    setLogWorkoutForm({ sets: '', reps: '', weight: '', duration: '', notes: '' });
+  };
+
+  const handleCloseLogWorkoutModal = () => {
+    setIsLogWorkoutModalOpen(false);
+    setExerciseToLog(null);
+    setLogWorkoutForm({ sets: '', reps: '', weight: '', duration: '', notes: '' });
+  };
+
+  const handleSaveWorkoutLog = async () => {
+    if (!token || !exerciseToLog) {
+      setSnackbar({
+        open: true,
+        message: 'Authentication required',
+        severity: 'error'
+      });
+      return;
+    }
+
+    if (!logWorkoutForm.sets) {
+      setSnackbar({
+        open: true,
+        message: 'Please enter the number of sets',
+        severity: 'error'
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      // First, create a workout log if we don't have one
+      if (!currentWorkoutLog) {
+        const newLog = await createWorkoutLog({}, token);
+        setCurrentWorkoutLog(newLog.log_id);
+        
+        // Log the exercise detail
+        await logExerciseDetail(
+          newLog.log_id,
+          {
+            exercise_id: exerciseToLog.id,
+            exercise_name: exerciseToLog.name,
+            set_number: parseInt(logWorkoutForm.sets),
+            reps_achieved: logWorkoutForm.reps ? parseInt(logWorkoutForm.reps) : undefined,
+            weight_kg_used: logWorkoutForm.weight ? parseFloat(logWorkoutForm.weight) : undefined,
+            duration_achieved_seconds: logWorkoutForm.duration ? parseInt(logWorkoutForm.duration) : undefined,
+            notes: logWorkoutForm.notes || undefined
+          },
+          token
+        );
+      } else {
+        // Use existing workout log
+        await logExerciseDetail(
+          currentWorkoutLog,
+          {
+            exercise_id: exerciseToLog.id,
+            exercise_name: exerciseToLog.name,
+            set_number: parseInt(logWorkoutForm.sets),
+            reps_achieved: logWorkoutForm.reps ? parseInt(logWorkoutForm.reps) : undefined,
+            weight_kg_used: logWorkoutForm.weight ? parseFloat(logWorkoutForm.weight) : undefined,
+            duration_achieved_seconds: logWorkoutForm.duration ? parseInt(logWorkoutForm.duration) : undefined,
+            notes: logWorkoutForm.notes || undefined
+          },
+          token
+        );
+      }
+      
+      setSnackbar({
+        open: true,
+        message: `${exerciseToLog.name} logged successfully!`,
+        severity: 'success'
+      });
+      
+      handleCloseLogWorkoutModal();
+      
+    } catch (error) {
+      console.error('Error logging workout:', error);
+      setSnackbar({
+        open: true,
+        message: error instanceof Error ? error.message : 'Failed to log workout',
+        severity: 'error'
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // --- Handlers for Create Plan Modal ---
+  const handleOpenCreatePlanModal = () => {
+    setPlanForm({ name: '', description: '' });
+    setPlanExercises([]);
+    setPlanSearchQuery('');
+    setPlanSearchResults([]);
+    setIsCreatePlanModalOpen(true);
+  };
+
+  const handleCloseCreatePlanModal = () => {
+    setIsCreatePlanModalOpen(false);
+  };
+
+  const handlePlanFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPlanForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const addExerciseToPlanList = (ex: Exercise) => {
+    if (planExercises.find(pe => pe.id === ex.id)) return;
+    setPlanExercises(prev => [...prev, ex]);
+  };
+
+  const removeExerciseFromPlanList = (id: number) => {
+    setPlanExercises(prev => prev.filter(ex => ex.id !== id));
+  };
+
+  const handleSaveNewPlan = async () => {
+    if (!token) {
+      setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
+      return;
+    }
+    if (!planForm.name.trim()) {
+      setSnackbar({ open: true, message: 'Plan name is required', severity: 'error' });
+      return;
+    }
+    if (planExercises.length === 0) {
+      setSnackbar({ open: true, message: 'Add at least one exercise', severity: 'error' });
+      return;
+    }
+    setIsSavingPlan(true);
+    try {
+      const newPlanResponse = await createWorkoutPlan(
+        { name: planForm.name.trim(), description: planForm.description.trim() || undefined }, 
+        token
+      );
+
+      if (newPlanResponse && newPlanResponse.success && newPlanResponse.data) {
+        const createdPlanId = newPlanResponse.data.plan_id;
+
+        if (createdPlanId === undefined || createdPlanId === null) {
+            console.error('Error saving plan: plan_id is missing from createWorkoutPlan response', newPlanResponse);
+            setSnackbar({ open: true, message: 'Error: Could not get new plan ID.', severity: 'error' });
+            setIsSavingPlan(false);
+            return;
+        }
+        
+        console.log(`Successfully created plan with ID: ${createdPlanId}. Now adding exercises.`);
+
+        for (const ex of planExercises) {
+          // Ensure you are passing all required fields for AddExerciseToPlanPayload if any
+          // For now, just exercise_id and exercise_name as per previous structure
+          const exercisePayload: AddExerciseToPlanPayload = {
+            exercise_id: ex.id, 
+            exercise_name: ex.name 
+            // Populate other fields like sets, reps, notes if they are part of the modal 
+            // and meant to be saved with the initial plan creation here.
+            // This example assumes they are not, and only id/name are added initially.
+          };
+          await addExerciseToPlan(createdPlanId, exercisePayload, token);
+        }
+        setSnackbar({ open: true, message: 'Workout plan created!', severity: 'success' });
+        handleCloseCreatePlanModal();
+      } else {
+        console.error('Error creating plan:', newPlanResponse?.error || 'Unknown error during plan creation');
+        setSnackbar({ open: true, message: newPlanResponse?.error || 'Failed to create plan base', severity: 'error' });
+      }
+    } catch (err) {
+      console.error('Error saving plan:', err);
+      setSnackbar({ open: true, message: err instanceof Error ? err.message : 'Failed to save plan', severity: 'error' });
+    } finally {
+      setIsSavingPlan(false);
+    }
+  };
 
   // --- Log before Render ---
   console.log('Filtered Exercises Count:', filteredExercises.length); // <-- ADD THIS LOG
@@ -355,9 +582,12 @@ const ExercisesPage: React.FC = () => {
   // --- Render Logic ---
   return (
     <Box sx={{ padding: 3, backgroundColor: '#edf0e9', minHeight: '100vh' }}>
-      {/* ... (Title Typography remains the same) ... */}
-      <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}> Exercise Library </Typography>
-      <Typography variant="subtitle1" sx={{ mb: 4, color: '#283618ff' }}> Browse and discover exercises to add to your routine. </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}> Exercise Library </Typography>
+        <Button variant="outlined" onClick={()=>navigate('/my-plans')} sx={{ mr:1, color:'#606c38ff', borderColor:'#606c38ff', '&:hover':{ bgcolor:'rgba(96,108,56,0.05)'} }}>View My Plans</Button>
+        <Button variant="contained" onClick={handleOpenCreatePlanModal} sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }} startIcon={<AddIcon />}>Create Workout Plan</Button>
+      </Box>
+      <Typography variant="subtitle1" sx={{ mb: 4, color: '#283618ff' }}> Browse exercises to log workouts or build plans. </Typography>
 
       {/* Search and Filter Controls */}
       <Paper elevation={1} sx={{ p: 2, mb: 3, borderLeft: '4px solid #606c38ff' }}>
@@ -489,11 +719,11 @@ const ExercisesPage: React.FC = () => {
                       <Button
                         size="small"
                         variant="text"
-                        onClick={() => handleOpenAddToWorkoutModal(exercise)}
-                        sx={{ ml: 1, color: '#606c38ff', '&:hover': { backgroundColor: 'rgba(96, 108, 56, 0.1)' } }}
+                        onClick={() => handleOpenLogWorkoutModal(exercise)}
+                        sx={{ ml: 1, color: '#bc6c25ff', '&:hover': { backgroundColor: 'rgba(188, 108, 37, 0.1)' } }}
                         startIcon={<FitnessCenterIcon />}
                       >
-                        Add to Workout
+                        Log Workout
                       </Button>
                     </Box>
                   </Card>
@@ -631,14 +861,6 @@ const ExercisesPage: React.FC = () => {
             </List>
           </DialogContent>
           <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff', p: '12px 16px' }}>
-            <Button 
-              onClick={() => selectedExerciseForModal && handleOpenAddToWorkoutModal(selectedExerciseForModal)}
-              variant="contained"
-              sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }}
-              startIcon={<FitnessCenterIcon />}
-            >
-              Add to Workout
-            </Button>
             <Button onClick={handleCloseDetailsModal} sx={{ color: '#bc6c25ff' }}>
               Close
             </Button>
@@ -790,6 +1012,71 @@ const ExercisesPage: React.FC = () => {
         </Dialog>
       )}
       {/* --- End Added --- */}
+
+      <LogWorkoutModal
+        open={isLogWorkoutModalOpen}
+        exercise={exerciseToLog}
+        token={token}
+        onClose={handleCloseLogWorkoutModal}
+      />
+
+      {/* --- Create Workout Plan Modal --- */}
+      {isCreatePlanModalOpen && (
+        <Dialog open={isCreatePlanModalOpen} onClose={handleCloseCreatePlanModal} maxWidth="md" fullWidth>
+          <DialogTitle sx={{ backgroundColor: '#606c38ff', color: 'white' }}>
+            Create Workout Plan
+            <IconButton
+              aria-label="close"
+              onClick={handleCloseCreatePlanModal}
+              sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[300] }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers sx={{ backgroundColor: '#fefae0' }}>
+            <Stack spacing={2}>
+              <TextField label="Plan Name" name="name" value={planForm.name} onChange={handlePlanFormChange} fullWidth required />
+              <TextField label="Description" name="description" value={planForm.description} onChange={handlePlanFormChange} fullWidth multiline rows={3} />
+              <Divider />
+              <TextField label="Search Exercises" value={planSearchQuery} onChange={(e)=>setPlanSearchQuery(e.target.value)} fullWidth InputProps={{ endAdornment: <SearchIcon /> }} />
+              {/* Search results */}
+              {planSearchResults.length > 0 && (
+                <Paper variant="outlined" sx={{ maxHeight: 200, overflowY: 'auto' }}>
+                  <List dense>
+                    {planSearchResults.map(ex => (
+                      <ListItem key={ex.id} button onClick={()=>addExerciseToPlanList(ex)}>
+                        <ListItemText primary={ex.name} secondary={ex.category} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              )}
+              <Divider />
+              <Typography variant="subtitle2">Selected Exercises ({planExercises.length})</Typography>
+              {planExercises.length === 0 ? (
+                <Typography variant="body2">No exercises added yet.</Typography>
+              ) : (
+                <Paper variant="outlined" sx={{ maxHeight: 200, overflowY: 'auto' }}>
+                  <List dense>
+                    {planExercises.map(ex => (
+                      <ListItem key={ex.id} secondaryAction={<IconButton edge="end" onClick={()=>removeExerciseFromPlanList(ex.id)}><CloseIcon fontSize="small" /></IconButton>}>
+                        <ListItemText primary={ex.name} secondary={ex.category} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              )}
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff' }}>
+            <Button onClick={handleCloseCreatePlanModal} sx={{ color: '#bc6c25ff' }}>Cancel</Button>
+            <Button variant="contained" onClick={handleSaveNewPlan} sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }} disabled={isSavingPlan || !planForm.name.trim() || planExercises.length===0}>
+              {isSavingPlan ? 'Saving...' : 'Save Plan'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+      {/* --- End Create Plan Modal --- */}
 
       {/* Snackbar for success/error messages */}
       <Snackbar

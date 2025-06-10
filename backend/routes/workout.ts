@@ -5,40 +5,67 @@ import { Router } from "../deps.ts"; // Import Router from Oak/deps
 import {
   createWorkoutPlanHandler,
   getUserWorkoutPlansHandler,
-  addExerciseToPlanHandler, // Import the new handler
-  // Import other handlers here later as needed
+  addExerciseToPlanHandler,
+  createWorkoutLogHandler,
+  getUserWorkoutLogsHandler,
+  logExerciseDetailsHandler,
+  getPlanExercisesHandler,
+  deleteWorkoutPlanHandler,
+  removeExerciseFromPlanHandler,
+  updatePlanExerciseHandler,
 } from "../controllers/workoutController.ts";
 // Import the authentication middleware to protect these routes
 import { authMiddleware } from "../middleware/authMiddleware.ts";
 
-// Create a new router instance with a prefix for workout plan routes
-const workoutRouter = new Router({
-  prefix: "/workout-plans", // Using '/workout-plans' as the base path (without /api since it will be mounted under apiRouter)
-});
+// Create a new router instance
+const workoutRouter = new Router();
 
-// --- Define Workout Plan Routes ---
+// --- Workout Plan Routes ---
 
 // POST /api/workout-plans
 // Creates a new workout plan for the authenticated user.
-// Runs authMiddleware first, then the createWorkoutPlanHandler.
-workoutRouter.post("/", authMiddleware, createWorkoutPlanHandler);
+workoutRouter.post("/workout-plans", authMiddleware, createWorkoutPlanHandler);
 
 // GET /api/workout-plans
 // Gets all workout plans belonging to the authenticated user.
-// Runs authMiddleware first, then the getUserWorkoutPlansHandler.
-workoutRouter.get("/", authMiddleware, getUserWorkoutPlansHandler);
+workoutRouter.get("/workout-plans", authMiddleware, getUserWorkoutPlansHandler);
 
 // POST /api/workout-plans/:planId/exercises
 // Adds an exercise to a specific workout plan for the authenticated user.
-workoutRouter.post("/:planId/exercises", authMiddleware, addExerciseToPlanHandler);
+workoutRouter.post("/workout-plans/:planId/exercises", authMiddleware, addExerciseToPlanHandler);
+
+// GET /api/workout-plans/:planId/exercises (list exercises in a plan)
+workoutRouter.get("/workout-plans/:planId/exercises", authMiddleware, getPlanExercisesHandler);
+
+// DELETE /api/workout-plans/:planId
+// Deletes a workout plan for the authenticated user.
+workoutRouter.delete("/workout-plans/:planId", authMiddleware, deleteWorkoutPlanHandler);
+
+// POST /api/workout-plans/:planId/exercises/:planExerciseId
+// Removes an exercise from a specific workout plan for the authenticated user.
+workoutRouter.delete("/workout-plans/:planId/exercises/:planExerciseId", authMiddleware, removeExerciseFromPlanHandler);
+
+// PUT /api/workout-plans/:planId/exercises/:planExerciseId
+// Updates a specific exercise within a workout plan for the authenticated user.
+workoutRouter.put("/workout-plans/:planId/exercises/:planExerciseId", authMiddleware, updatePlanExerciseHandler);
+
+// --- Workout Log Routes ---
+
+// POST /api/workout-logs
+// Creates a new workout log (actual workout session)
+workoutRouter.post("/workout-logs", authMiddleware, createWorkoutLogHandler);
+
+// GET /api/workout-logs
+// Gets all workout logs for the authenticated user
+workoutRouter.get("/workout-logs", authMiddleware, getUserWorkoutLogsHandler);
+
+// POST /api/workout-logs/:logId/exercises
+// Logs exercise details for a specific workout session
+workoutRouter.post("/workout-logs/:logId/exercises", authMiddleware, logExerciseDetailsHandler);
 
 // --- TODO: Add routes for other workout plan/log actions ---
 // e.g., GET /api/workout-plans/:planId -> getWorkoutPlanByIdHandler
 // e.g., PUT /api/workout-plans/:planId -> updateWorkoutPlanHandler
-// e.g., DELETE /api/workout-plans/:planId -> deleteWorkoutPlanHandler
-// e.g., POST /api/workout-logs -> createWorkoutLogHandler
-// e.g., GET /api/workout-logs -> getUserWorkoutLogsHandler
-
 
 // Export the configured router
 export default workoutRouter;

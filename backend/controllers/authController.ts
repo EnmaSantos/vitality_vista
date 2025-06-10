@@ -1,6 +1,6 @@
 // backend/controllers/authController.ts
 import { Context, createJwt, getNumericDate } from "../deps.ts"; // Import needed functions directly
-import dbClient from "../services/db.ts"; // Import the database client [cite: vitality_vista.zip/backend/services/db.ts]
+import dbClient, { ensureConnection } from "../services/db.ts"; // Import the database client and ensureConnection
 import { UserSchema, USER_TABLE_NAME } from "../models/user.model.ts"; // Import the schema and table name [cite: backend/models/user.model.ts]
 import { hash, compare } from "../services/password.ts"; // Import hash and compare from our custom password service
 
@@ -127,6 +127,9 @@ async function generateToken(userId: string): Promise<string> {
 // Register a new user
 export async function register(ctx: Context) {
   try {
+    // Ensure database connection is alive
+    await ensureConnection();
+    
     const result = ctx.request.body({ type: "json" });
     const body: RegisterDTO = await result.value;
 
@@ -179,6 +182,9 @@ export async function register(ctx: Context) {
 // Login user
 export async function login(ctx: Context) {
   try {
+    // Ensure database connection is alive
+    await ensureConnection();
+    
     const result = ctx.request.body({ type: "json" });
     const body: LoginDTO = await result.value;
 
