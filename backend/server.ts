@@ -21,7 +21,8 @@ import foodLogRouter from "./routes/foodLogRoutes.ts";
 
 // Initialize the app
 const app = new Application();
-const port = parseInt(Deno.env.get("PORT") || "8000"); // Uses env var loaded above
+// Access environment variables for Deno deployment
+const port = parseInt(globalThis.Deno?.env.get("PORT") || "8000");
 
 
 // Basic middleware with improved CORS configuration

@@ -257,8 +257,12 @@ const ExercisesPage: React.FC = () => {
     
     setIsLoadingPlans(true);
     try {
-      const plans = await getUserWorkoutPlans(token);
-      setWorkoutPlans(plans);
+      const response = await getUserWorkoutPlans(token);
+      if (response.success && response.data) {
+        setWorkoutPlans(response.data);
+      } else {
+        throw new Error(response.error || 'Failed to fetch workout plans');
+      }
     } catch (error) {
       console.error('Error fetching workout plans:', error);
       setSnackbar({
@@ -330,17 +334,18 @@ const ExercisesPage: React.FC = () => {
         }
         
         console.log('Creating new workout plan:', newPlanForm);
-        const newPlan = await createWorkoutPlan({
+        const newPlanResponse = await createWorkoutPlan({
           name: newPlanForm.name.trim(),
           description: newPlanForm.description.trim() || undefined
         }, token);
         
-        console.log('New plan created:', newPlan);
+        console.log('New plan created:', newPlanResponse);
         
-        if (!newPlan || !newPlan.plan_id) {
-          throw new Error('Failed to create workout plan - invalid response');
+        if (!newPlanResponse.success || !newPlanResponse.data || !newPlanResponse.data.plan_id) {
+          throw new Error(newPlanResponse.error || 'Failed to create workout plan - invalid response');
         }
         
+        const newPlan = newPlanResponse.data;
         finalPlanId = newPlan.plan_id;
         // Update the plans list with the new plan
         setWorkoutPlans(prev => [newPlan, ...prev]);
@@ -559,7 +564,11 @@ const ExercisesPage: React.FC = () => {
             // and meant to be saved with the initial plan creation here.
             // This example assumes they are not, and only id/name are added initially.
           };
-          await addExerciseToPlan(createdPlanId, exercisePayload, token);
+          const addExerciseResponse = await addExerciseToPlan(createdPlanId, exercisePayload, token);
+          if (!addExerciseResponse.success) {
+            console.error('Failed to add exercise to plan:', addExerciseResponse.error);
+            // Continue with other exercises, or throw error if you want to stop
+          }
         }
         setSnackbar({ open: true, message: 'Workout plan created!', severity: 'success' });
         handleCloseCreatePlanModal();
