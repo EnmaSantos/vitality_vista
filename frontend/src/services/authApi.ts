@@ -35,8 +35,8 @@ interface User {
   }
   // --- End Added ---
   
-  // Always use the direct Deno Deploy URL to avoid CORS issues
-  const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api/auth";
+  // Use localhost for development, fallback to production URL
+  const API_BASE_URL = "http://localhost:8000/api/auth";
   
   console.log("authApi: Using API_BASE_URL:", API_BASE_URL); // Log the base URL being used
   
@@ -139,14 +139,59 @@ interface User {
   }
   // --- End Added ---
   
-  // --- Placeholder for Verify Token function ---
-  /*
-  export async function verifyToken(token: string): Promise<User> {
-      // Logic to call GET /api/auth/me with Authorization header
-      console.log("Verify token function not implemented yet.");
-      throw new Error("Verify token not implemented");
+  /**
+ * Verifies the token stored in localStorage with the backend.
+ * This is used to re-authenticate a user when the app is re-opened.
+ * @returns The data object containing a refreshed token and user if successful.
+ * @throws An error with the failure message if verification fails.
+ */
+export async function verifyToken(): Promise<AuthResponseData> {
+  console.log("authApi: Verifying stored token...");
+  const token = localStorage.getItem('authToken');
+
+  if (!token) {
+    console.log("authApi: No token found to verify.");
+    throw new Error("No token available.");
   }
-  */
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/me`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    let responseData: AuthApiResponse;
+    try {
+      responseData = await response.json();
+    } catch (jsonError) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      console.error("JSON parsing error during token verification:", jsonError);
+      throw new Error("Failed to parse server response during token verification.");
+    }
+
+    if (!response.ok || !responseData.success || !responseData.data) {
+      console.log("authApi: Token verification failed response:", responseData);
+      throw new Error(responseData.message || `Token verification failed. Status: ${response.status}`);
+    }
+
+    console.log("authApi: Token verification successful.");
+    return responseData.data;
+
+  } catch (error) {
+    console.error("authApi: Token verification API call failed:", error);
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error("An unknown error occurred during token verification.");
+    }
+  }
+}
 
 // --- Logout Function ---  
 export async function logout(): Promise<void> {

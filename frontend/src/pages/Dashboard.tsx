@@ -93,9 +93,25 @@ const Dashboard: React.FC = () => {
   }, [token]);
 
   useEffect(() => {
+    // Initial fetch when component mounts
     fetchDashboardProfile();
-    fetchTodaysFoodLogs(); // Fetch food logs as well
-  }, [fetchDashboardProfile, fetchTodaysFoodLogs]); // Add fetchTodaysFoodLogs to dependencies
+    fetchTodaysFoodLogs();
+
+    // Set up an event listener to re-fetch when the user navigates back to the page
+    const handleFocus = () => {
+      console.log("Dashboard focused, re-fetching data...");
+      fetchDashboardProfile();
+      fetchTodaysFoodLogs();
+    };
+
+    // 'focus' event is a good proxy for when a user returns to the tab/window
+    window.addEventListener('focus', handleFocus);
+
+    // Cleanup the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [fetchDashboardProfile, fetchTodaysFoodLogs]); // Dependencies for the initial fetch
 
   const displayTDEE = profile?.tdee !== null && profile?.tdee !== undefined ? profile.tdee : "N/A";
   const displayConsumed = isLoadingFoodLogs ? "Loading..." : consumedCalories;

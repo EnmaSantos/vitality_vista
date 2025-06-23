@@ -28,11 +28,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // 2. Handle Not Authenticated State
   // If not loading AND not authenticated, redirect to the login page
   if (!isAuthenticated) {
-    console.log('ProtectedRoute: User not authenticated, redirecting to login.');
+    console.log('ProtectedRoute: User not authenticated, redirecting to landing page.');
     // Use the Navigate component for declarative redirect
     // state={{ from: location }} preserves the intended destination URL
     // replace={true} replaces the current entry in history stack
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/landing" state={{ from: location }} replace />;
   }
 
   // 3. Handle Authenticated State

@@ -248,18 +248,25 @@ export async function getCurrentUser(ctx: Context) { // Mark as async
       return;
     }
 
-    // Return user data (sanitizeUser now expects UserSchema)
+    // Generate a new token to refresh the user's session
+    const token = await generateToken(user.id);
+
+    // Return success response with user data and the new token
     ctx.response.status = 200;
     ctx.response.body = {
       success: true,
-      data: sanitizeUser(user), // Pass UserSchema to sanitizeUser
+      message: "User profile retrieved successfully",
+      data: {
+        token, // Send the refreshed token back
+        user: sanitizeUser(user),
+      },
     };
   } catch (error) {
     console.error("Get current user error:", error);
     ctx.response.status = 500;
     ctx.response.body = {
       success: false,
-      message: "Server error fetching user profile",
+      message: "Server error retrieving user profile",
       error: (error instanceof Error) ? error.message : "Unknown error",
     };
   }

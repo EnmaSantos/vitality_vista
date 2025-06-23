@@ -51,26 +51,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
     console.log("AuthProvider: Checking for stored token...");
     try {
       const storedToken = localStorage.getItem('authToken');
-      const storedUserString = localStorage.getItem('authUser');
-
-      if (storedToken && storedUserString) {
-        console.log("AuthProvider: Found token and user in localStorage.");
-        const storedUser = JSON.parse(storedUserString) as User;
-        // TODO LATER: Optionally verify token with backend /api/auth/me here
-        setToken(storedToken);
-        setUser(storedUser);
-        setIsAuthenticated(true);
+      
+      if (storedToken) {
+        console.log("AuthProvider: Found token in localStorage. Verifying...");
+        authApi.verifyToken()
+          .then(data => {
+            console.log("AuthProvider: Token is valid.", data);
+            setToken(data.token);
+            setUser(data.user);
+            setIsAuthenticated(true);
+            localStorage.setItem('authToken', data.token); // Refresh the token
+            localStorage.setItem('authUser', JSON.stringify(data.user));
+          })
+          .catch(error => {
+            console.error("AuthProvider: Token verification failed.", error);
+            // Clear invalid token from storage and state
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('authUser');
+            setToken(null);
+            setUser(null);
+            setIsAuthenticated(false);
+          })
+          .finally(() => {
+            setIsLoading(false);
+            console.log("AuthProvider: Initial loading complete.");
+          });
       } else {
-        console.log("AuthProvider: No token/user found in localStorage.");
+        console.log("AuthProvider: No token found in localStorage.");
+        setIsLoading(false); // No token, so not loading
       }
     } catch (error) {
-        console.error("AuthProvider: Error reading from localStorage", error);
-        // Ensure state is cleared if localStorage is corrupt
+        console.error("AuthProvider: Error during initial auth check", error);
+        // Ensure state is cleared if something goes wrong
         localStorage.removeItem('authToken');
         localStorage.removeItem('authUser');
-    } finally {
-        setIsLoading(false); // Finished initial check
-        console.log("AuthProvider: Initial loading complete.");
+        setIsLoading(false); // Finished check, even if with an error
     }
   }, []); // Empty dependency array ensures this runs only once on mount
 
@@ -109,11 +124,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async (): Promise<void> => {
     console.log("AuthProvider: Logging out.");
     try {
-      await authApi.logout();
+      await authApi.logout(); // It's okay if this fails, we still log out locally.
       console.log("AuthProvider: API logout successful.");
     } catch (error) {
-      console.error("AuthProvider: API logout failed. Proceeding with local logout.", error);
+      console.error("AuthProvider: API logout call failed, but proceeding with local logout.", error);
     } finally {
+      // Clear state and localStorage regardless of API call outcome
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
