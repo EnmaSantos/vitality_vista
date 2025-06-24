@@ -48,7 +48,7 @@ const Landing: React.FC = () => {
           </Box>
           <Button
             component={RouterLink}
-            to="/signup"
+            to="/login"
             sx={{
               bgcolor: '#94e0b2',
               color: '#101914',
@@ -114,7 +114,7 @@ const Landing: React.FC = () => {
           </Box>
           <Button
             component={RouterLink}
-            to="/signup"
+            to="/login"
             sx={{
               bgcolor: '#94e0b2',
               color: '#101914',
@@ -334,7 +334,7 @@ const Landing: React.FC = () => {
           </Typography>
           <Button
             component={RouterLink}
-            to="/signup"
+            to="/login"
             sx={{
               bgcolor: '#94e0b2',
               color: '#101914',
