@@ -352,7 +352,7 @@ const FoodLog: React.FC = () => {
   const dailyTotals = useMemo(() => {
     return loggedEntries.reduce((totals, entry) => {
       return {
-        calories: totals.calories + entry.calories_consumed,
+        calories: totals.calories + (parseFloat(String(entry.calories_consumed)) || 0),
         protein: totals.protein + (parseFloat(String(entry.protein_consumed)) || 0),
         carbs: totals.carbs + (parseFloat(String(entry.carbs_consumed)) || 0),
         fat: totals.fat + (parseFloat(String(entry.fat_consumed)) || 0),
@@ -512,7 +512,7 @@ const FoodLog: React.FC = () => {
                     </Grid>
                     <Grid item xs={10} sm={6} md={7}>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: {xs: 'flex-start', sm: 'space-around'}, alignItems: 'center', pl: {xs:0, sm:1}, gap: {xs: 1, sm: 0.5} }}>
-                        <Typography variant="body2" sx={{color: '#bc6c25ff', minWidth: '70px', textAlign: 'right'}}>{entry.calories_consumed.toFixed(0)} kcal</Typography>
+                        <Typography variant="body2" sx={{color: '#bc6c25ff', minWidth: '70px', textAlign: 'right'}}>{(parseFloat(String(entry.calories_consumed)) || 0).toFixed(0)} kcal</Typography>
                         <Typography variant="body2" sx={{color: '#606c38ff', minWidth: '60px', textAlign: 'right'}}>P: {parseFloat(String(entry.protein_consumed)).toFixed(1)}g</Typography>
                         <Typography variant="body2" sx={{color: '#606c38ff', minWidth: '60px', textAlign: 'right'}}>C: {parseFloat(String(entry.carbs_consumed)).toFixed(1)}g</Typography>
                         <Typography variant="body2" sx={{color: '#606c38ff', minWidth: '60px', textAlign: 'right'}}>F: {parseFloat(String(entry.fat_consumed)).toFixed(1)}g</Typography>
