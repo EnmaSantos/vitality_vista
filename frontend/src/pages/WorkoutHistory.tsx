@@ -19,7 +19,12 @@ import {
   Button,
   Stack,
   IconButton,
-  Tooltip
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -27,7 +32,10 @@ import {
   Schedule as ScheduleIcon,
   Notes as NotesIcon,
   Timeline as TimelineIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon
 } from '@mui/icons-material';
 import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -52,9 +60,137 @@ const WorkoutHistory: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | false>(false);
 
+  // State for editing workout names
+  const [editingWorkout, setEditingWorkout] = useState<number | null>(null);
+  const [editWorkoutName, setEditWorkoutName] = useState('');
+  const [isUpdatingName, setIsUpdatingName] = useState(false);
+
   useEffect(() => {
     setCurrentThemeColor(themeColors.darkMossGreen);
   }, [setCurrentThemeColor]);
+
+  // Function to get time of day based on hour
+  const getTimeOfDay = (date: Date): string => {
+    const hour = date.getHours();
+    if (hour >= 5 && hour < 12) return 'Morning';
+    if (hour >= 12 && hour < 17) return 'Afternoon';
+    if (hour >= 17 && hour < 21) return 'Evening';
+    return 'Night';
+  };
+
+  // Function to generate intelligent workout name
+  const generateWorkoutName = (log: WorkoutLog, details: LogExerciseDetail[]): string => {
+    const date = new Date(log.log_date);
+    const timeOfDay = getTimeOfDay(date);
+    const dateStr = format(date, 'MMM d');
+    
+    if (details && details.length > 0) {
+      // Get unique exercise names
+      const exerciseNames = [...new Set(details.map(d => d.exercise_name))];
+      
+      if (exerciseNames.length === 1) {
+        // Single exercise workout
+        return `${exerciseNames[0]} • ${dateStr} • ${timeOfDay}`;
+      } else if (exerciseNames.length <= 3) {
+        // Multiple exercises (show up to 3)
+        return `${exerciseNames.slice(0, 3).join(', ')} • ${dateStr} • ${timeOfDay}`;
+      } else {
+        // Many exercises - show count
+        return `${exerciseNames.length} Exercises • ${dateStr} • ${timeOfDay}`;
+      }
+    }
+    
+    // Fallback if no exercises
+    if (log.plan_name) {
+      return `${log.plan_name} • ${dateStr} • ${timeOfDay}`;
+    }
+    
+    return `Workout • ${dateStr} • ${timeOfDay}`;
+  };
+
+  // Function to get display name for workout
+  const getWorkoutDisplayName = (log: WorkoutLog): string => {
+    // Check if there's a custom name in notes (format: "NAME: custom name")
+    if (log.notes && log.notes.startsWith('NAME:')) {
+      const customName = log.notes.substring(5).split('\n')[0].trim();
+      if (customName) return customName;
+    }
+    
+    // Generate intelligent name
+    const details = exerciseDetails[log.log_id] || [];
+    return generateWorkoutName(log, details);
+  };
+
+  // Function to update workout name
+  const updateWorkoutName = async (logId: number, newName: string) => {
+    if (!token) return;
+    
+    setIsUpdatingName(true);
+    try {
+      // We'll store the custom name in the notes field with a special format
+      const currentLog = workoutLogs.find(log => log.log_id === logId);
+      let existingNotes = currentLog?.notes || '';
+      
+      // Remove existing NAME: prefix if it exists
+      if (existingNotes.startsWith('NAME:')) {
+        const lines = existingNotes.split('\n');
+        existingNotes = lines.slice(1).join('\n').trim();
+      }
+      
+      // Add new name with PREFIX
+      const updatedNotes = `NAME: ${newName}${existingNotes ? '\n' + existingNotes : ''}`;
+      
+      // Get API base URL
+      const API_BASE_URL = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+        ? 'http://localhost:8000/api'
+        : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api');
+      
+      // Call API to update workout log notes
+      const response = await fetch(`${API_BASE_URL}/workout-logs/${logId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ notes: updatedNotes }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        setWorkoutLogs(prevLogs => 
+          prevLogs.map(log => 
+            log.log_id === logId 
+              ? { ...log, notes: updatedNotes }
+              : log
+          )
+        );
+        setEditingWorkout(null);
+      } else {
+        throw new Error('Failed to update workout name');
+      }
+    } catch (err) {
+      console.error('Error updating workout name:', err);
+      setError('Failed to update workout name');
+    } finally {
+      setIsUpdatingName(false);
+    }
+  };
+
+  const handleStartEdit = (log: WorkoutLog) => {
+    setEditingWorkout(log.log_id);
+    setEditWorkoutName(getWorkoutDisplayName(log));
+  };
+
+  const handleSaveEdit = () => {
+    if (editingWorkout && editWorkoutName.trim()) {
+      updateWorkoutName(editingWorkout, editWorkoutName.trim());
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingWorkout(null);
+    setEditWorkoutName('');
+  };
 
   const fetchWorkoutLogs = async () => {
     if (!token) {
@@ -68,6 +204,20 @@ const WorkoutHistory: React.FC = () => {
       setError(null);
       const logs = await getUserWorkoutLogs(token);
       setWorkoutLogs(logs);
+      
+      // Fetch exercise details for the first few exercises of each workout for intelligent naming
+      // We'll do this in the background for better naming
+      logs.forEach(async (log) => {
+        if (!exerciseDetails[log.log_id]) {
+          try {
+            const details = await getWorkoutLogDetails(log.log_id, token);
+            setExerciseDetails(prev => ({ ...prev, [log.log_id]: details }));
+          } catch (err) {
+            // Silent fail for naming - user can still expand to see details
+            console.log(`Could not load details for workout ${log.log_id} for naming`);
+          }
+        }
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch workout history');
     } finally {
@@ -128,7 +278,12 @@ const WorkoutHistory: React.FC = () => {
   const getWorkoutStats = (details: LogExerciseDetail[]) => {
     const exerciseCount = new Set(details.map(d => d.exercise_name)).size;
     const totalSets = details.length;
-    const totalWeight = details.reduce((sum, d) => sum + (d.weight_kg_used || 0), 0);
+    
+    // Handle weight data that might come as strings from the database
+    const totalWeight = details.reduce((sum, d) => {
+      const weight = parseFloat(String(d.weight_kg_used)) || 0;
+      return sum + weight;
+    }, 0);
     
     return {
       exerciseCount,
@@ -287,9 +442,63 @@ const WorkoutHistory: React.FC = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 2 }}>
                     <FitnessCenterIcon sx={{ color: '#606c38ff' }} />
                     <Box sx={{ flexGrow: 1 }}>
-                      <Typography variant="h6" sx={{ color: '#283618ff' }}>
-                        {log.plan_name || `Workout ${log.log_id}`}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="h6" sx={{ color: '#283618ff' }}>
+                          {editingWorkout === log.log_id ? (
+                            <TextField
+                              value={editWorkoutName}
+                              onChange={(e) => setEditWorkoutName(e.target.value)}
+                              onBlur={handleSaveEdit}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleSaveEdit();
+                                } else if (e.key === 'Escape') {
+                                  handleCancelEdit();
+                                }
+                              }}
+                              size="small"
+                              autoFocus
+                              sx={{ minWidth: 300 }}
+                              disabled={isUpdatingName}
+                            />
+                          ) : (
+                            getWorkoutDisplayName(log)
+                          )}
+                        </Typography>
+                        {editingWorkout === log.log_id ? (
+                          <Box sx={{ display: 'flex', gap: 0.5 }}>
+                            <IconButton 
+                              size="small" 
+                              onClick={handleSaveEdit}
+                              disabled={isUpdatingName}
+                              sx={{ color: '#606c38ff' }}
+                            >
+                              <SaveIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton 
+                              size="small" 
+                              onClick={handleCancelEdit}
+                              disabled={isUpdatingName}
+                              sx={{ color: '#666' }}
+                            >
+                              <CancelIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        ) : (
+                          <Tooltip title="Edit workout name">
+                            <IconButton 
+                              size="small" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStartEdit(log);
+                              }}
+                              sx={{ color: '#606c38ff' }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Typography variant="body2" sx={{ color: '#606c38ff' }}>
                           {dateInfo.formatted} at {dateInfo.time}
@@ -343,10 +552,10 @@ const WorkoutHistory: React.FC = () => {
                                 Total Sets: <strong>{stats.totalSets}</strong>
                               </Typography>
                             </Grid>
-                            {stats.totalWeight && (
+                            {stats.totalWeight && stats.totalWeight > 0 && (
                               <Grid item xs={4}>
                                 <Typography variant="body2" color="#606c38ff">
-                                  Total Weight: <strong>{stats.totalWeight.toFixed(1)} kg</strong>
+                                  Total Weight: <strong>{Number(stats.totalWeight).toFixed(1)} kg</strong>
                                 </Typography>
                               </Grid>
                             )}
@@ -380,7 +589,7 @@ const WorkoutHistory: React.FC = () => {
                                     )}
                                     {set.weight_kg_used && (
                                       <Chip 
-                                        label={`${set.weight_kg_used} kg`}
+                                        label={`${parseFloat(String(set.weight_kg_used))} kg`}
                                         size="small"
                                         variant="outlined"
                                       />
@@ -407,7 +616,7 @@ const WorkoutHistory: React.FC = () => {
                       ))}
 
                       {/* Workout Notes */}
-                      {log.notes && (
+                      {log.notes && !log.notes.startsWith('NAME:') && (
                         <Box sx={{ mt: 3, p: 2, bgcolor: '#f9f9f9', borderRadius: 1 }}>
                           <Stack direction="row" spacing={1} alignItems="center" mb={1}>
                             <NotesIcon sx={{ fontSize: 16, color: '#606c38ff' }} />
@@ -419,6 +628,25 @@ const WorkoutHistory: React.FC = () => {
                             {log.notes}
                           </Typography>
                         </Box>
+                      )}
+                      {log.notes && log.notes.startsWith('NAME:') && (
+                        (() => {
+                          const lines = log.notes.split('\n');
+                          const actualNotes = lines.slice(1).join('\n').trim();
+                          return actualNotes ? (
+                            <Box sx={{ mt: 3, p: 2, bgcolor: '#f9f9f9', borderRadius: 1 }}>
+                              <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                                <NotesIcon sx={{ fontSize: 16, color: '#606c38ff' }} />
+                                <Typography variant="subtitle2" sx={{ color: '#283618ff' }}>
+                                  Workout Notes
+                                </Typography>
+                              </Stack>
+                              <Typography variant="body2" sx={{ color: '#666' }}>
+                                {actualNotes}
+                              </Typography>
+                            </Box>
+                          ) : null;
+                        })()
                       )}
                     </Box>
                   ) : (

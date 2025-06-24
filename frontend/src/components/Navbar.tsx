@@ -30,7 +30,6 @@ import { useAuth } from '../context/AuthContext';
 const navItems = [
   { path: '/', label: 'Dashboard' },
   { path: '/exercises', label: 'Exercises' },
-  { path: '/workout-history', label: 'Workout History' },
   { path: '/food-log', label: 'Food Log' },
   { path: '/progress', label: 'Progress' },
   { path: '/recipes', label: 'Recipes' },

@@ -875,4 +875,103 @@ export async function updatePlanExerciseHandler(ctx: RouterContext) {
   }
 }
 
+/**
+ * Updates a workout log (for editing workout names stored in notes)
+ */
+export async function updateWorkoutLogHandler(ctx: RouterContext) {
+  const response: ApiResponse<WorkoutLogSchema> = { success: false };
+  
+  try {
+    // 1. Validate authentication
+    const userId = ctx.state.userId as string;
+    if (!userId) {
+      ctx.response.status = 401;
+      response.error = "User not authenticated";
+      ctx.response.body = response;
+      return;
+    }
+
+    // 2. Validate log ID
+    const logId = parseInt(ctx.params.logId);
+    if (isNaN(logId)) {
+      ctx.response.status = 400;
+      response.error = "Invalid log ID";
+      ctx.response.body = response;
+      return;
+    }
+
+    // 3. Parse request body
+    if (!ctx.request.hasBody) {
+      ctx.response.status = 400;
+      response.error = "Request body is required";
+      ctx.response.body = response;
+      return;
+    }
+
+    const body = ctx.request.body({ type: 'json' });
+    const payload = await body.value as {
+      notes?: string;
+      duration_minutes?: number;
+    };
+
+    // 4. Verify the workout log belongs to the user
+    const ownershipQuery = `
+      SELECT user_id FROM workout_logs WHERE log_id = $1
+    `;
+    const ownershipResult = await dbClient.queryObject<{ user_id: string }>(
+      ownershipQuery,
+      [logId]
+    );
+
+    if (ownershipResult.rows.length === 0) {
+      ctx.response.status = 404;
+      response.error = "Workout log not found";
+      ctx.response.body = response;
+      return;
+    }
+
+    if (ownershipResult.rows[0].user_id !== userId) {
+      ctx.response.status = 403;
+      response.error = "Access denied";
+      ctx.response.body = response;
+      return;
+    }
+
+    // 5. Update the workout log
+    const updateQuery = `
+      UPDATE workout_logs 
+      SET notes = COALESCE($1, notes),
+          duration_minutes = COALESCE($2, duration_minutes)
+      WHERE log_id = $3 AND user_id = $4
+      RETURNING log_id, user_id, plan_id, log_date, duration_minutes, notes, created_at
+    `;
+
+    const result = await dbClient.queryObject<WorkoutLogSchema>(
+      updateQuery,
+      [payload.notes || null, payload.duration_minutes || null, logId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error("Failed to update workout log");
+    }
+
+    // 6. Send success response
+    response.success = true;
+    response.data = result.rows[0];
+    response.message = "Workout log updated successfully";
+    
+    ctx.response.status = 200;
+    ctx.response.body = response;
+
+  } catch (error) {
+    console.error("Error in updateWorkoutLogHandler:", error);
+    
+    response.success = false;
+    response.error = error instanceof Error ? error.message : "Unknown error occurred";
+    
+    ctx.response.status = 500;
+    ctx.response.body = response;
+  }
+}
+
 // --- TODO: Add handlers for other workout management actions ---
