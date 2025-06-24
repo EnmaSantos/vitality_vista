@@ -142,4 +142,29 @@ export async function getUserWorkoutLogs(token: string): Promise<WorkoutLog[]> {
     console.error('Error fetching workout logs:', error);
     throw error;
   }
+}
+
+/**
+ * Gets detailed exercise logs for a specific workout log
+ */
+export async function getWorkoutLogDetails(logId: number, token: string): Promise<LogExerciseDetail[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/workout-logs/${logId}/exercises`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const result: ApiResponse<LogExerciseDetail[]> = await response.json();
+    
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || result.message || 'Failed to fetch workout log details');
+    }
+
+    return result.data || [];
+  } catch (error) {
+    console.error('Error fetching workout log details:', error);
+    throw error;
+  }
 } 

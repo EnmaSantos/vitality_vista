@@ -297,14 +297,23 @@ const MyPlans: React.FC = () => {
         <Typography variant="h4" gutterBottom sx={{ textAlign: 'left', flexGrow: 1 }}>
             My Workout Plans
         </Typography>
-        <Button 
-            variant="contained" 
-            color="primary" 
-            startIcon={<AddIcon />} 
-            onClick={handleNavigateToCreatePlan}
-        >
-            Create New Plan
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button 
+              variant="outlined" 
+              onClick={() => navigate('/workout-history')}
+              sx={{ color: '#606c38ff', borderColor: '#606c38ff', '&:hover': { bgcolor: 'rgba(96,108,56,0.05)' } }}
+          >
+              View History
+          </Button>
+          <Button 
+              variant="contained" 
+              color="primary" 
+              startIcon={<AddIcon />} 
+              onClick={handleNavigateToCreatePlan}
+          >
+              Create New Plan
+          </Button>
+        </Box>
       </Box>
       {plans.map((plan) => (
         <Accordion 

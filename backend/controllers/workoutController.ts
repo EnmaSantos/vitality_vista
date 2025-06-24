@@ -545,6 +545,87 @@ export async function getUserWorkoutLogsHandler(ctx: RouterContext) {
   }
 }
 
+/**
+ * Gets exercise details for a specific workout log
+ */
+export async function getWorkoutLogDetailsHandler(ctx: RouterContext) {
+  const response: ApiResponse<LogExerciseDetailSchema[]> = { success: false };
+  
+  try {
+    // 1. Validate authentication
+    const userId = ctx.state.userId as string;
+    if (!userId) {
+      ctx.response.status = 401;
+      response.error = "User not authenticated";
+      ctx.response.body = response;
+      return;
+    }
+
+    // 2. Validate log ID
+    const logId = parseInt(ctx.params.logId);
+    if (isNaN(logId)) {
+      ctx.response.status = 400;
+      response.error = "Invalid log ID";
+      ctx.response.body = response;
+      return;
+    }
+
+    // 3. Verify the workout log belongs to the user
+    const logOwnershipQuery = `
+      SELECT user_id FROM workout_logs WHERE log_id = $1
+    `;
+    const ownershipResult = await dbClient.queryObject<{ user_id: string }>(
+      logOwnershipQuery,
+      [logId]
+    );
+
+    if (ownershipResult.rows.length === 0) {
+      ctx.response.status = 404;
+      response.error = "Workout log not found";
+      ctx.response.body = response;
+      return;
+    }
+
+    if (ownershipResult.rows[0].user_id !== userId) {
+      ctx.response.status = 403;
+      response.error = "Access denied";
+      ctx.response.body = response;
+      return;
+    }
+
+    // 4. Fetch exercise details for the workout log
+    const exerciseDetailsQuery = `
+      SELECT log_exercise_id, log_id, exercise_id, exercise_name, order_in_log,
+             set_number, reps_achieved, weight_kg_used, duration_achieved_seconds, notes
+      FROM log_exercise_details
+      WHERE log_id = $1
+      ORDER BY order_in_log, set_number
+    `;
+
+    const result = await dbClient.queryObject<LogExerciseDetailSchema>(
+      exerciseDetailsQuery,
+      [logId]
+    );
+
+    // 5. Send success response
+    response.success = true;
+    response.data = result.rows;
+    response.message = `Found ${result.rows.length} exercise details for workout log`;
+    
+    ctx.response.status = 200;
+    ctx.response.body = response;
+
+  } catch (error) {
+    console.error("Error in getWorkoutLogDetailsHandler:", error);
+    
+    response.success = false;
+    response.error = error instanceof Error ? error.message : "Unknown error occurred";
+    
+    ctx.response.status = 500;
+    ctx.response.body = response;
+  }
+}
+
 // --- New: Get exercises for a specific plan ---
 export async function getPlanExercisesHandler(ctx: RouterContext) {
   const response: ApiResponse<PlanExerciseSchema[]> = { success: false };

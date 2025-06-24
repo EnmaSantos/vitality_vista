@@ -10,3 +10,4 @@ export { default as Signup } from './Signup';
 export { default as ForgotPassword } from './ForgotPassword';
 export { default as ProfilePage } from './ProfilePage';
 export { default as MyPlans } from './MyPlans';
+export { default as WorkoutHistory } from './WorkoutHistory';

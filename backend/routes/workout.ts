@@ -13,6 +13,7 @@ import {
   deleteWorkoutPlanHandler,
   removeExerciseFromPlanHandler,
   updatePlanExerciseHandler,
+  getWorkoutLogDetailsHandler,
 } from "../controllers/workoutController.ts";
 // Import the authentication middleware to protect these routes
 import { authMiddleware } from "../middleware/authMiddleware.ts";
@@ -58,6 +59,10 @@ workoutRouter.post("/workout-logs", authMiddleware, createWorkoutLogHandler);
 // GET /api/workout-logs
 // Gets all workout logs for the authenticated user
 workoutRouter.get("/workout-logs", authMiddleware, getUserWorkoutLogsHandler);
+
+// GET /api/workout-logs/:logId/exercises
+// Gets exercise details for a specific workout log
+workoutRouter.get("/workout-logs/:logId/exercises", authMiddleware, getWorkoutLogDetailsHandler);
 
 // POST /api/workout-logs/:logId/exercises
 // Logs exercise details for a specific workout session

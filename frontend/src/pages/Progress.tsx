@@ -359,6 +359,22 @@ const ProgressPage: React.FC = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={2}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h5" sx={{ color: '#283618ff' }}>
+              Workout Progress
+            </Typography>
+            <Button 
+              variant="outlined"
+              onClick={() => window.location.href = '/workout-history'}
+              sx={{ 
+                color: '#606c38ff', 
+                borderColor: '#606c38ff',
+                '&:hover': { bgcolor: 'rgba(96,108,56,0.05)' }
+              }}
+            >
+              View Detailed History
+            </Button>
+          </Box>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <Typography variant="h6" gutterBottom>
