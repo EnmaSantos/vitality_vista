@@ -3,21 +3,22 @@ import { Typography, Box, Paper, Grid, Card, CardContent, CircularProgress, Aler
 import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { getUserProfile, UserProfileData } from '../services/profileApi';
-import { getFoodLogsForDate, LoggedFoodEntry } from '../services/foodLogApi';
+import { getFoodLogEntriesAPI, FoodLogEntry } from '../services/foodLogApi';
 
 // Helper to get today's date in YYYY-MM-DD format
 const getTodayDateString = () => new Date().toISOString().split('T')[0];
 
 const Dashboard: React.FC = () => {
   const { setCurrentThemeColor } = useThemeContext();
-  const { token } = useAuth();
+  const auth = useAuth(); // Use the full auth context
+  const { token } = auth;
 
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
 
   // State for food log data
-  const [dailyFoodLogs, setDailyFoodLogs] = useState<LoggedFoodEntry[]>([]);
+  const [dailyFoodLogs, setDailyFoodLogs] = useState<FoodLogEntry[]>([]); // Use FoodLogEntry
   const [isLoadingFoodLogs, setIsLoadingFoodLogs] = useState(true);
   const [foodLogError, setFoodLogError] = useState<string | null>(null);
   const [consumedCalories, setConsumedCalories] = useState(0);
@@ -54,26 +55,26 @@ const Dashboard: React.FC = () => {
 
   // Fetch food logs for today
   const fetchTodaysFoodLogs = useCallback(async () => {
-    if (token) {
+    if (auth.token) { // Check auth.token
       setIsLoadingFoodLogs(true);
       setFoodLogError(null);
       try {
         const todayStr = getTodayDateString();
         console.log(`Dashboard: Fetching food logs for date: ${todayStr}`);
-        const logs = await getFoodLogsForDate(todayStr, token);
+        const logs = await getFoodLogEntriesAPI(todayStr, auth); // Use the correct API function
         setDailyFoodLogs(logs);
         console.log("Dashboard: Today's food logs fetched:", logs);
 
-        // Calculate totals
+        // Calculate totals with correct field names
         let totalCalories = 0;
         let totalProtein = 0;
         let totalCarbs = 0;
         let totalFat = 0;
         logs.forEach(log => {
-          totalCalories += log.calories || 0;
-          totalProtein += log.protein || 0;
-          totalCarbs += log.carbohydrate || 0;
-          totalFat += log.fat || 0;
+          totalCalories += Number(log.calories_consumed) || 0;
+          totalProtein += Number(log.protein_consumed) || 0;
+          totalCarbs += Number(log.carbs_consumed) || 0;
+          totalFat += Number(log.fat_consumed) || 0;
         });
         setConsumedCalories(totalCalories);
         setConsumedProtein(totalProtein);
@@ -90,7 +91,7 @@ const Dashboard: React.FC = () => {
       setIsLoadingFoodLogs(false);
       console.log("Dashboard: No token available to fetch food logs.");
     }
-  }, [token]);
+  }, [auth]); // Depend on the auth object
 
   useEffect(() => {
     // Initial fetch when component mounts
@@ -113,8 +114,8 @@ const Dashboard: React.FC = () => {
     };
   }, [fetchDashboardProfile, fetchTodaysFoodLogs]); // Dependencies for the initial fetch
 
-  const displayTDEE = profile?.tdee !== null && profile?.tdee !== undefined ? profile.tdee : "N/A";
-  const displayConsumed = isLoadingFoodLogs ? "Loading..." : consumedCalories;
+  const displayTDEE = profile?.tdee !== null && profile?.tdee !== undefined ? Math.round(profile.tdee) : "N/A";
+  const displayConsumed = isLoadingFoodLogs ? "Loading..." : Math.round(consumedCalories);
 
   return (
     <Box sx={{ padding: 3, backgroundColor: '#fefae0ff', minHeight: '100vh' }}>

@@ -36,7 +36,7 @@ interface User {
   // --- End Added ---
   
   // Use localhost for development, fallback to production URL
-  const API_BASE_URL = "http://localhost:8000/api/auth";
+  const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api/auth";
   
   console.log("authApi: Using API_BASE_URL:", API_BASE_URL); // Log the base URL being used
   

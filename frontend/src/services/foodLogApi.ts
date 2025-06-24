@@ -62,38 +62,18 @@ export interface FoodLogEntry {
   fatsecret_serving_id: string;
   logged_serving_description: string;
   logged_quantity: number; // May come as string from backend (e.g., "1.50")
-  calories_consumed: number;
-  protein_consumed: number; // May come as string
-  fat_consumed: number;     // May come as string
-  carbs_consumed: number;   // May come as string
+  calories_consumed: number | string;
+  protein_consumed: number | string;
+  fat_consumed: number | string;
+  carbs_consumed: number | string;
   food_name?: string | null;
   notes?: string | null;
   created_at: string; // Or Date
   updated_at: string; // Or Date
 }
 
-// Simplified interface for Dashboard consumption
-export interface LoggedFoodEntry {
-  log_entry_id: number;
-  user_id: string;
-  food_name: string;
-  calories: number;
-  protein: number;
-  fat: number;
-  carbohydrate: number; // Maps to carbs_consumed from backend
-  meal_type: string;
-  log_date: string;
-  quantity: number; // Maps to logged_quantity from backend
-  serving_description: string; // Maps to logged_serving_description from backend
-  notes?: string | null;
-  created_at: string;
-}
-
 // API Base URL - Updated to be consistent with other API services
-const API_BASE_URL =
- (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
-   ? 'http://localhost:8000/api/' // Backend running locally (ends with /)
-   : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/'); // Default (ends with /)
+const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api";
 
 const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem("authToken");
@@ -132,7 +112,7 @@ export const searchFoodsAPI = async (
   maxResults = 10
 ): Promise<NutritionData[]> => {
   if (!auth.token) throw new Error("Authentication token not found.");
-  const url = `${API_BASE_URL}fatsecret/foods/search?query=${encodeURIComponent(query)}&max_results=${maxResults}`;
+  const url = `${API_BASE_URL}/fatsecret/foods/search?query=${encodeURIComponent(query)}&max_results=${maxResults}`;
   const response = await fetchWithAuth(url, { method: 'GET' });
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || 'Failed to search foods.');
@@ -144,7 +124,7 @@ export const getFoodDetailsAPI = async (
   auth: AuthContextType
 ): Promise<NutritionData | null> => {
   if (!auth.token) throw new Error("Authentication token not found.");
-  const url = `${API_BASE_URL}fatsecret/foods/${foodId}`;
+  const url = `${API_BASE_URL}/fatsecret/foods/${foodId}`;
   const response = await fetchWithAuth(url, { method: 'GET' });
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || 'Failed to get food details.');
@@ -156,7 +136,7 @@ export const searchFoodsAutocompleteAPI = async (
   auth: AuthContextType
 ): Promise<AutocompleteSuggestion[]> => {
   if (!auth.token) throw new Error("Authentication token not found.");
-  const url = `${API_BASE_URL}fatsecret/foods/autocomplete?expression=${encodeURIComponent(expression)}`;
+  const url = `${API_BASE_URL}/fatsecret/foods/autocomplete?expression=${encodeURIComponent(expression)}`;
   const response = await fetchWithAuth(url, { method: 'GET' });
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || 'Failed to get autocomplete suggestions.');
@@ -171,7 +151,7 @@ export const createFoodLogEntryAPI = async (
   auth: AuthContextType
 ): Promise<FoodLogEntry> => {
   if (!auth.token) throw new Error("Authentication token not found.");
-  const url = `${API_BASE_URL}food-logs`;
+  const url = `${API_BASE_URL}/food-logs`;
   const response = await fetchWithAuth(url, {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -186,7 +166,7 @@ export const getFoodLogEntriesAPI = async (
   auth: AuthContextType
 ): Promise<FoodLogEntry[]> => {
   if (!auth.token) throw new Error("Authentication token not found.");
-  const url = `${API_BASE_URL}food-logs?date=${date}`;
+  const url = `${API_BASE_URL}/food-logs?date=${date}`;
   const response = await fetchWithAuth(url, { method: 'GET' });
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || 'Failed to fetch food log entries.');
@@ -198,53 +178,9 @@ export const deleteFoodLogEntryAPI = async (
   auth: AuthContextType
 ): Promise<{ success: boolean, message: string }> => {
   if (!auth.token) throw new Error("Authentication token not found.");
-  const url = `${API_BASE_URL}food-logs/${logEntryId}`;
+  const url = `${API_BASE_URL}/food-logs/${logEntryId}`;
   const response = await fetchWithAuth(url, { method: 'DELETE' });
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || 'Failed to delete food log entry.');
   return data;
 };
-
-// Simplified function for Dashboard to get today's food logs with token only
-export async function getFoodLogsForDate(date: string, token: string): Promise<LoggedFoodEntry[]> {
-  console.log(`getFoodLogsForDate: Fetching food logs for date: ${date}`);
-  
-  const url = `${API_BASE_URL}food-logs?date=${date}`;
-  
-  try {
-    const response = await fetchWithAuth(url, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
-      },
-    });
-
-    let responseData;
-    try {
-      responseData = await response.json();
-    } catch (e) {
-      if (e instanceof Error && e.message === "Token expired") {
-        throw e;
-      }
-      throw new Error(`Failed to parse JSON response from ${url}`);
-    }
-
-    if (!response.ok || !responseData.success) {
-      console.error("getFoodLogsForDate: Get food logs failed response:", responseData);
-      throw new Error(responseData.message || `Failed to fetch food logs. Status: ${response.status}`);
-    }
-
-    return responseData.data; 
-    
-  } catch (error) {
-    if (error instanceof Error && error.message === "Token expired") {
-        console.warn("Session expired. Redirecting to login.");
-    } else {
-        console.error("getFoodLogsForDate: An unexpected error occurred:", error);
-    }
-    // Re-throw the error so the calling component knows about it
-    // The fetchWithAuth handles the redirect, but this allows the UI to stop loading states etc.
-    throw error;
-  }
-}
