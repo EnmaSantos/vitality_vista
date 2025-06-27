@@ -91,6 +91,11 @@ export interface AddExerciseToPlanPayload {
   notes?: string;
 }
 
+export interface UpdateWorkoutPlanPayload {
+    name?: string;
+    description?: string;
+}
+
 // New DTO type for frontend, matching backend's UpdatePlanExerciseRequest
 export interface UpdatePlanExerciseData {
   sets?: number;
@@ -100,6 +105,42 @@ export interface UpdatePlanExerciseData {
   rest_period_seconds?: number;
   notes?: string;
   // order_in_plan?: number; // if reordering is implemented
+}
+
+export interface WorkoutLog {
+  log_id: number;
+  user_id: string;
+  plan_id?: number;
+  workout_date: string;
+  duration_seconds?: number;
+  notes?: string;
+}
+
+export interface LogExerciseDetail {
+  log_exercise_id: number;
+  log_id: number;
+  exercise_id: number;
+  exercise_name: string;
+  set_number: number;
+  reps_achieved?: number;
+  weight_kg_used?: number;
+  duration_achieved_seconds?: number;
+}
+
+export interface CreateWorkoutLogPayload {
+    plan_id?: number;
+    workout_date: string; // YYYY-MM-DD
+    duration_seconds?: number;
+    notes?: string;
+}
+
+export interface LogExerciseDetailPayload {
+    exercise_id: number;
+    exercise_name: string;
+    set_number: number;
+    reps_achieved?: number;
+    weight_kg_used?: number;
+    duration_achieved_seconds?: number;
 }
 
 // API Functions
@@ -164,6 +205,27 @@ export const getPlanExercises = async (planId: number, token: string | null): Pr
     }
     return { success: false, error: error instanceof Error ? error.message : "Network error" };
   }
+};
+
+export const updateWorkoutPlan = async (
+    planId: number, 
+    planData: UpdateWorkoutPlanPayload, 
+    token: string | null
+): Promise<ApiResponse<WorkoutPlan>> => {
+    if (!token) return { success: false, error: "No token provided for updating plan." };
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/workout-plans/${planId}`, {
+            method: 'PUT',
+            body: JSON.stringify(planData),
+        });
+        return await response.json();
+    } catch (error) {
+        console.error("Error updating workout plan:", error);
+        if (error instanceof Error && error.message === "Token expired") {
+            return { success: false, error: "Your session has expired. Please log in again." };
+        }
+        return { success: false, error: error instanceof Error ? error.message : "Network error" };
+    }
 };
 
 export const deleteWorkoutPlan = async (planId: number): Promise<ApiResponse<null>> => {
@@ -248,5 +310,46 @@ export const updatePlanExercise = async (
       error: error instanceof Error ? error.message : "Network error or unexpected issue updating exercise",
       message: error instanceof Error ? error.message : "Failed to update exercise in plan"
     };
+  }
+}; 
+
+export const createWorkoutLog = async (
+  logData: CreateWorkoutLogPayload,
+  token: string | null
+): Promise<ApiResponse<WorkoutLog>> => {
+  if (!token) return { success: false, error: "No token provided." };
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}/workout-logs`, {
+      method: 'POST',
+      body: JSON.stringify(logData),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Error creating workout log:", error);
+    if (error instanceof Error && error.message === "Token expired") {
+      return { success: false, error: "Your session has expired. Please log in again." };
+    }
+    return { success: false, error: "Network error" };
+  }
+};
+
+export const logExerciseDetails = async (
+  logId: number,
+  exerciseData: LogExerciseDetailPayload,
+  token: string | null
+): Promise<ApiResponse<LogExerciseDetail>> => {
+  if (!token) return { success: false, error: "No token provided." };
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}/workout-logs/${logId}/exercises`, {
+      method: 'POST',
+      body: JSON.stringify(exerciseData),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Error logging exercise details:", error);
+    if (error instanceof Error && error.message === "Token expired") {
+      return { success: false, error: "Your session has expired. Please log in again." };
+    }
+    return { success: false, error: "Network error" };
   }
 }; 

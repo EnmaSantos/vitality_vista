@@ -43,6 +43,11 @@ interface UpdatePlanExerciseRequest {
   order_in_plan?: number; // Optional: if we want to allow reordering later
 }
 
+interface UpdateWorkoutPlanRequest {
+  name?: string;
+  description?: string;
+}
+
 /**
  * Creates a new workout plan for the authenticated user
  */
@@ -120,6 +125,107 @@ export async function createWorkoutPlanHandler(ctx: RouterContext) {
     response.success = false;
     response.error = error instanceof Error ? error.message : "Unknown error occurred";
     
+    ctx.response.status = 500;
+    ctx.response.body = response;
+  }
+}
+
+/**
+ * Updates an existing workout plan for the authenticated user
+ */
+export async function updateWorkoutPlanHandler(ctx: RouterContext) {
+  const response: ApiResponse<WorkoutPlanSchema> = { success: false };
+
+  try {
+    await ensureConnection();
+    const userId = ctx.state.userId as string;
+    if (!userId) {
+      ctx.response.status = 401;
+      response.error = "User not authenticated";
+      ctx.response.body = response;
+      return;
+    }
+
+    const planId = parseInt(ctx.params.planId);
+    if (isNaN(planId)) {
+      ctx.response.status = 400;
+      response.error = "Invalid plan ID";
+      ctx.response.body = response;
+      return;
+    }
+
+    if (!ctx.request.hasBody) {
+      ctx.response.status = 400;
+      response.error = "Request body is required";
+      ctx.response.body = response;
+      return;
+    }
+
+    const body = ctx.request.body({ type: 'json' });
+    const payload = await body.value as UpdateWorkoutPlanRequest;
+
+    if (!payload.name && !payload.description) {
+        ctx.response.status = 400;
+        response.error = "At least one field (name or description) must be provided for update.";
+        ctx.response.body = response;
+        return;
+    }
+    
+    const currentPlanQuery = `SELECT user_id FROM workout_plans WHERE plan_id = $1`;
+    const planResult = await dbClient.queryObject<{ user_id: string }>(currentPlanQuery, [planId]);
+
+    if (planResult.rows.length === 0) {
+        ctx.response.status = 404;
+        response.error = "Plan not found";
+        ctx.response.body = response;
+        return;
+    }
+
+    if (planResult.rows[0].user_id !== userId) {
+        ctx.response.status = 403;
+        response.error = "User not authorized to update this plan";
+        ctx.response.body = response;
+        return;
+    }
+
+    const updateFields: string[] = [];
+    const updateValues: (string | number | null)[] = [];
+    let valueCount = 1;
+
+    if (payload.name) {
+        updateFields.push(`name = $${valueCount++}`);
+        updateValues.push(payload.name.trim());
+    }
+
+    if (payload.description) {
+        updateFields.push(`description = $${valueCount++}`);
+        updateValues.push(payload.description.trim());
+    }
+    
+    updateValues.push(planId);
+
+    const updateQuery = `
+      UPDATE workout_plans
+      SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
+      WHERE plan_id = $${valueCount}
+      RETURNING plan_id, user_id, name, description, created_at, updated_at
+    `;
+
+    const updateResult = await dbClient.queryObject<WorkoutPlanSchema>(updateQuery, updateValues);
+
+    if (updateResult.rows.length === 0) {
+        throw new Error("Failed to update workout plan.");
+    }
+
+    response.success = true;
+    response.data = updateResult.rows[0];
+    response.message = "Workout plan updated successfully";
+    ctx.response.status = 200;
+    ctx.response.body = response;
+
+  } catch (error) {
+    console.error("Error in updateWorkoutPlanHandler:", error);
+    response.error = error instanceof Error ? error.message : "Unknown error occurred";
     ctx.response.status = 500;
     ctx.response.body = response;
   }

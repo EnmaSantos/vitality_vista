@@ -17,7 +17,8 @@ import {
   ForgotPassword,
   ProfilePage,
   MyPlans,
-  WorkoutHistory
+  WorkoutHistory,
+  WorkoutSession,
 } from "./pages"; // Import from index.ts
 import { ThemeProvider } from './context/ThemeContext'; // Assuming you also have ThemeProvider
 import "./App.css";
@@ -51,6 +52,8 @@ const AppLayout = () => {
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/my-plans" element={<ProtectedRoute><MyPlans /></ProtectedRoute>} />
           <Route path="/workout-history" element={<ProtectedRoute><WorkoutHistory /></ProtectedRoute>} />
+          <Route path="/workout/session/:planId" element={<ProtectedRoute><WorkoutSession /></ProtectedRoute>} />
+          <Route path="/workout/session/exercise/:exerciseId" element={<ProtectedRoute><WorkoutSession /></ProtectedRoute>} />
           
           {/* --- Fallback Route (Remains Unchanged) --- */}
           <Route path="*" element={<Navigate to="/landing" replace />} />

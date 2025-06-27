@@ -9,13 +9,16 @@ import {
   deleteWorkoutPlan,
   removeExerciseFromPlan,
   updatePlanExercise,
-  UpdatePlanExerciseData
+  UpdatePlanExerciseData,
+  updateWorkoutPlan,
+  UpdateWorkoutPlanPayload,
 } from '../api/workoutApi';
 import { Accordion, AccordionSummary, AccordionDetails, Typography, Button, List, ListItem, ListItemText, IconButton, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Stack } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import LogWorkoutModal from '../components/LogWorkoutModal';
 
 // Placeholder for ExerciseDetail until exercisesApi.ts is created/fixed
@@ -73,6 +76,12 @@ const MyPlans: React.FC = () => {
   const [exerciseToEdit, setExerciseToEdit] = useState<PlanExercise | null>(null);
   const [editExerciseForm, setEditExerciseForm] = useState<UpdatePlanExerciseData>({});
   const [isUpdatingExercise, setIsUpdatingExercise] = useState(false);
+  
+  // --- State for Edit Plan Modal ---
+  const [editPlanModalOpen, setEditPlanModalOpen] = useState(false);
+  const [planToEdit, setPlanToEdit] = useState<WorkoutPlan | null>(null);
+  const [editPlanForm, setEditPlanForm] = useState<UpdateWorkoutPlanPayload>({ name: '', description: '' });
+  const [isUpdatingPlan, setIsUpdatingPlan] = useState(false);
   
   const fetchUserPlans = useCallback(async () => {
     if (!token) { setError("Authentication token not found."); setLoadingPlans(false); return; }
@@ -210,6 +219,51 @@ const MyPlans: React.FC = () => {
     setExerciseToRemove(null);
   };
 
+  // --- Handlers for Edit Plan Modal ---
+  const handleOpenEditPlanModal = (plan: WorkoutPlan) => {
+    setPlanToEdit(plan);
+    setEditPlanForm({
+      name: plan.name,
+      description: plan.description || ''
+    });
+    setEditPlanModalOpen(true);
+  };
+
+  const handleCloseEditPlanModal = () => {
+    setEditPlanModalOpen(false);
+    setPlanToEdit(null);
+    setEditPlanForm({ name: '', description: '' });
+  };
+
+  const handleEditPlanFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setEditPlanForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleConfirmUpdatePlan = async () => {
+    if (!planToEdit || !token) {
+      setError("Cannot update plan: Missing data or token.");
+      return;
+    }
+    setIsUpdatingPlan(true);
+    setError(null);
+
+    try {
+      const response = await updateWorkoutPlan(planToEdit.plan_id, editPlanForm, token);
+      if (response.success && response.data) {
+        setPlans(prevPlans => prevPlans.map(p => p.plan_id === response.data!.plan_id ? response.data! : p));
+        handleCloseEditPlanModal();
+      } else {
+        setError(response.error || 'Failed to update plan.');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred while updating the plan.');
+      console.error(err);
+    } finally {
+      setIsUpdatingPlan(false);
+    }
+  };
+
   // --- Handlers for Edit Exercise Modal ---
   const handleOpenEditExerciseModal = (exercise: PlanExercise) => {
     setExerciseToEdit(exercise);
@@ -315,109 +369,109 @@ const MyPlans: React.FC = () => {
           </Button>
         </Box>
       </Box>
-      {plans.map((plan) => (
-        <Accordion 
-          key={plan.plan_id} 
-          expanded={expandedPlan === plan.plan_id} 
-          onChange={handleAccordionChange(plan.plan_id)}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <Typography variant="h6">{plan.name}</Typography>
-              <Box>
-                {planExercises[plan.plan_id] && planExercises[plan.plan_id].length > 0 && (
-                    <Typography variant="caption" sx={{ mr: 2 }}>
-                        {planExercises[plan.plan_id].length} exercise(s)
-                    </Typography>
+      <Box sx={{ my: 4 }}>
+        {loadingPlans ? (
+          <CircularProgress />
+        ) : error ? (
+          <Typography color="error">{error}</Typography>
+        ) : plans.length === 0 ? (
+          <Typography>You haven't created any workout plans yet.</Typography>
+        ) : (
+          plans.map(plan => (
+            <Accordion key={plan.plan_id} expanded={expandedPlan === plan.plan_id} onChange={handleAccordionChange(plan.plan_id)}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls={`plan-${plan.plan_id}-content`} id={`plan-${plan.plan_id}-header`}>
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                  <Typography sx={{ flexGrow: 1, fontWeight: 'medium' }}>{plan.name}</Typography>
+                  <IconButton 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      handleOpenEditPlanModal(plan);
+                    }} 
+                    aria-label="edit plan"
+                  >
+                      <EditIcon />
+                  </IconButton>
+                  <IconButton onClick={(e) => { e.stopPropagation(); handleOpenDeletePlanModal(plan); }} aria-label="delete plan">
+                    <DeleteIcon />
+                  </IconButton>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    startIcon={<PlayCircleOutlineIcon />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/workout/session/${plan.plan_id}`);
+                    }}
+                    sx={{ ml: 2, borderRadius: '20px' }}
+                  >
+                    Start Plan
+                  </Button>
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  {plan.description || 'No description for this plan.'}
+                </Typography>
+                {loadingExercises[plan.plan_id] && <CircularProgress />}
+                {!loadingExercises[plan.plan_id] && planExercises[plan.plan_id] && (
+                  <List>
+                    {planExercises[plan.plan_id].length > 0 ? (
+                      planExercises[plan.plan_id].map((exercise) => (
+                        <ListItem 
+                            key={exercise.plan_exercise_id} 
+                            divider
+                            secondaryAction={
+                                <Box>
+                                    <IconButton 
+                                        edge="end" 
+                                        aria-label="edit exercise"
+                                        onClick={() => handleOpenEditExerciseModal(exercise)} // Open edit modal
+                                        sx={{ mr: 0.5 }}
+                                    >
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                    <Button 
+                                        variant="outlined" 
+                                        size="small"
+                                        onClick={() => handleLogWorkout(exercise, plan.plan_id)}
+                                        sx={{ mr: 0.5 }}
+                                    >
+                                        Log
+                                    </Button>
+                                    <IconButton 
+                                        edge="end" 
+                                        aria-label="remove exercise"
+                                        onClick={() => handleOpenRemoveExerciseModal(plan.plan_id, exercise.plan_exercise_id, exercise.exercise_name)}
+                                    >
+                                        <DeleteIcon fontSize="small"/>
+                                    </IconButton>
+                                </Box>
+                            }
+                        >
+                          <ListItemText 
+                            primary={exercise.exercise_name} 
+                            secondary={
+                              <>
+                                {exercise.sets && `Sets: ${exercise.sets}`}{exercise.reps && `, Reps: ${exercise.reps}`}
+                                {exercise.weight_kg && `, Weight: ${exercise.weight_kg}kg`}
+                                {exercise.duration_minutes && `, Duration: ${exercise.duration_minutes}min`}
+                                {exercise.notes && <Typography variant="body2" color="textSecondary">Notes: {exercise.notes}</Typography>}
+                              </>
+                            }
+                          />
+                        </ListItem>
+                      ))
+                    ) : (
+                      <Typography sx={{ textAlign: 'center', my: 2 }}>No exercises added to this plan yet.</Typography>
+                    )}
+                  </List>
                 )}
-                {planExercises[plan.plan_id] && planExercises[plan.plan_id].length === 0 && expandedPlan === plan.plan_id && !loadingExercises[plan.plan_id] && (
-                    <Typography variant="caption" sx={{ mr: 2 }}>
-                        No exercises in this plan.
-                    </Typography>
-                )}
-                {loadingExercises[plan.plan_id] && expandedPlan === plan.plan_id && (
-                    <CircularProgress size={20} sx={{ mr: 2 }} />
-                )}
-                <IconButton 
-                  size="small" 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    alert('Plan Edit functionality coming soon!'); // Placeholder for Plan Edit
-                  }}
-                  sx={{ mr: 1 }}
-                >
-                  <EditIcon />
-                </IconButton>
-                <IconButton 
-                  size="small" 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    handleOpenDeletePlanModal(plan);
-                  }}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Box>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails>
-            {loadingExercises[plan.plan_id] && <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}><CircularProgress /></Box>}
-            {!loadingExercises[plan.plan_id] && planExercises[plan.plan_id] && (
-              <List>
-                {planExercises[plan.plan_id].length > 0 ? (
-                  planExercises[plan.plan_id].map((exercise) => (
-                    <ListItem 
-                        key={exercise.plan_exercise_id} 
-                        divider
-                        secondaryAction={
-                            <Box>
-                                <IconButton 
-                                    edge="end" 
-                                    aria-label="edit exercise"
-                                    onClick={() => handleOpenEditExerciseModal(exercise)} // Open edit modal
-                                    sx={{ mr: 0.5 }}
-                                >
-                                    <EditIcon fontSize="small" />
-                                </IconButton>
-                                <Button 
-                                    variant="outlined" 
-                                    size="small"
-                                    onClick={() => handleLogWorkout(exercise, plan.plan_id)}
-                                    sx={{ mr: 0.5 }}
-                                >
-                                    Log
-                                </Button>
-                                <IconButton 
-                                    edge="end" 
-                                    aria-label="remove exercise"
-                                    onClick={() => handleOpenRemoveExerciseModal(plan.plan_id, exercise.plan_exercise_id, exercise.exercise_name)}
-                                >
-                                    <DeleteIcon fontSize="small"/>
-                                </IconButton>
-                            </Box>
-                        }
-                    >
-                      <ListItemText 
-                        primary={exercise.exercise_name} 
-                        secondary={
-                          <>
-                            {exercise.sets && `Sets: ${exercise.sets}`}{exercise.reps && `, Reps: ${exercise.reps}`}
-                            {exercise.weight_kg && `, Weight: ${exercise.weight_kg}kg`}
-                            {exercise.duration_minutes && `, Duration: ${exercise.duration_minutes}min`}
-                            {exercise.notes && <Typography variant="body2" color="textSecondary">Notes: {exercise.notes}</Typography>}
-                          </>
-                        }
-                      />
-                    </ListItem>
-                  ))
-                ) : (
-                  <Typography sx={{ textAlign: 'center', my: 2 }}>No exercises added to this plan yet.</Typography>
-                )}
-              </List>
-            )}
-          </AccordionDetails>
-        </Accordion>
-      ))}
+              </AccordionDetails>
+            </Accordion>
+          ))
+        )}
+      </Box>
 
       {selectedExerciseForLog && (
         <LogWorkoutModal
@@ -455,7 +509,48 @@ const MyPlans: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* --- Edit Exercise Modal --- */}
+      {/* Edit Plan Modal */}
+      <Dialog open={editPlanModalOpen} onClose={handleCloseEditPlanModal}>
+        <DialogTitle>Edit Workout Plan</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Update the name and description of your workout plan.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            name="name"
+            label="Plan Name"
+            type="text"
+            fullWidth
+            variant="standard"
+            value={editPlanForm.name}
+            onChange={handleEditPlanFormChange}
+          />
+          <TextField
+            margin="dense"
+            id="description"
+            name="description"
+            label="Description"
+            type="text"
+            fullWidth
+            multiline
+            rows={4}
+            variant="standard"
+            value={editPlanForm.description}
+            onChange={handleEditPlanFormChange}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditPlanModal}>Cancel</Button>
+          <Button onClick={handleConfirmUpdatePlan} disabled={isUpdatingPlan}>
+            {isUpdatingPlan ? <CircularProgress size={24} /> : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Exercise Modal */}
       {exerciseToEdit && (
         <Dialog open={editExerciseModalOpen} onClose={() => setEditExerciseModalOpen(false)} maxWidth="sm" fullWidth>
           <DialogTitle>Edit Exercise: {exerciseToEdit.exercise_name}</DialogTitle>

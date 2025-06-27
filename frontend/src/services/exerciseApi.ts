@@ -1,5 +1,3 @@
-
-
 // frontend/src/services/exerciseApi.ts
 
 // Import the base URL from the environment variable we set up in Step 1
@@ -26,23 +24,22 @@ export interface Exercise {
 
 /**
  * Fetches all exercises from the API.
- * @returns {Promise<Exercise[]>} A promise that resolves to an array of exercises.
+ * @returns {Promise<Exercise[]>} A promise that resolves to an array of all exercises.
  */
 export async function getAllExercises(): Promise<Exercise[]> {
-  const url = `${API_BASE_URL}exercises`; // Use template literal to build URL
-  console.log(`Workspaceing exercises from: ${url}`); // Log the URL for debugging
+  const url = `${API_BASE_URL}exercises`;
+  console.log(`🔍 getAllExercises - Fetching all exercises from: ${url}`);
 
   const response = await fetch(url);
 
   if (!response.ok) {
-    // Log more details on error
     const errorBody = await response.text();
     console.error(`Failed to fetch exercises: ${response.status} ${response.statusText}`, errorBody);
     throw new Error(`Failed to fetch exercises. Status: ${response.status}`);
   }
 
   const data = await response.json();
-  return data as Exercise[]; // Type assertion (or use proper validation/parsing)
+  return data as Exercise[];
 }
 
 /**
@@ -52,7 +49,7 @@ export async function getAllExercises(): Promise<Exercise[]> {
  */
 export async function getExerciseById(id: string | number): Promise<Exercise> {
   const url = `${API_BASE_URL}exercises/${id}`;
-  console.log(`Workspaceing exercise by ID: ${url}`);
+  console.log(`Fetching exercise by ID: ${url}`);
 
   const response = await fetch(url);
 
@@ -72,10 +69,9 @@ export async function getExerciseById(id: string | number): Promise<Exercise> {
  * @returns {Promise<Exercise[]>} A promise that resolves to an array of matching exercises.
  */
 export async function searchExercisesByName(name: string): Promise<Exercise[]> {
-  // URL encode the search term to handle spaces or special characters
   const encodedName = encodeURIComponent(name);
   const url = `${API_BASE_URL}exercises/search/${encodedName}`;
-  console.log(`Searching exercises by name: ${url}`);
+  console.log(`🔍 searchExercisesByName - Searching exercises by name: ${url}`);
 
   const response = await fetch(url);
 

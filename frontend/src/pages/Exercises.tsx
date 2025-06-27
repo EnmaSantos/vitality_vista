@@ -30,7 +30,7 @@ import {
   Stack,
   Snackbar
 } from '@mui/material';
-import { Search as SearchIcon, Close as CloseIcon, FitnessCenter as FitnessCenterIcon, Add as AddIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Close as CloseIcon, FitnessCenter as FitnessCenterIcon, Add as AddIcon, PlayCircleOutline as PlayCircleOutlineIcon } from '@mui/icons-material';
 import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { getAllExercises, searchExercisesByName, Exercise } from '../services/exerciseApi';
 import { 
@@ -68,14 +68,14 @@ const ExercisesPage: React.FC = () => {
 
   // --- State Variables ---
   const [searchQuery, setSearchQuery] = useState('');
-  const [category, setCategory] = useState('all'); // 'all' is still the default value
+  const [category, setCategory] = useState('all');
   const { setCurrentThemeColor } = useThemeContext();
-  const { token } = useAuth(); // Get authentication token
-  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const { token } = useAuth();
+  const [allExercises, setAllExercises] = useState<Exercise[]>([]); // Holds all exercises from API
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [availableCategories, setAvailableCategories] = useState<string[]>([]); // <-- State for dynamic categories (NEW)
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
   // --- Added: State for Exercise Details Modal ---
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -135,6 +135,27 @@ const ExercisesPage: React.FC = () => {
     setCurrentThemeColor(themeColors.darkMossGreen);
   }, [setCurrentThemeColor]);
 
+  // Effect to fetch all exercises once on component mount
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const exercisesData = await getAllExercises();
+        setAllExercises(exercisesData);
+        // Extract unique categories from the full list
+        const uniqueCategories = Array.from(new Set(exercisesData.map(ex => ex.category).filter(Boolean) as string[])).sort();
+        setAvailableCategories(uniqueCategories);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load exercises';
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAllData();
+  }, []); // Empty dependency array ensures this runs only once
+
   // Effect to automatically open Create Plan Modal if signaled by navigation state
   useEffect(() => {
     if (location.state?.openCreatePlanModal) {
@@ -144,96 +165,27 @@ const ExercisesPage: React.FC = () => {
     }
   }, [location.state, navigate]); // Added navigate to dependency array
 
-  // Effect for fetching exercises data (MODIFIED for Search)
-  useEffect(() => {
-    console.log(`Effect triggered. Current searchQuery: "${searchQuery}"`); // <-- ADD THIS LOG
-
-    const fetchExercises = async () => {
-      setIsLoading(true);
-      setError(null);
-      // Don't reset page here, handle it in the separate effect based on query/category changing
-      // setCurrentPage(1);
-      setAvailableCategories([]); // Keep clearing categories on new fetch
-
-      try {
-        let data: Exercise[];
-        if (searchQuery.trim() !== '') {
-          // If there is a search query, use the search API
-          console.log(`Fetching search results for: ${searchQuery}`);
-          data = await searchExercisesByName(searchQuery);
-        } else {
-          // Otherwise, fetch all (or potentially fetch based on category if desired later)
-          console.log('Fetching all exercises (no search query)');
-          data = await getAllExercises();
-        }
-
-        console.log('API Result Data:', data); // <-- ADD THIS LOG
-        setExercises(data); // Store fetched/searched data
-
-        // Extract Unique Categories (Only run if data was fetched successfully)
-        if (data && data.length > 0) {
-          const allCategories = data.map(ex => ex.category).filter(Boolean) as string[];
-          const uniqueCategories = Array.from(new Set(allCategories)).sort();
-          // If searching, we might only want to show categories from the *search results*
-          // or keep the full list - let's keep the full list for now when searchQuery is empty
-          if (searchQuery.trim() === '') {
-            setAvailableCategories(uniqueCategories);
-          }
-          // If searching, maybe don't update availableCategories, or update based on results?
-          // For simplicity now, let's only update categories when fetching all.
-        }
-
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load exercises';
-        setError(errorMessage);
-        console.error("Error fetching exercises:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // Optional: Add debouncing here later if needed to avoid API calls on every keystroke
-    fetchExercises();
-
-  }, [searchQuery]); // Re-run effect when searchQuery changes
-
-  // Effect: search exercises inside Create Plan modal
-  useEffect(() => {
-    const fetchSearch = async () => {
-      if (planSearchQuery.trim().length < 2) {
-        setPlanSearchResults([]);
-        return;
-      }
-      try {
-        const results = await searchExercisesByName(planSearchQuery.trim());
-        setPlanSearchResults(results.slice(0, 20));
-      } catch (err) {
-        console.error('Error searching exercises:', err);
-      }
-    };
-    fetchSearch();
-  }, [planSearchQuery]);
-
-  // --- Filtering Logic (MODIFIED) ---
-  // Apply only category filtering client-side now
-  const filteredExercises = exercises.filter(exercise => {
+  // --- Client-Side Filtering Logic ---
+  const filteredExercises = allExercises.filter(exercise => {
     const matchesCategory = category === 'all' || exercise.category === category;
-    return matchesCategory;
+    const matchesSearch = exercise.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
   });
-  // The search filtering is handled by the API call in useEffect when searchQuery is not empty
 
-  // --- Pagination Calculations ---
+  // --- Client-Side Pagination Calculations ---
   const totalPages = Math.ceil(filteredExercises.length / ITEMS_PER_PAGE);
-  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
-  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentExercises = filteredExercises.slice(indexOfFirstItem, indexOfLastItem);
-
+  const currentExercises = filteredExercises.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+  
   // --- Event Handlers ---
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
+  
+  // Reset to page 1 when filters change
   useEffect(() => {
       setCurrentPage(1);
   }, [searchQuery, category]);
@@ -585,7 +537,8 @@ const ExercisesPage: React.FC = () => {
   };
 
   // --- Log before Render ---
-  console.log('Filtered Exercises Count:', filteredExercises.length); // <-- ADD THIS LOG
+  console.log('Filtered Exercises Count:', currentExercises.length); // <-- ADD THIS LOG
+  console.log('Total Count from API:', allExercises.length);
   console.log('Current Page Exercises:', currentExercises); // <-- ADD THIS LOG
 
   // --- Render Logic ---
@@ -626,17 +579,22 @@ const ExercisesPage: React.FC = () => {
           </Grid>
 
           <Grid item xs={12} md={4}>
-            <FormControl fullWidth variant="outlined" disabled={isLoading || !!error}>
-              <InputLabel sx={{ color: '#606c38ff' }}>Category</InputLabel>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="category-select-label">Category</InputLabel>
               <Select
+                labelId="category-select-label"
+                id="category-select"
                 value={category}
-                onChange={(e) => setCategory(e.target.value as string)}
                 label="Category"
+                onChange={(e) => setCategory(e.target.value as string)}
+                disabled={isLoading}
               >
-                <MenuItem value="all">All Categories</MenuItem>
-                {availableCategories.map((catName) => (
-                  <MenuItem key={catName} value={catName}>
-                    {catName.charAt(0).toUpperCase() + catName.slice(1)}
+                <MenuItem value="all">
+                  <em>All Categories</em>
+                </MenuItem>
+                {availableCategories.map((cat) => (
+                  <MenuItem key={cat} value={cat}>
+                    {cat}
                   </MenuItem>
                 ))}
               </Select>
@@ -671,7 +629,7 @@ const ExercisesPage: React.FC = () => {
       ) : (
         <>
           <Typography variant="h6" sx={{ color: '#283618ff', mb: 2 }}>
-            {filteredExercises.length} Exercises Found
+            {currentExercises.length} Exercises Found
           </Typography>
           <Grid container spacing={2}>
             {currentExercises.map((exercise) => {
@@ -730,6 +688,20 @@ const ExercisesPage: React.FC = () => {
                       </Button>
                       <Button
                         size="small"
+                        variant="contained"
+                        onClick={() => navigate(`/workout/session/exercise/${exercise.id}`)}
+                        sx={{ 
+                          ml: 1, 
+                          backgroundColor: '#94e0b2',
+                          color: '#101914',
+                          '&:hover': { backgroundColor: '#7dd19a' }
+                        }}
+                        startIcon={<PlayCircleOutlineIcon />}
+                      >
+                        Start Workout
+                      </Button>
+                      <Button
+                        size="small"
                         variant="text"
                         onClick={() => handleOpenLogWorkoutModal(exercise)}
                         sx={{ ml: 1, color: '#bc6c25ff', '&:hover': { backgroundColor: 'rgba(188, 108, 37, 0.1)' } }}
@@ -743,7 +715,7 @@ const ExercisesPage: React.FC = () => {
               );
             })}
           </Grid>
-          {filteredExercises.length === 0 && (
+          {currentExercises.length === 0 && (
             <Paper sx={{ p: 3, textAlign: 'center', mt: 3, borderTop: '3px solid #606c38ff' }}>
               <Typography variant="subtitle1" color="textSecondary">
                 No exercises found matching your criteria.

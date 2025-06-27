@@ -56,7 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.log("AuthProvider: Found token in localStorage. Verifying...");
         authApi.verifyToken()
           .then(data => {
-            console.log("AuthProvider: Token is valid.", data);
+            console.log("AuthProvider: Token is valid.");
             setToken(data.token);
             setUser(data.user);
             setIsAuthenticated(true);

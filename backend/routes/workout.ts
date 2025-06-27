@@ -15,6 +15,7 @@ import {
   updatePlanExerciseHandler,
   getWorkoutLogDetailsHandler,
   updateWorkoutLogHandler,
+  updateWorkoutPlanHandler,
 } from "../controllers/workoutController.ts";
 // Import the authentication middleware to protect these routes
 import { authMiddleware } from "../middleware/authMiddleware.ts";
@@ -42,6 +43,10 @@ workoutRouter.get("/workout-plans/:planId/exercises", authMiddleware, getPlanExe
 // DELETE /api/workout-plans/:planId
 // Deletes a workout plan for the authenticated user.
 workoutRouter.delete("/workout-plans/:planId", authMiddleware, deleteWorkoutPlanHandler);
+
+// PUT /api/workout-plans/:planId
+// Updates a workout plan's details.
+workoutRouter.put("/workout-plans/:planId", authMiddleware, updateWorkoutPlanHandler);
 
 // POST /api/workout-plans/:planId/exercises/:planExerciseId
 // Removes an exercise from a specific workout plan for the authenticated user.
