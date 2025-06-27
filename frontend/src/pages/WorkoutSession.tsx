@@ -37,12 +37,15 @@ const WorkoutSession = () => {
     const [activeSetTime, setActiveSetTime] = useState(0);
     const activeSetIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const [restTime, setRestTime] = useState(60);
+    const [restTimeInput, setRestTimeInput] = useState<string>('60');
 
     // Effect to set initial rest time and form fields
     useEffect(() => {
         const currentExercise = exercises[currentExerciseIndex];
         if (currentExercise) {
-            setRestTime(currentExercise.rest_period_seconds || 60);
+            const restSeconds = currentExercise.rest_period_seconds || 60;
+            setRestTime(restSeconds);
+            setRestTimeInput(restSeconds.toString());
             setCurrentReps(currentExercise.reps || '');
             setCurrentWeight(currentExercise.weight_kg || '');
         }
@@ -279,9 +282,26 @@ const WorkoutSession = () => {
                             <TextField 
                                 label="Rest time (seconds)"
                                 type="number"
-                                value={restTime}
-                                onChange={(e) => setRestTime(Number(e.target.value))}
+                                value={restTimeInput}
+                                onChange={(e) => {
+                                    const inputValue = e.target.value;
+                                    setRestTimeInput(inputValue);
+                                    
+                                    // Only update actual restTime if the input is valid
+                                    const numValue = Number(inputValue);
+                                    if (inputValue !== '' && !isNaN(numValue) && numValue > 0) {
+                                        setRestTime(numValue);
+                                    }
+                                }}
+                                onBlur={() => {
+                                    // If input is empty or invalid when focus is lost, reset to default
+                                    if (restTimeInput === '' || Number(restTimeInput) <= 0 || isNaN(Number(restTimeInput))) {
+                                        setRestTimeInput('60');
+                                        setRestTime(60);
+                                    }
+                                }}
                                 sx={{ mb: 2 }}
+                                inputProps={{ min: 1 }}
                             />
                             <Timer duration={restTime} onFinish={handleStartNextSet} />
                         </Box>
