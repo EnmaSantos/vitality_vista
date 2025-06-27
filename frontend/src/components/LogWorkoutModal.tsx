@@ -15,12 +15,23 @@ interface LogWorkoutModalProps {
 
 const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token, onClose, onLogged }) => {
   const [currentWorkoutLog, setCurrentWorkoutLog] = useState<number | null>(null);
-  const [form, setForm] = useState({ sets: '', reps: '', weight: '', duration: '', notes: '' });
+  const [form, setForm] = useState({ sets: '', reps: '', weight: '', duration: '', distance: '', intensity: '', notes: '' });
   const [isSaving, setIsSaving] = useState(false);
   const [snackbar, setSnackbar] = useState<{open:boolean; msg:string; severity:'success'|'error'}>({open:false,msg:'',severity:'success'});
 
+  // Helper function to determine exercise type
+  const getExerciseType = (category: string | undefined): 'strength' | 'cardio' | 'stretching' => {
+    if (!category) return 'strength';
+    const cat = category.toLowerCase();
+    if (cat.includes('cardio') || cat.includes('cardiovascular')) return 'cardio';
+    if (cat.includes('stretch') || cat.includes('flexibility')) return 'stretching';
+    return 'strength';
+  };
+
+  const exerciseType = exercise ? getExerciseType(exercise.category) : 'strength';
+
   const resetState = () => {
-    setForm({ sets: '', reps: '', weight: '', duration: '', notes: '' });
+    setForm({ sets: '', reps: '', weight: '', duration: '', distance: '', intensity: '', notes: '' });
     setCurrentWorkoutLog(null);
   };
 
@@ -39,10 +50,17 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
       setSnackbar({open:true,msg:'Authentication required',severity:'error'});
       return;
     }
-    if (!form.sets) {
+
+    // Different validation based on exercise type
+    if (exerciseType === 'strength' && !form.sets) {
       setSnackbar({open:true,msg:'Enter number of sets',severity:'error'});
       return;
     }
+    if ((exerciseType === 'cardio' || exerciseType === 'stretching') && !form.duration) {
+      setSnackbar({open:true,msg:'Enter duration for this exercise',severity:'error'});
+      return;
+    }
+
     setIsSaving(true);
     try {
       let logId = currentWorkoutLog;
@@ -51,15 +69,35 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
         logId = newLog.log_id;
         setCurrentWorkoutLog(logId);
       }
-      await logExerciseDetail(logId!, {
+
+      // Build payload based on exercise type
+      const payload: any = {
         exercise_id: exercise.id,
         exercise_name: exercise.name,
-        set_number: parseInt(form.sets),
-        reps_achieved: form.reps ? parseInt(form.reps) : undefined,
-        weight_kg_used: form.weight ? parseFloat(form.weight) : undefined,
-        duration_achieved_seconds: form.duration ? parseInt(form.duration) : undefined,
+        duration_achieved_seconds: form.duration ? parseInt(form.duration) * 60 : undefined, // Convert minutes to seconds
         notes: form.notes || undefined,
-      }, token);
+      };
+
+      if (exerciseType === 'strength') {
+        payload.set_number = parseInt(form.sets);
+        payload.reps_achieved = form.reps ? parseInt(form.reps) : undefined;
+        payload.weight_kg_used = form.weight ? parseFloat(form.weight) : undefined;
+      } else {
+        // For cardio and stretching, use set_number = 1 since they're typically single sessions
+        payload.set_number = 1;
+        // Add distance info to notes if provided (for cardio)
+        if (form.distance && exerciseType === 'cardio') {
+          const distanceNote = `Distance: ${form.distance} km`;
+          payload.notes = payload.notes ? `${payload.notes}\n${distanceNote}` : distanceNote;
+        }
+        // Add intensity info to notes if provided
+        if (form.intensity) {
+          const intensityNote = `Intensity: ${form.intensity}/10`;
+          payload.notes = payload.notes ? `${payload.notes}\n${intensityNote}` : intensityNote;
+        }
+      }
+
+      await logExerciseDetail(logId!, payload, token);
       setSnackbar({open:true,msg:`${exercise.name} logged!`,severity:'success'});
       onLogged && onLogged();
       handleClose();
@@ -71,28 +109,175 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
     }
   };
 
+  const renderFormFields = () => {
+    switch (exerciseType) {
+      case 'cardio':
+        return (
+          <>
+            <Typography variant="body2" color="#283618ff">Log your cardio session details</Typography>
+            <TextField 
+              label="Duration (minutes)" 
+              name="duration" 
+              type="number" 
+              value={form.duration} 
+              onChange={handleChange} 
+              fullWidth 
+              InputProps={{ inputProps:{min:1} }}
+              helperText="How long did you exercise?"
+            />
+            <TextField 
+              label="Distance (km) - Optional" 
+              name="distance" 
+              type="number" 
+              value={form.distance} 
+              onChange={handleChange} 
+              fullWidth 
+              InputProps={{ inputProps:{min:0, step:'0.1'} }}
+              helperText="Distance covered (if applicable)"
+            />
+            <TextField 
+              label="Intensity (1-10) - Optional" 
+              name="intensity" 
+              type="number" 
+              value={form.intensity} 
+              onChange={handleChange} 
+              fullWidth 
+              InputProps={{ inputProps:{min:1, max:10} }}
+              helperText="Rate your effort level"
+            />
+            <TextField 
+              label="Notes" 
+              name="notes" 
+              value={form.notes} 
+              onChange={handleChange} 
+              fullWidth 
+              multiline 
+              rows={3}
+              helperText="Any additional details about your cardio session"
+            />
+          </>
+        );
+
+      case 'stretching':
+        return (
+          <>
+            <Typography variant="body2" color="#283618ff">Log your stretching session</Typography>
+            <TextField 
+              label="Duration (minutes)" 
+              name="duration" 
+              type="number" 
+              value={form.duration} 
+              onChange={handleChange} 
+              fullWidth 
+              InputProps={{ inputProps:{min:1} }}
+              helperText="Total stretching time"
+            />
+            <TextField 
+              label="Intensity (1-10) - Optional" 
+              name="intensity" 
+              type="number" 
+              value={form.intensity} 
+              onChange={handleChange} 
+              fullWidth 
+              InputProps={{ inputProps:{min:1, max:10} }}
+              helperText="How deep/intense was the stretch?"
+            />
+            <TextField 
+              label="Notes" 
+              name="notes" 
+              value={form.notes} 
+              onChange={handleChange} 
+              fullWidth 
+              multiline 
+              rows={3}
+              helperText="Areas stretched, flexibility improvements, etc."
+            />
+          </>
+        );
+
+      default: // strength
+        return (
+          <>
+            <Typography variant="body2" color="#283618ff">Log your actual performance for this exercise</Typography>
+            <TextField 
+              label="Sets Completed" 
+              name="sets" 
+              type="number" 
+              value={form.sets} 
+              onChange={handleChange} 
+              fullWidth 
+              InputProps={{ inputProps:{min:1} }} 
+            />
+            <TextField 
+              label="Reps Achieved" 
+              name="reps" 
+              type="number" 
+              value={form.reps} 
+              onChange={handleChange} 
+              fullWidth 
+              InputProps={{ inputProps:{min:0} }} 
+            />
+            <TextField 
+              label="Weight Used (kg)" 
+              name="weight" 
+              type="number" 
+              value={form.weight} 
+              onChange={handleChange} 
+              fullWidth 
+              InputProps={{ inputProps:{min:0, step:'0.25'} }} 
+            />
+            <TextField 
+              label="Duration (minutes) - Optional" 
+              name="duration" 
+              type="number" 
+              value={form.duration} 
+              onChange={handleChange} 
+              fullWidth 
+              InputProps={{ inputProps:{min:0} }}
+              helperText="Time spent on this exercise (optional)"
+            />
+            <TextField 
+              label="Notes" 
+              name="notes" 
+              value={form.notes} 
+              onChange={handleChange} 
+              fullWidth 
+              multiline 
+              rows={3} 
+            />
+          </>
+        );
+    }
+  };
+
   return (
     <>
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ bgcolor: '#606c38ff', color: 'white' }}>
           {exercise ? `Log "${exercise.name}" Workout` : 'Log Workout'}
+          {exercise && (
+            <Typography variant="caption" display="block" sx={{ color: '#e0e0e0', mt: 0.5 }}>
+              {exercise.category} • {exerciseType.charAt(0).toUpperCase() + exerciseType.slice(1)} Exercise
+            </Typography>
+          )}
           <IconButton aria-label="close" onClick={handleClose} sx={{ position:'absolute', right:8, top:8, color:'#eee' }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         <DialogContent dividers sx={{ backgroundColor: '#fefae0' }}>
           <Stack spacing={2} mt={1}>
-            <Typography variant="body2" color="#283618ff">Log your actual performance for this exercise</Typography>
-            <TextField label="Sets Completed" name="sets" type="number" value={form.sets} onChange={handleChange} fullWidth InputProps={{ inputProps:{min:1} }} />
-            <TextField label="Reps Achieved" name="reps" type="number" value={form.reps} onChange={handleChange} fullWidth InputProps={{ inputProps:{min:0} }} />
-            <TextField label="Weight Used (kg)" name="weight" type="number" value={form.weight} onChange={handleChange} fullWidth InputProps={{ inputProps:{min:0, step:'0.25'} }} />
-            <TextField label="Duration (seconds)" name="duration" type="number" value={form.duration} onChange={handleChange} fullWidth InputProps={{ inputProps:{min:0} }} />
-            <TextField label="Notes" name="notes" value={form.notes} onChange={handleChange} fullWidth multiline rows={3} />
+            {renderFormFields()}
           </Stack>
         </DialogContent>
         <DialogActions sx={{ backgroundColor:'#fefae0', borderTop:'1px solid #dda15eff' }}>
           <Button onClick={handleClose} sx={{ color:'#bc6c25ff' }}>Cancel</Button>
-          <Button variant="contained" startIcon={<FitnessCenterIcon />} onClick={handleSave} disabled={isSaving || !form.sets} sx={{ bgcolor:'#606c38ff', '&:hover':{ bgcolor:'#283618ff' } }}>
+          <Button 
+            variant="contained" 
+            startIcon={<FitnessCenterIcon />} 
+            onClick={handleSave} 
+            disabled={isSaving || (exerciseType === 'strength' && !form.sets) || ((exerciseType === 'cardio' || exerciseType === 'stretching') && !form.duration)} 
+            sx={{ bgcolor:'#606c38ff', '&:hover':{ bgcolor:'#283618ff' } }}
+          >
             {isSaving ? <CircularProgress size={20} /> : 'Save Workout'}
           </Button>
         </DialogActions>
