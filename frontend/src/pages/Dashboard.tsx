@@ -66,9 +66,14 @@ const Dashboard: React.FC = () => {
           console.log("Dashboard: Unified endpoint failed, falling back to separate API calls");
           
           // Fallback to separate API calls for backward compatibility
-          const [foodLogData, workoutLogData] = await Promise.all([
-            import('../services/foodLogApi').then(module => module.getFoodLogEntriesByDate(todayStr, auth.token!)),
-            import('../services/workoutLogApi').then(module => module.getWorkoutLogsByDate(todayStr, auth.token!))
+          const [foodLogModule, workoutLogModule] = await Promise.all([
+            import('../services/foodLogApi'),
+            import('../services/workoutLogApi')
+          ]);
+          
+          const [foodLogData, workoutSummary] = await Promise.all([
+            foodLogModule.getFoodLogEntriesAPI(todayStr, auth),
+            workoutLogModule.getTodaysWorkoutSummary(auth.token!, profile?.weight_kg ? parseFloat(String(profile.weight_kg)) : 70)
           ]);
           
           // Calculate totals from separate API calls
@@ -85,24 +90,13 @@ const Dashboard: React.FC = () => {
             sum + (parseFloat(String(entry.fat_consumed)) || 0), 0
           );
           
-          // Calculate calories burned and exercise breakdown
-          let totalCaloriesBurned = 0;
-          const exerciseBreakdown = { strength: 0, cardio: 0, stretching: 0 };
-          
-          workoutLogData.forEach(log => {
-            const caloriesBurned = parseFloat(String(log.calories_burned)) || 0;
-            totalCaloriesBurned += caloriesBurned;
-            
-            // Simple exercise type detection for fallback
-            const exerciseName = log.exercise_name?.toLowerCase() || '';
-            if (exerciseName.includes('run') || exerciseName.includes('bike') || exerciseName.includes('cardio')) {
-              exerciseBreakdown.cardio += caloriesBurned;
-            } else if (exerciseName.includes('stretch') || exerciseName.includes('yoga')) {
-              exerciseBreakdown.stretching += caloriesBurned;
-            } else {
-              exerciseBreakdown.strength += caloriesBurned;
-            }
-          });
+          // Get calories burned from workout summary
+          const totalCaloriesBurned = workoutSummary.success ? (workoutSummary.data?.totalCaloriesBurned || 0) : 0;
+          const exerciseBreakdown = workoutSummary.success && workoutSummary.data ? {
+            strength: workoutSummary.data.exerciseBreakdown.strength.calories,
+            cardio: workoutSummary.data.exerciseBreakdown.cardio.calories,
+            stretching: workoutSummary.data.exerciseBreakdown.stretching.calories
+          } : { strength: 0, cardio: 0, stretching: 0 };
           
           // Create fallback summary structure
           const fallbackSummary = {
@@ -137,7 +131,7 @@ const Dashboard: React.FC = () => {
       setIsLoadingCalories(false);
       console.log("Dashboard: No token available to fetch calorie data.");
     }
-  }, [auth]);
+  }, [auth, profile?.weight_kg]);
 
   useEffect(() => {
     // Initial fetch when component mounts
