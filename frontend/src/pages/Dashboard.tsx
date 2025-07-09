@@ -48,7 +48,7 @@ const Dashboard: React.FC = () => {
     }
   }, [token]);
 
-  // Fetch daily calorie summary (food + exercise)
+  // Fetch daily calorie summary (food + exercise) with fallback
   const fetchDailyCalorieSummary = useCallback(async () => {
     if (auth.token) {
       setIsLoadingCalories(true);
@@ -56,9 +56,76 @@ const Dashboard: React.FC = () => {
       try {
         const todayStr = getTodayDateString();
         console.log(`Dashboard: Fetching daily calorie summary for date: ${todayStr}`);
-        const summary = await getDailyCalorieSummaryWithAuth(todayStr, auth);
-        setDailyCalorieSummary(summary);
-        console.log("Dashboard: Daily calorie summary fetched:", summary);
+        
+        try {
+          // Try the new unified endpoint first
+          const summary = await getDailyCalorieSummaryWithAuth(todayStr, auth);
+          setDailyCalorieSummary(summary);
+          console.log("Dashboard: Daily calorie summary fetched:", summary);
+        } catch (unifiedEndpointError) {
+          console.log("Dashboard: Unified endpoint failed, falling back to separate API calls");
+          
+          // Fallback to separate API calls for backward compatibility
+          const [foodLogData, workoutLogData] = await Promise.all([
+            import('../services/foodLogApi').then(module => module.getFoodLogEntriesByDate(todayStr, auth.token!)),
+            import('../services/workoutLogApi').then(module => module.getWorkoutLogsByDate(todayStr, auth.token!))
+          ]);
+          
+          // Calculate totals from separate API calls
+          const totalCaloriesConsumed = foodLogData.reduce((sum, entry) => 
+            sum + (parseFloat(String(entry.calories_consumed)) || 0), 0
+          );
+          const totalProtein = foodLogData.reduce((sum, entry) => 
+            sum + (parseFloat(String(entry.protein_consumed)) || 0), 0
+          );
+          const totalCarbs = foodLogData.reduce((sum, entry) => 
+            sum + (parseFloat(String(entry.carbs_consumed)) || 0), 0
+          );
+          const totalFat = foodLogData.reduce((sum, entry) => 
+            sum + (parseFloat(String(entry.fat_consumed)) || 0), 0
+          );
+          
+          // Calculate calories burned and exercise breakdown
+          let totalCaloriesBurned = 0;
+          const exerciseBreakdown = { strength: 0, cardio: 0, stretching: 0 };
+          
+          workoutLogData.forEach(log => {
+            const caloriesBurned = parseFloat(String(log.calories_burned)) || 0;
+            totalCaloriesBurned += caloriesBurned;
+            
+            // Simple exercise type detection for fallback
+            const exerciseName = log.exercise_name?.toLowerCase() || '';
+            if (exerciseName.includes('run') || exerciseName.includes('bike') || exerciseName.includes('cardio')) {
+              exerciseBreakdown.cardio += caloriesBurned;
+            } else if (exerciseName.includes('stretch') || exerciseName.includes('yoga')) {
+              exerciseBreakdown.stretching += caloriesBurned;
+            } else {
+              exerciseBreakdown.strength += caloriesBurned;
+            }
+          });
+          
+          // Create fallback summary structure
+          const fallbackSummary = {
+            calories_consumed: totalCaloriesConsumed,
+            calories_burned: totalCaloriesBurned,
+            net_calories: totalCaloriesConsumed - totalCaloriesBurned,
+            macros: {
+              protein_consumed: totalProtein,
+              carbs_consumed: totalCarbs,
+              fat_consumed: totalFat
+            },
+            exercise_breakdown: exerciseBreakdown,
+            food_breakdown: {
+              breakfast: 0, // These would need more complex calculation
+              lunch: 0,
+              dinner: 0,
+              snacks: totalCaloriesConsumed
+            }
+          };
+          
+          setDailyCalorieSummary(fallbackSummary);
+          console.log("Dashboard: Fallback calorie summary created:", fallbackSummary);
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to load daily calorie summary.";
         setCalorieError(errorMessage);
