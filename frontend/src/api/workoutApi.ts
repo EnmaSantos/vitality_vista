@@ -1,15 +1,7 @@
 // frontend/src/api/workoutApi.ts
 
-// Determine API_BASE_URL based on the environment
-const getApiBaseUrl = () => {
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'http://localhost:8000/api'; // Backend running locally
-  }
-  // Replace with your deployed backend URL if necessary
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/';
-};
-
-const API_BASE_URL = getApiBaseUrl();
+// API Base URL - Updated to be consistent with other API services
+const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api";
 
 // A wrapper for fetch that includes authentication and error handling
 const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
