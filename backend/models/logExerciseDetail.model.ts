@@ -13,5 +13,6 @@ export interface LogExerciseDetailSchema {
     reps_achieved: number | null; // Corresponds to INTEGER (nullable)
     weight_kg_used: number | null; // Corresponds to NUMERIC(6, 2) (nullable)
     duration_achieved_seconds: number | null; // Corresponds to INTEGER (nullable)
+    calories_burned: number | null; // Corresponds to INTEGER (nullable) - Calculated MET-based calories
     notes: string | null;      // Corresponds to TEXT (nullable)
   }

@@ -7,6 +7,53 @@ import { PlanExerciseSchema } from "../models/planExercise.model.ts"; // Import 
 import { WorkoutLogSchema } from "../models/workoutLog.model.ts"; // Import the workout log model
 import { LogExerciseDetailSchema } from "../models/logExerciseDetail.model.ts"; // Import the log exercise detail model
 
+// MET (Metabolic Equivalent of Task) values for exercise calorie calculation
+const MET_VALUES = {
+  strength: 3.5, // Light to moderate resistance training
+  cardio: 7.0,   // Moderate cardio (running 6 mph equivalent)
+  stretching: 2.5, // Stretching, hatha yoga
+  // Enhanced cardio types
+  running: 8.0,  // Running 6 mph
+  cycling: 7.5,  // Cycling moderate pace
+  swimming: 6.0, // Swimming moderate pace
+  walking: 3.5,  // Walking brisk pace
+  rowing: 7.0,   // Rowing moderate pace
+  hiit: 8.5,     // High-intensity interval training
+  elliptical: 6.5 // Elliptical moderate pace
+};
+
+// Determine exercise type from name for calorie calculation
+function getExerciseTypeForCalories(exerciseName: string): keyof typeof MET_VALUES {
+  const name = exerciseName.toLowerCase();
+  
+  // Specific cardio types
+  if (name.includes('run') || name.includes('jog')) return 'running';
+  if (name.includes('cycle') || name.includes('bike')) return 'cycling';
+  if (name.includes('swim')) return 'swimming';
+  if (name.includes('walk')) return 'walking';
+  if (name.includes('row')) return 'rowing';
+  if (name.includes('hiit') || name.includes('interval')) return 'hiit';
+  if (name.includes('elliptical')) return 'elliptical';
+  
+  // General categories
+  if (name.includes('cardio') || name.includes('treadmill')) return 'cardio';
+  if (name.includes('stretch') || name.includes('yoga') || name.includes('flexibility')) return 'stretching';
+  
+  // Default to strength
+  return 'strength';
+}
+
+// Calculate calories burned using MET formula
+function calculateCaloriesBurned(
+  exerciseType: keyof typeof MET_VALUES,
+  durationMinutes: number,
+  weightKg: number
+): number {
+  const met = MET_VALUES[exerciseType];
+  const durationHours = durationMinutes / 60;
+  return Math.round(met * weightKg * durationHours);
+}
+
 // Consistent API Response Format
 interface ApiResponse<T = any> {
   success: boolean;
@@ -538,7 +585,40 @@ export async function logExerciseDetailsHandler(ctx: RouterContext) {
       return;
     }
 
-    // 6. Get next order number for this log
+    // 6. Get user weight for calorie calculation
+    const userProfileQuery = `
+      SELECT weight_kg FROM user_profiles WHERE user_id = $1
+    `;
+    const profileResult = await dbClient.queryObject<{ weight_kg: number }>(userProfileQuery, [userId]);
+    const userWeight = profileResult.rows[0]?.weight_kg || 70; // Default weight if not set
+
+    // 7. Calculate calories burned
+    let caloriesBurned: number | null = null;
+    if (payload.duration_achieved_seconds && payload.duration_achieved_seconds > 0) {
+      const durationMinutes = Math.max(Math.round(payload.duration_achieved_seconds / 60), 1);
+      const exerciseType = getExerciseTypeForCalories(payload.exercise_name);
+      caloriesBurned = calculateCaloriesBurned(exerciseType, durationMinutes, userWeight);
+      console.log(`Calculated calories for ${payload.exercise_name}:`, {
+        exerciseType,
+        durationMinutes,
+        userWeight,
+        caloriesBurned
+      });
+    } else if (payload.reps_achieved && payload.reps_achieved > 0) {
+      // Estimate duration for strength exercises based on sets/reps
+      const weight = payload.weight_kg_used || 0;
+      const estimatedDurationMinutes = weight > 50 ? 3 : weight > 20 ? 2 : 1;
+      const exerciseType = getExerciseTypeForCalories(payload.exercise_name);
+      caloriesBurned = calculateCaloriesBurned(exerciseType, estimatedDurationMinutes, userWeight);
+      console.log(`Estimated calories for strength exercise ${payload.exercise_name}:`, {
+        exerciseType,
+        estimatedDurationMinutes,
+        userWeight,
+        caloriesBurned
+      });
+    }
+
+    // 8. Get next order number for this log
     const orderQuery = `
       SELECT COALESCE(MAX(order_in_log), 0) + 1 as next_order
       FROM log_exercise_details 
@@ -550,17 +630,17 @@ export async function logExerciseDetailsHandler(ctx: RouterContext) {
     );
     const nextOrder = orderResult.rows[0]?.next_order || 1;
 
-    // 7. Insert exercise detail
+    // 9. Insert exercise detail with calculated calories
     const insertQuery = `
       INSERT INTO log_exercise_details (
         log_id, exercise_id, exercise_name, order_in_log,
         set_number, reps_achieved, weight_kg_used, 
-        duration_achieved_seconds, notes
+        duration_achieved_seconds, calories_burned, notes
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING log_exercise_id, log_id, exercise_id, exercise_name, 
                 order_in_log, set_number, reps_achieved, weight_kg_used,
-                duration_achieved_seconds, notes
+                duration_achieved_seconds, calories_burned, notes
     `;
 
     const result = await dbClient.queryObject<LogExerciseDetailSchema>(insertQuery, [
@@ -572,6 +652,7 @@ export async function logExerciseDetailsHandler(ctx: RouterContext) {
       payload.reps_achieved || null,
       payload.weight_kg_used || null,
       payload.duration_achieved_seconds || null,
+      caloriesBurned,
       payload.notes?.trim() || null,
     ]);
 

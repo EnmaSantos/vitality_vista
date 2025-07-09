@@ -23,6 +23,7 @@ export interface LogExerciseDetail {
   reps_achieved: number | null;
   weight_kg_used: number | null;
   duration_achieved_seconds: number | null;
+  calories_burned: number | null;
   notes: string | null;
 }
 
@@ -280,27 +281,23 @@ export async function getTodaysWorkoutSummary(
               1 // Minimum 1 minute per exercise
             );
             
-            // Determine exercise type (you might need to fetch exercise data for category)
-            // For now, we'll use a simple heuristic or default to strength
+            // Determine exercise type for breakdown categorization
             const exerciseType = getExerciseTypeFromExerciseName(detail.exercise_name);
             
             summary.totalWorkoutTime += durationMinutes;
             summary.exerciseBreakdown[exerciseType].time += durationMinutes;
             
-            // Calculate calories if user weight is provided
-            if (userWeightKg && userWeightKg > 0) {
-              const caloriesBurned = calculateCaloriesBurned(exerciseType, durationMinutes, userWeightKg);
-              console.log(`getTodaysWorkoutSummary: Calorie calculation for ${detail.exercise_name}:`, {
-                exerciseType,
-                durationMinutes,
-                userWeightKg,
-                caloriesBurned
-              });
-              summary.totalCaloriesBurned += caloriesBurned;
-              summary.exerciseBreakdown[exerciseType].calories += caloriesBurned;
-            } else {
-              console.log('getTodaysWorkoutSummary: No user weight provided, skipping calorie calculation');
-            }
+            // Use stored calories_burned from database (calculated when exercise was logged)
+            const caloriesBurned = parseFloat(String(detail.calories_burned)) || 0;
+            console.log(`getTodaysWorkoutSummary: Using stored calories for ${detail.exercise_name}:`, {
+              exerciseType,
+              durationMinutes,
+              storedCalories: caloriesBurned,
+              detail: detail
+            });
+            
+            summary.totalCaloriesBurned += caloriesBurned;
+            summary.exerciseBreakdown[exerciseType].calories += caloriesBurned;
           }
         }
       }

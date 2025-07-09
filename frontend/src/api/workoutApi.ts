@@ -117,6 +117,7 @@ export interface LogExerciseDetail {
   reps_achieved?: number;
   weight_kg_used?: number;
   duration_achieved_seconds?: number;
+  calories_burned?: number;
 }
 
 export interface CreateWorkoutLogPayload {

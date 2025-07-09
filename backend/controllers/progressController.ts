@@ -245,7 +245,7 @@ export async function getDailyCalorieSummaryHandler(ctx: RouterContext) {
     // Process workout logs and exercise details
     for (const log of workoutLogResult.rows) {
       const exerciseDetailsQuery = `
-        SELECT exercise_name, duration_achieved_seconds, reps_achieved, weight_kg_used
+        SELECT exercise_name, duration_achieved_seconds, reps_achieved, weight_kg_used, calories_burned
         FROM log_exercise_details 
         WHERE log_id = $1
       `;
@@ -254,28 +254,17 @@ export async function getDailyCalorieSummaryHandler(ctx: RouterContext) {
         duration_achieved_seconds: number | string | null;
         reps_achieved: number | string | null;
         weight_kg_used: number | string | null;
+        calories_burned: number | string | null;
       }>(exerciseDetailsQuery, [log.log_id]);
 
       for (const detail of exerciseDetailsResult.rows) {
-        // Calculate duration (minimum 1 minute per exercise)
-        let durationMinutes = 1;
-        if (detail.duration_achieved_seconds) {
-          durationMinutes = Math.max(Math.round(parseFloat(String(detail.duration_achieved_seconds)) / 60), 1);
-        } else {
-          // Estimate duration for strength exercises based on sets/reps
-          const reps = parseFloat(String(detail.reps_achieved)) || 0;
-          const weight = parseFloat(String(detail.weight_kg_used)) || 0;
-          if (reps > 0) {
-            // Estimate 1-3 minutes per set based on weight/intensity
-            durationMinutes = weight > 50 ? 3 : weight > 20 ? 2 : 1;
-          }
-        }
-
-        // Determine exercise type and calculate calories
-        const exerciseType = getExerciseTypeForCalories(detail.exercise_name);
-        const caloriesBurned = calculateCaloriesBurned(exerciseType, durationMinutes, userWeight);
+        // Use stored calories_burned from database (calculated when exercise was logged)
+        const caloriesBurned = parseFloat(String(detail.calories_burned)) || 0;
         
         summary.calories_burned += caloriesBurned;
+
+        // Determine exercise type for breakdown categorization
+        const exerciseType = getExerciseTypeForCalories(detail.exercise_name);
 
         // Add to exercise breakdown
         if (exerciseType === 'running' || exerciseType === 'cycling' || exerciseType === 'swimming' || 
