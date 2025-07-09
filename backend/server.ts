@@ -13,6 +13,7 @@ import { handleSearchFatSecretRecipes, handleGetFatSecretRecipeById, handleGetFa
 import authRouter from "./routes/auth.ts";
 import workoutRouter from "./routes/workout.ts";
 import profileRouter from "./routes/profile.ts"; // Import the profile router
+import progressRouter from "./routes/progress.ts"; // Import the progress router
 // import { authMiddleware } from "./middleware/authMiddleware.ts"; // authMiddleware is used by routers internally
 
 // Import new specific routers
@@ -72,6 +73,10 @@ apiRouter.use(workoutRouter.routes(), workoutRouter.allowedMethods());
 // the routes will be /api/users/me/profile
 apiRouter.use(profileRouter.routes());
 apiRouter.use(profileRouter.allowedMethods());
+
+// Mount Progress routes
+apiRouter.use(progressRouter.routes());
+apiRouter.use(progressRouter.allowedMethods());
 
 // Register the main API router with the application
 app.use(apiRouter.routes());

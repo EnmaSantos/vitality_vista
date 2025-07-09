@@ -2,7 +2,7 @@
 
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 export interface DailyCalorieSummary {
   date: string;
@@ -43,7 +43,7 @@ export async function getDailyCalorieSummary(
 ): Promise<DailyCalorieSummary> {
   try {
     const dateParam = date || new Date().toISOString().split('T')[0];
-    const url = `${API_BASE_URL}/api/progress/daily-calories?date=${dateParam}`;
+    const url = `${API_BASE_URL}/progress/daily-calories?date=${dateParam}`;
     
     const response = await fetch(url, {
       method: 'GET',
