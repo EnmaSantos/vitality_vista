@@ -1,6 +1,6 @@
 import { Context } from "../deps.ts";
 import { type RouterContext } from "https://deno.land/x/oak@v12.6.1/mod.ts";
-import { dbClient, ensureConnection } from "../services/db.ts";
+import dbClient, { ensureConnection } from "../services/db.ts";
 import { UserBodyMetricLogSchema } from "../models/userBodyMetricLog.model.ts";
 
 // Consistent API Response Format
