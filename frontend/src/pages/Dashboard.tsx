@@ -71,9 +71,12 @@ const Dashboard: React.FC = () => {
             import('../services/workoutLogApi')
           ]);
           
+          const userWeight = profile?.weight_kg ? parseFloat(String(profile.weight_kg)) : 70;
+          console.log('Dashboard: User weight for calorie calculation:', userWeight, 'from profile weight_kg:', profile?.weight_kg);
+          
           const [foodLogData, workoutSummary] = await Promise.all([
             foodLogModule.getFoodLogEntriesAPI(todayStr, auth),
-            workoutLogModule.getTodaysWorkoutSummary(auth.token!, profile?.weight_kg ? parseFloat(String(profile.weight_kg)) : 70)
+            workoutLogModule.getTodaysWorkoutSummary(auth.token!, userWeight)
           ]);
           
           // Calculate totals from separate API calls
@@ -91,6 +94,7 @@ const Dashboard: React.FC = () => {
           );
           
           // Get calories burned from workout summary
+          console.log('Dashboard: Workout summary response:', workoutSummary);
           const totalCaloriesBurned = workoutSummary.success ? (workoutSummary.data?.totalCaloriesBurned || 0) : 0;
           const exerciseBreakdown = workoutSummary.success && workoutSummary.data ? {
             strength: workoutSummary.data.exerciseBreakdown.strength.calories,

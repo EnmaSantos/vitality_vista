@@ -234,8 +234,10 @@ export async function getTodaysWorkoutSummary(
     }
 
     const workoutLogs = await response.json();
+    console.log('getTodaysWorkoutSummary: Raw workout logs response:', workoutLogs);
     
     if (!Array.isArray(workoutLogs)) {
+      console.log('getTodaysWorkoutSummary: No workout logs found or invalid format, returning empty summary');
       return { success: true, data: getEmptyWorkoutSummary() };
     }
 
@@ -253,9 +255,10 @@ export async function getTodaysWorkoutSummary(
     };
 
     // Process each workout log
+    console.log(`getTodaysWorkoutSummary: Processing ${workoutLogs.length} workout logs for today`);
     for (const log of workoutLogs) {
       // Fetch exercise details for this log
-      const detailsResponse = await fetch(`${API_BASE_URL}/workout-logs/${log.log_id}/details`, {
+      const detailsResponse = await fetch(`${API_BASE_URL}/workout-logs/${log.log_id}/exercises`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -265,6 +268,7 @@ export async function getTodaysWorkoutSummary(
 
       if (detailsResponse.ok) {
         const exerciseDetails = await detailsResponse.json();
+        console.log('getTodaysWorkoutSummary: Exercise details for log', log.log_id, ':', exerciseDetails);
         
         if (Array.isArray(exerciseDetails)) {
           for (const detail of exerciseDetails) {
@@ -286,14 +290,23 @@ export async function getTodaysWorkoutSummary(
             // Calculate calories if user weight is provided
             if (userWeightKg && userWeightKg > 0) {
               const caloriesBurned = calculateCaloriesBurned(exerciseType, durationMinutes, userWeightKg);
+              console.log(`getTodaysWorkoutSummary: Calorie calculation for ${detail.exercise_name}:`, {
+                exerciseType,
+                durationMinutes,
+                userWeightKg,
+                caloriesBurned
+              });
               summary.totalCaloriesBurned += caloriesBurned;
               summary.exerciseBreakdown[exerciseType].calories += caloriesBurned;
+            } else {
+              console.log('getTodaysWorkoutSummary: No user weight provided, skipping calorie calculation');
             }
           }
         }
       }
     }
 
+    console.log('getTodaysWorkoutSummary: Final summary calculated:', summary);
     return { success: true, data: summary };
   } catch (error) {
     console.error('Error fetching workout summary:', error);
