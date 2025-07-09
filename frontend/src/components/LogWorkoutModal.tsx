@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Stack, Typography, TextField, IconButton, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Stack, Typography, TextField, IconButton, Button, CircularProgress, Snackbar, Alert, Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import { Exercise } from '../services/exerciseApi';
@@ -15,23 +15,77 @@ interface LogWorkoutModalProps {
 
 const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token, onClose, onLogged }) => {
   const [currentWorkoutLog, setCurrentWorkoutLog] = useState<number | null>(null);
-  const [form, setForm] = useState({ sets: '', reps: '', weight: '', duration: '', distance: '', intensity: '', notes: '' });
+  const [form, setForm] = useState({ 
+    sets: '', 
+    reps: '', 
+    weight: '', 
+    duration: '', 
+    distance: '', 
+    intensity: '', 
+    heartRate: '',
+    pace: '',
+    calories: '',
+    notes: '' 
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [snackbar, setSnackbar] = useState<{open:boolean; msg:string; severity:'success'|'error'}>({open:false,msg:'',severity:'success'});
 
-  // Helper function to determine exercise type
-  const getExerciseType = (category: string | undefined): 'strength' | 'cardio' | 'stretching' => {
-    if (!category) return 'strength';
-    const cat = category.toLowerCase();
-    if (cat.includes('cardio') || cat.includes('cardiovascular')) return 'cardio';
-    if (cat.includes('stretch') || cat.includes('flexibility')) return 'stretching';
+  // Enhanced function to determine exercise type with better cardio detection
+  const getExerciseType = (category: string | undefined, exerciseName: string | undefined): 'strength' | 'cardio' | 'stretching' => {
+    if (!category && !exerciseName) return 'strength';
+    
+    const cat = category?.toLowerCase() || '';
+    const name = exerciseName?.toLowerCase() || '';
+    
+    // More specific cardio detection
+    if (cat.includes('cardio') || cat.includes('cardiovascular') || 
+        name.includes('run') || name.includes('jog') || name.includes('cycle') || 
+        name.includes('bike') || name.includes('swim') || name.includes('row') ||
+        name.includes('walk') || name.includes('treadmill') || name.includes('elliptical') ||
+        name.includes('jump') || name.includes('hiit') || name.includes('interval')) {
+      return 'cardio';
+    }
+    
+    if (cat.includes('stretch') || cat.includes('flexibility') || cat.includes('yoga') ||
+        name.includes('stretch') || name.includes('yoga') || name.includes('mobility')) {
+      return 'stretching';
+    }
+    
     return 'strength';
   };
 
-  const exerciseType = exercise ? getExerciseType(exercise.category) : 'strength';
+  // Get specific cardio type for better calorie calculation
+  const getCardioSubType = (exerciseName: string | undefined): string => {
+    if (!exerciseName) return 'general';
+    
+    const name = exerciseName.toLowerCase();
+    if (name.includes('run') || name.includes('jog')) return 'running';
+    if (name.includes('cycle') || name.includes('bike')) return 'cycling';
+    if (name.includes('swim')) return 'swimming';
+    if (name.includes('walk')) return 'walking';
+    if (name.includes('row')) return 'rowing';
+    if (name.includes('hiit') || name.includes('interval')) return 'hiit';
+    if (name.includes('elliptical')) return 'elliptical';
+    
+    return 'general';
+  };
+
+  const exerciseType = exercise ? getExerciseType(exercise.category, exercise.name) : 'strength';
+  const cardioSubType = exerciseType === 'cardio' ? getCardioSubType(exercise?.name) : '';
 
   const resetState = () => {
-    setForm({ sets: '', reps: '', weight: '', duration: '', distance: '', intensity: '', notes: '' });
+    setForm({ 
+      sets: '', 
+      reps: '', 
+      weight: '', 
+      duration: '', 
+      distance: '', 
+      intensity: '', 
+      heartRate: '',
+      pace: '',
+      calories: '',
+      notes: '' 
+    });
     setCurrentWorkoutLog(null);
   };
 
@@ -85,13 +139,36 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
       } else {
         // For cardio and stretching, use set_number = 1 since they're typically single sessions
         payload.set_number = 1;
-        // Add distance info to notes if provided (for cardio)
-        if (form.distance && exerciseType === 'cardio') {
-          const distanceNote = `Distance: ${form.distance} km`;
-          payload.notes = payload.notes ? `${payload.notes}\n${distanceNote}` : distanceNote;
-        }
-        // Add intensity info to notes if provided
-        if (form.intensity) {
+        
+        // Enhanced cardio metrics handling
+        if (exerciseType === 'cardio') {
+          const cardioMetrics: string[] = [];
+          
+          if (form.distance) {
+            cardioMetrics.push(`Distance: ${form.distance} km`);
+          }
+          if (form.pace) {
+            cardioMetrics.push(`Pace: ${form.pace} min/km`);
+          }
+          if (form.heartRate) {
+            cardioMetrics.push(`Heart Rate: ${form.heartRate} bpm`);
+          }
+          if (form.calories) {
+            cardioMetrics.push(`Calories (manual): ${form.calories} cal`);
+          }
+          if (form.intensity) {
+            cardioMetrics.push(`Intensity: ${form.intensity}/10`);
+          }
+          
+          // Add cardio type info
+          cardioMetrics.push(`Type: ${cardioSubType}`);
+          
+          if (cardioMetrics.length > 0) {
+            const cardioNote = cardioMetrics.join('\n');
+            payload.notes = payload.notes ? `${payload.notes}\n${cardioNote}` : cardioNote;
+          }
+        } else if (exerciseType === 'stretching' && form.intensity) {
+          // Add intensity info for stretching
           const intensityNote = `Intensity: ${form.intensity}/10`;
           payload.notes = payload.notes ? `${payload.notes}\n${intensityNote}` : intensityNote;
         }
@@ -114,7 +191,9 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
       case 'cardio':
         return (
           <>
-            <Typography variant="body2" color="#283618ff">Log your cardio session details</Typography>
+            <Typography variant="body2" color="#283618ff">
+              Log your {cardioSubType} session details
+            </Typography>
             <TextField 
               label="Duration (minutes)" 
               name="duration" 
@@ -122,28 +201,63 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
               value={form.duration} 
               onChange={handleChange} 
               fullWidth 
+              required
               InputProps={{ inputProps:{min:1} }}
               helperText="How long did you exercise?"
             />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField 
+                label="Distance (km)" 
+                name="distance" 
+                type="number" 
+                value={form.distance} 
+                onChange={handleChange} 
+                sx={{ flex: 1 }}
+                InputProps={{ inputProps:{min:0, step:'0.1'} }}
+                helperText="Distance covered"
+              />
+              <TextField 
+                label="Pace (min/km)" 
+                name="pace" 
+                type="number" 
+                value={form.pace} 
+                onChange={handleChange} 
+                sx={{ flex: 1 }}
+                InputProps={{ inputProps:{min:0, step:'0.1'} }}
+                helperText="Average pace"
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField 
+                label="Heart Rate (bpm)" 
+                name="heartRate" 
+                type="number" 
+                value={form.heartRate} 
+                onChange={handleChange} 
+                sx={{ flex: 1 }}
+                InputProps={{ inputProps:{min:40, max:220} }}
+                helperText="Average heart rate"
+              />
+              <TextField 
+                label="Intensity (1-10)" 
+                name="intensity" 
+                type="number" 
+                value={form.intensity} 
+                onChange={handleChange} 
+                sx={{ flex: 1 }}
+                InputProps={{ inputProps:{min:1, max:10} }}
+                helperText="Effort level"
+              />
+            </Box>
             <TextField 
-              label="Distance (km) - Optional" 
-              name="distance" 
+              label="Calories Burned (optional)" 
+              name="calories" 
               type="number" 
-              value={form.distance} 
+              value={form.calories} 
               onChange={handleChange} 
               fullWidth 
-              InputProps={{ inputProps:{min:0, step:'0.1'} }}
-              helperText="Distance covered (if applicable)"
-            />
-            <TextField 
-              label="Intensity (1-10) - Optional" 
-              name="intensity" 
-              type="number" 
-              value={form.intensity} 
-              onChange={handleChange} 
-              fullWidth 
-              InputProps={{ inputProps:{min:1, max:10} }}
-              helperText="Rate your effort level"
+              InputProps={{ inputProps:{min:1} }}
+              helperText="Manual calorie input (if known from device)"
             />
             <TextField 
               label="Notes" 
@@ -152,8 +266,8 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
               onChange={handleChange} 
               fullWidth 
               multiline 
-              rows={3}
-              helperText="Any additional details about your cardio session"
+              rows={2}
+              helperText="Route, weather, equipment, how you felt, etc."
             />
           </>
         );

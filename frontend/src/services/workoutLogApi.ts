@@ -36,6 +36,50 @@ interface ApiResponse<T = any> {
   message?: string;
 }
 
+export interface WorkoutSummary {
+  totalWorkoutTime: number; // in minutes
+  totalCaloriesBurned: number;
+  exercisesCompleted: number;
+  workoutSessions: number;
+  exerciseBreakdown: {
+    strength: { time: number; calories: number };
+    cardio: { time: number; calories: number };
+    stretching: { time: number; calories: number };
+  };
+}
+
+// MET (Metabolic Equivalent of Task) values for different exercise types
+const MET_VALUES = {
+  strength: 3.5, // Light to moderate resistance training
+  cardio: 7.0,   // Moderate cardio (running 6 mph equivalent)
+  stretching: 2.5 // Stretching, hatha yoga
+};
+
+/**
+ * Calculate calories burned using MET formula
+ * Calories = MET × weight(kg) × duration(hours)
+ */
+function calculateCaloriesBurned(
+  exerciseType: 'strength' | 'cardio' | 'stretching',
+  durationMinutes: number,
+  weightKg: number
+): number {
+  const met = MET_VALUES[exerciseType];
+  const durationHours = durationMinutes / 60;
+  return Math.round(met * weightKg * durationHours);
+}
+
+/**
+ * Determine exercise type from category string
+ */
+function getExerciseType(category: string | undefined): 'strength' | 'cardio' | 'stretching' {
+  if (!category) return 'strength';
+  const cat = category.toLowerCase();
+  if (cat.includes('cardio') || cat.includes('cardiovascular')) return 'cardio';
+  if (cat.includes('stretch') || cat.includes('flexibility')) return 'stretching';
+  return 'strength';
+}
+
 /**
  * Creates a new workout log (session)
  */
@@ -167,4 +211,139 @@ export async function getWorkoutLogDetails(logId: number, token: string): Promis
     console.error('Error fetching workout log details:', error);
     throw error;
   }
+}
+
+/**
+ * Fetch today's workout summary with calorie calculations
+ */
+export async function getTodaysWorkoutSummary(
+  token: string,
+  userWeightKg?: number
+): Promise<{ success: boolean; data?: WorkoutSummary; error?: string }> {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Fetch today's workout logs
+    const response = await fetch(`${API_BASE_URL}/workout-logs?date=${today}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch workout logs: ${response.status}`);
+    }
+
+    const workoutLogs = await response.json();
+    
+    if (!Array.isArray(workoutLogs)) {
+      return { success: true, data: getEmptyWorkoutSummary() };
+    }
+
+    // Initialize summary
+    const summary: WorkoutSummary = {
+      totalWorkoutTime: 0,
+      totalCaloriesBurned: 0,
+      exercisesCompleted: 0,
+      workoutSessions: workoutLogs.length,
+      exerciseBreakdown: {
+        strength: { time: 0, calories: 0 },
+        cardio: { time: 0, calories: 0 },
+        stretching: { time: 0, calories: 0 }
+      }
+    };
+
+    // Process each workout log
+    for (const log of workoutLogs) {
+      // Fetch exercise details for this log
+      const detailsResponse = await fetch(`${API_BASE_URL}/workout-logs/${log.log_id}/details`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (detailsResponse.ok) {
+        const exerciseDetails = await detailsResponse.json();
+        
+        if (Array.isArray(exerciseDetails)) {
+          for (const detail of exerciseDetails) {
+            summary.exercisesCompleted++;
+            
+            // Get duration (convert from seconds to minutes)
+            const durationMinutes = Math.max(
+              detail.duration_achieved_seconds ? Math.round(detail.duration_achieved_seconds / 60) : 0,
+              1 // Minimum 1 minute per exercise
+            );
+            
+            // Determine exercise type (you might need to fetch exercise data for category)
+            // For now, we'll use a simple heuristic or default to strength
+            const exerciseType = getExerciseTypeFromExerciseName(detail.exercise_name);
+            
+            summary.totalWorkoutTime += durationMinutes;
+            summary.exerciseBreakdown[exerciseType].time += durationMinutes;
+            
+            // Calculate calories if user weight is provided
+            if (userWeightKg && userWeightKg > 0) {
+              const caloriesBurned = calculateCaloriesBurned(exerciseType, durationMinutes, userWeightKg);
+              summary.totalCaloriesBurned += caloriesBurned;
+              summary.exerciseBreakdown[exerciseType].calories += caloriesBurned;
+            }
+          }
+        }
+      }
+    }
+
+    return { success: true, data: summary };
+  } catch (error) {
+    console.error('Error fetching workout summary:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to fetch workout summary' 
+    };
+  }
+}
+
+/**
+ * Simple heuristic to determine exercise type from name
+ * This could be improved by fetching the actual exercise data
+ */
+function getExerciseTypeFromExerciseName(exerciseName: string): 'strength' | 'cardio' | 'stretching' {
+  const name = exerciseName.toLowerCase();
+  
+  // Cardio keywords
+  if (name.includes('run') || name.includes('jog') || name.includes('cycle') || 
+      name.includes('bike') || name.includes('swim') || name.includes('row') ||
+      name.includes('jump') || name.includes('cardio') || name.includes('treadmill')) {
+    return 'cardio';
+  }
+  
+  // Stretching keywords
+  if (name.includes('stretch') || name.includes('yoga') || name.includes('flexibility') ||
+      name.includes('mobility') || name.includes('warm') || name.includes('cool')) {
+    return 'stretching';
+  }
+  
+  // Default to strength
+  return 'strength';
+}
+
+/**
+ * Return empty workout summary for days with no workouts
+ */
+function getEmptyWorkoutSummary(): WorkoutSummary {
+  return {
+    totalWorkoutTime: 0,
+    totalCaloriesBurned: 0,
+    exercisesCompleted: 0,
+    workoutSessions: 0,
+    exerciseBreakdown: {
+      strength: { time: 0, calories: 0 },
+      cardio: { time: 0, calories: 0 },
+      stretching: { time: 0, calories: 0 }
+    }
+  };
 } 

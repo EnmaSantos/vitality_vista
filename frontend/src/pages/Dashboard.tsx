@@ -3,7 +3,7 @@ import { Typography, Box, Paper, Grid, Card, CardContent, CircularProgress, Aler
 import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { getUserProfile, UserProfileData } from '../services/profileApi';
-import { getFoodLogEntriesAPI, FoodLogEntry } from '../services/foodLogApi';
+import { getDailyCalorieSummaryWithAuth, DailyCalorieSummary } from '../services/calorieApi';
 
 // Helper to get today's date in YYYY-MM-DD format
 const getTodayDateString = () => new Date().toISOString().split('T')[0];
@@ -17,15 +17,10 @@ const Dashboard: React.FC = () => {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
 
-  // State for food log data
-  const [dailyFoodLogs, setDailyFoodLogs] = useState<FoodLogEntry[]>([]); // Use FoodLogEntry
-  const [isLoadingFoodLogs, setIsLoadingFoodLogs] = useState(true);
-  const [foodLogError, setFoodLogError] = useState<string | null>(null);
-  const [consumedCalories, setConsumedCalories] = useState(0);
-  // Add states for other macros
-  const [consumedProtein, setConsumedProtein] = useState(0);
-  const [consumedCarbs, setConsumedCarbs] = useState(0);
-  const [consumedFat, setConsumedFat] = useState(0);
+  // State for unified calorie data
+  const [dailyCalorieSummary, setDailyCalorieSummary] = useState<DailyCalorieSummary | null>(null);
+  const [isLoadingCalories, setIsLoadingCalories] = useState(true);
+  const [calorieError, setCalorieError] = useState<string | null>(null);
 
   useEffect(() => {
     setCurrentThemeColor(themeColors.cornsilk);
@@ -53,56 +48,42 @@ const Dashboard: React.FC = () => {
     }
   }, [token]);
 
-  // Fetch food logs for today
-  const fetchTodaysFoodLogs = useCallback(async () => {
-    if (auth.token) { // Check auth.token
-      setIsLoadingFoodLogs(true);
-      setFoodLogError(null);
+  // Fetch daily calorie summary (food + exercise)
+  const fetchDailyCalorieSummary = useCallback(async () => {
+    if (auth.token) {
+      setIsLoadingCalories(true);
+      setCalorieError(null);
       try {
         const todayStr = getTodayDateString();
-        console.log(`Dashboard: Fetching food logs for date: ${todayStr}`);
-        const logs = await getFoodLogEntriesAPI(todayStr, auth); // Use the correct API function
-        setDailyFoodLogs(logs);
-        console.log("Dashboard: Today's food logs fetched:", logs);
-
-        // Calculate totals with correct field names
-        let totalCalories = 0;
-        let totalProtein = 0;
-        let totalCarbs = 0;
-        let totalFat = 0;
-        logs.forEach(log => {
-          totalCalories += Number(log.calories_consumed) || 0;
-          totalProtein += Number(log.protein_consumed) || 0;
-          totalCarbs += Number(log.carbs_consumed) || 0;
-          totalFat += Number(log.fat_consumed) || 0;
-        });
-        setConsumedCalories(totalCalories);
-        setConsumedProtein(totalProtein);
-        setConsumedCarbs(totalCarbs);
-        setConsumedFat(totalFat);
-
+        console.log(`Dashboard: Fetching daily calorie summary for date: ${todayStr}`);
+        const summary = await getDailyCalorieSummaryWithAuth(todayStr, auth);
+        setDailyCalorieSummary(summary);
+        console.log("Dashboard: Daily calorie summary fetched:", summary);
       } catch (err) {
-        setFoodLogError(err instanceof Error ? err.message : "Failed to load today's food logs.");
-        console.error("Dashboard: Error fetching food logs:", err);
+        const errorMessage = err instanceof Error ? err.message : "Failed to load daily calorie summary.";
+        setCalorieError(errorMessage);
+        console.error("Dashboard: Error fetching calorie summary:", err);
       } finally {
-        setIsLoadingFoodLogs(false);
+        setIsLoadingCalories(false);
       }
     } else {
-      setIsLoadingFoodLogs(false);
-      console.log("Dashboard: No token available to fetch food logs.");
+      setIsLoadingCalories(false);
+      console.log("Dashboard: No token available to fetch calorie data.");
     }
-  }, [auth]); // Depend on the auth object
+  }, [auth]);
 
   useEffect(() => {
     // Initial fetch when component mounts
     fetchDashboardProfile();
-    fetchTodaysFoodLogs();
+    fetchDailyCalorieSummary();
+  }, [fetchDashboardProfile, fetchDailyCalorieSummary]);
 
+  useEffect(() => {
     // Set up an event listener to re-fetch when the user navigates back to the page
     const handleFocus = () => {
       console.log("Dashboard focused, re-fetching data...");
       fetchDashboardProfile();
-      fetchTodaysFoodLogs();
+      fetchDailyCalorieSummary();
     };
 
     // 'focus' event is a good proxy for when a user returns to the tab/window
@@ -112,10 +93,16 @@ const Dashboard: React.FC = () => {
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, [fetchDashboardProfile, fetchTodaysFoodLogs]); // Dependencies for the initial fetch
+  }, [fetchDashboardProfile, fetchDailyCalorieSummary]); // Dependencies for the initial fetch
 
   const displayTDEE = profile?.tdee !== null && profile?.tdee !== undefined ? Math.round(profile.tdee) : "N/A";
-  const displayConsumed = isLoadingFoodLogs ? "Loading..." : Math.round(consumedCalories);
+  const displayConsumed = isLoadingCalories ? "Loading..." : (dailyCalorieSummary?.calories_consumed || 0);
+  const displayBurned = isLoadingCalories ? 0 : (dailyCalorieSummary?.calories_burned || 0);
+  const netCalories = isLoadingCalories ? 0 : (dailyCalorieSummary?.net_calories || 0);
+  const totalWorkoutTime = dailyCalorieSummary ? 
+    (dailyCalorieSummary.exercise_breakdown.strength || 0) +
+    (dailyCalorieSummary.exercise_breakdown.cardio || 0) +
+    (dailyCalorieSummary.exercise_breakdown.stretching || 0) : 0;
 
   return (
     <Box sx={{ padding: 3, backgroundColor: '#fefae0ff', minHeight: '100vh' }}>
@@ -127,7 +114,7 @@ const Dashboard: React.FC = () => {
       </Typography>
 
       {/* Display loading or error for profile fetching */}
-      {(isLoadingProfile || isLoadingFoodLogs) && (
+      {(isLoadingProfile || isLoadingCalories) && (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', my: 2 }}>
           <CircularProgress sx={{ color: '#606c38ff' }} />
           <Typography sx={{ ml: 2, color: '#606c38ff' }}>Loading dashboard data...</Typography>
@@ -138,9 +125,9 @@ const Dashboard: React.FC = () => {
           Could not load profile data: {profileError}
         </Alert>
       )}
-      {foodLogError && !isLoadingFoodLogs && (
+      {calorieError && !isLoadingCalories && (
         <Alert severity="warning" sx={{ my: 2 }}>
-          Could not load today's food logs: {foodLogError}
+          Could not load today's calorie data: {calorieError}
         </Alert>
       )}
 
@@ -157,8 +144,22 @@ const Dashboard: React.FC = () => {
                     Calories
                   </Typography>
                   <Typography variant="h5" sx={{ color: '#283618ff' }}>
-                    {`${displayConsumed} / ${displayTDEE} kcal`}
+                    {typeof displayConsumed === 'number' 
+                      ? `${Math.round(displayConsumed)} - ${Math.round(displayBurned)} = ${Math.round(netCalories)}` 
+                      : displayConsumed
+                    } kcal
                   </Typography>
+                  <Typography variant="caption" sx={{ color: '#bc6c25ff' }}>
+                    {typeof displayConsumed === 'number' 
+                      ? `Consumed - Burned = Net`
+                      : 'Loading...'
+                    }
+                  </Typography>
+                  {displayTDEE !== "N/A" && typeof displayConsumed === 'number' && (
+                    <Typography variant="caption" display="block" sx={{ color: '#606c38ff' }}>
+                      Target: {displayTDEE} kcal {netCalories < displayTDEE ? `(${Math.round(displayTDEE - netCalories)} remaining)` : '(goal met!)'}
+                    </Typography>
+                  )}
                   {displayTDEE === "N/A" && !isLoadingProfile && (
                      <Typography variant="caption" sx={{ color: '#bc6c25ff' }}>
                        Enter profile details (age, gender, height, weight, activity) to calculate TDEE.
@@ -172,7 +173,7 @@ const Dashboard: React.FC = () => {
                 <CardContent>
                   <Typography color="#606c38ff" gutterBottom>Protein</Typography>
                   <Typography variant="h5" sx={{ color: '#283618ff' }}>
-                    {isLoadingFoodLogs ? "..." : Math.round(consumedProtein)}g
+                    {isLoadingCalories ? "..." : Math.round(dailyCalorieSummary?.macros.protein_consumed || 0)}g
                   </Typography>
                 </CardContent>
               </Card>
@@ -181,7 +182,7 @@ const Dashboard: React.FC = () => {
                 <CardContent>
                   <Typography color="#606c38ff" gutterBottom>Carbs</Typography>
                   <Typography variant="h5" sx={{ color: '#283618ff' }}>
-                    {isLoadingFoodLogs ? "..." : Math.round(consumedCarbs)}g
+                    {isLoadingCalories ? "..." : Math.round(dailyCalorieSummary?.macros.carbs_consumed || 0)}g
                   </Typography>
                 </CardContent>
               </Card>
@@ -190,16 +191,27 @@ const Dashboard: React.FC = () => {
                 <CardContent>
                   <Typography color="#606c38ff" gutterBottom>Fat</Typography>
                   <Typography variant="h5" sx={{ color: '#283618ff' }}>
-                    {isLoadingFoodLogs ? "..." : Math.round(consumedFat)}g
+                    {isLoadingCalories ? "..." : Math.round(dailyCalorieSummary?.macros.fat_consumed || 0)}g
                   </Typography>
                 </CardContent>
               </Card>
               
-              {/* Placeholders for Activity and Water */}
+              {/* Updated Activity Card with real data */}
               <Card variant="outlined" sx={{ bgcolor: '#fefae0ff', borderColor: '#dda15eff' }}>
                 <CardContent>
-                  <Typography color="#606c38ff" gutterBottom>Activity</Typography>
-                  <Typography variant="h5" sx={{ color: '#283618ff' }}>-- / -- min</Typography>
+                  <Typography color="#606c38ff" gutterBottom>Today's Activity</Typography>
+                  <Typography variant="h5" sx={{ color: '#283618ff' }}>
+                    {isLoadingCalories ? "Loading..." : dailyCalorieSummary 
+                      ? `${Math.round(totalWorkoutTime)} min • ${Math.round(dailyCalorieSummary.calories_burned)} cal`
+                      : "0 min • 0 cal"
+                    }
+                  </Typography>
+                  {dailyCalorieSummary && dailyCalorieSummary.calories_burned > 0 && (
+                    <Typography variant="caption" sx={{ color: '#606c38ff' }}>
+                      Strength: {Math.round(dailyCalorieSummary.exercise_breakdown.strength)} cal • 
+                      Cardio: {Math.round(dailyCalorieSummary.exercise_breakdown.cardio)} cal
+                    </Typography>
+                  )}
                 </CardContent>
               </Card>
               
@@ -216,21 +228,54 @@ const Dashboard: React.FC = () => {
         <Grid item xs={12} md={6}>
           <Paper elevation={2} sx={{ p: 2, height: '100%', borderLeft: '4px solid #606c38ff' }}>
             <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
-              Weekly Progress
+              Workout Breakdown
             </Typography>
-            <Box sx={{
-              height: '240px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: '#fefae0ff',
-              border: '1px dashed #dda15eff',
-              borderRadius: 1
-            }}>
-              <Typography color="#606c38ff">
-                Weekly progress charts will appear here
-              </Typography>
-            </Box>
+            {isLoadingCalories ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
+                <CircularProgress sx={{ color: '#606c38ff' }} />
+              </Box>
+            ) : dailyCalorieSummary && dailyCalorieSummary.calories_burned > 0 ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Card variant="outlined" sx={{ bgcolor: '#f0f8e8', borderColor: '#94e0b2' }}>
+                  <CardContent sx={{ py: 1.5 }}>
+                    <Typography variant="subtitle2" color="#283618ff">💪 Strength Training</Typography>
+                    <Typography variant="body2" sx={{ color: '#606c38ff' }}>
+                      {Math.round(dailyCalorieSummary.exercise_breakdown.strength)} cal burned
+                    </Typography>
+                  </CardContent>
+                </Card>
+                <Card variant="outlined" sx={{ bgcolor: '#e8f4f8', borderColor: '#7dd3fc' }}>
+                  <CardContent sx={{ py: 1.5 }}>
+                    <Typography variant="subtitle2" color="#283618ff">🏃 Cardio</Typography>
+                    <Typography variant="body2" sx={{ color: '#606c38ff' }}>
+                      {Math.round(dailyCalorieSummary.exercise_breakdown.cardio)} cal burned
+                    </Typography>
+                  </CardContent>
+                </Card>
+                <Card variant="outlined" sx={{ bgcolor: '#f8f4e8', borderColor: '#fbbf24' }}>
+                  <CardContent sx={{ py: 1.5 }}>
+                    <Typography variant="subtitle2" color="#283618ff">🧘 Stretching</Typography>
+                    <Typography variant="body2" sx={{ color: '#606c38ff' }}>
+                      {Math.round(dailyCalorieSummary.exercise_breakdown.stretching)} cal burned
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Box>
+            ) : (
+              <Box sx={{
+                height: '200px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: '#fefae0ff',
+                border: '1px dashed #dda15eff',
+                borderRadius: 1
+              }}>
+                <Typography color="#606c38ff">
+                  No workouts completed today. Start exercising to see your activity breakdown!
+                </Typography>
+              </Box>
+            )}
           </Paper>
         </Grid>
 
