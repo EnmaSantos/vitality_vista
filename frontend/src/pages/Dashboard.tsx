@@ -104,6 +104,7 @@ const Dashboard: React.FC = () => {
           
           // Create fallback summary structure
           const fallbackSummary = {
+            date: todayStr,
             calories_consumed: totalCaloriesConsumed,
             calories_burned: totalCaloriesBurned,
             net_calories: totalCaloriesConsumed - totalCaloriesBurned,
@@ -117,7 +118,7 @@ const Dashboard: React.FC = () => {
               breakfast: 0, // These would need more complex calculation
               lunch: 0,
               dinner: 0,
-              snacks: totalCaloriesConsumed
+              snack: totalCaloriesConsumed
             }
           };
           
