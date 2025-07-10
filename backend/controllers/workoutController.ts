@@ -697,20 +697,49 @@ export async function getUserWorkoutLogsHandler(ctx: RouterContext) {
       return;
     }
 
-    // 2. Fetch workout logs
-    const selectQuery = `
-      SELECT wl.log_id, wl.user_id, wl.plan_id, wl.log_date, 
-             wl.duration_minutes, wl.notes, wl.created_at,
-             wp.name as plan_name
-      FROM workout_logs wl
-      LEFT JOIN workout_plans wp ON wl.plan_id = wp.plan_id
-      WHERE wl.user_id = $1
-      ORDER BY wl.log_date DESC
-    `;
+    // 2. Check for date filtering
+    const dateParam = ctx.request.url.searchParams.get("date");
+    let selectQuery: string;
+    let queryParams: (string | number)[];
 
+    if (dateParam) {
+      // Validate date format
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+        ctx.response.status = 400;
+        response.error = "Invalid date format. Use YYYY-MM-DD";
+        ctx.response.body = response;
+        return;
+      }
+
+      // Filter by specific date
+      selectQuery = `
+        SELECT wl.log_id, wl.user_id, wl.plan_id, wl.log_date, 
+               wl.duration_minutes, wl.notes, wl.created_at,
+               wp.name as plan_name
+        FROM workout_logs wl
+        LEFT JOIN workout_plans wp ON wl.plan_id = wp.plan_id
+        WHERE wl.user_id = $1 AND DATE(wl.log_date) = $2
+        ORDER BY wl.log_date DESC
+      `;
+      queryParams = [userId, dateParam];
+    } else {
+      // Get all workout logs
+      selectQuery = `
+        SELECT wl.log_id, wl.user_id, wl.plan_id, wl.log_date, 
+               wl.duration_minutes, wl.notes, wl.created_at,
+               wp.name as plan_name
+        FROM workout_logs wl
+        LEFT JOIN workout_plans wp ON wl.plan_id = wp.plan_id
+        WHERE wl.user_id = $1
+        ORDER BY wl.log_date DESC
+      `;
+      queryParams = [userId];
+    }
+
+    // 3. Fetch workout logs
     const result = await dbClient.queryObject<WorkoutLogSchema & { plan_name?: string }>(
       selectQuery,
-      [userId]
+      queryParams
     );
 
     // 3. Send success response
