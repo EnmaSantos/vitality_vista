@@ -24,7 +24,8 @@ const Signup: React.FC = () => {
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    weight: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
@@ -72,6 +73,7 @@ const Signup: React.FC = () => {
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
+        weight: parseFloat(formData.weight),
       });
       console.log('Signup Page: Context registration reported success (auto-login).');
     } catch (err) {
@@ -148,6 +150,21 @@ const Signup: React.FC = () => {
                 label="Last Name"
                 variant="outlined"
                 value={formData.lastName}
+                onChange={handleChange}
+                required
+                disabled={isSubmitting}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                id="weight"
+                name="weight"
+                label="Weight (kg)"
+                variant="outlined"
+                type="number"
+                value={formData.weight}
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}

@@ -575,6 +575,7 @@ export async function logExerciseDetailsHandler(ctx: RouterContext) {
       weight_kg_used?: number;
       duration_achieved_seconds?: number;
       notes?: string;
+      use_body_weight?: boolean;
     };
 
     // 5. Validate required fields
@@ -591,6 +592,10 @@ export async function logExerciseDetailsHandler(ctx: RouterContext) {
     `;
     const profileResult = await dbClient.queryObject<{ weight_kg: number }>(userProfileQuery, [userId]);
     const userWeight = profileResult.rows[0]?.weight_kg || 70; // Default weight if not set
+
+    if (payload.use_body_weight) {
+      payload.weight_kg_used = userWeight;
+    }
 
     // 7. Calculate calories burned
     let caloriesBurned: number | null = null;

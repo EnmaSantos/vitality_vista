@@ -32,6 +32,7 @@ interface User {
   export interface RegisterCredentials extends LoginCredentials {
       firstName: string;
       lastName: string;
+      weight: number;
   }
   // --- End Added ---
   

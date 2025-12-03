@@ -237,10 +237,12 @@ export async function getTodaysWorkoutSummary(
     const workoutLogs = await response.json();
     console.log('getTodaysWorkoutSummary: Raw workout logs response:', workoutLogs);
     
-    if (!Array.isArray(workoutLogs)) {
+    if (!workoutLogs.success || !Array.isArray(workoutLogs.data)) {
       console.log('getTodaysWorkoutSummary: No workout logs found or invalid format, returning empty summary');
       return { success: true, data: getEmptyWorkoutSummary() };
     }
+
+    const logs = workoutLogs.data;
 
     // Initialize summary
     const summary: WorkoutSummary = {
@@ -256,8 +258,8 @@ export async function getTodaysWorkoutSummary(
     };
 
     // Process each workout log
-    console.log(`getTodaysWorkoutSummary: Processing ${workoutLogs.length} workout logs for today`);
-    for (const log of workoutLogs) {
+    console.log(`getTodaysWorkoutSummary: Processing ${logs.length} workout logs for today`);
+    for (const log of logs) {
       // Fetch exercise details for this log
       const detailsResponse = await fetch(`${API_BASE_URL}/workout-logs/${log.log_id}/exercises`, {
         method: 'GET',

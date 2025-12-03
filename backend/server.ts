@@ -75,7 +75,7 @@ apiRouter.use(profileRouter.routes());
 apiRouter.use(profileRouter.allowedMethods());
 
 // Mount Progress routes
-apiRouter.use(progressRouter.routes());
+apiRouter.use("/progress", progressRouter.routes());
 apiRouter.use(progressRouter.allowedMethods());
 
 // Register the main API router with the application

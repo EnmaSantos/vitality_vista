@@ -285,10 +285,17 @@ const WorkoutHistory: React.FC = () => {
       return sum + weight;
     }, 0);
     
+    // Calculate total calories burned
+    const totalCalories = details.reduce((sum, d) => {
+      const calories = parseFloat(String(d.calories_burned)) || 0;
+      return sum + calories;
+    }, 0);
+    
     return {
       exerciseCount,
       totalSets,
-      totalWeight: totalWeight > 0 ? totalWeight : null
+      totalWeight: totalWeight > 0 ? totalWeight : null,
+      totalCalories: totalCalories > 0 ? totalCalories : null
     };
   };
 
@@ -559,6 +566,13 @@ const WorkoutHistory: React.FC = () => {
                                 </Typography>
                               </Grid>
                             )}
+                            {stats.totalCalories && stats.totalCalories > 0 && (
+                              <Grid item xs={4}>
+                                <Typography variant="body2" color="#606c38ff">
+                                  Calories Burned: <strong>{Math.round(stats.totalCalories)} cal</strong>
+                                </Typography>
+                              </Grid>
+                            )}
                           </Grid>
                         </Box>
                       )}
@@ -599,6 +613,14 @@ const WorkoutHistory: React.FC = () => {
                                         label={`${Math.floor(set.duration_achieved_seconds / 60)}:${(set.duration_achieved_seconds % 60).toString().padStart(2, '0')}`}
                                         size="small"
                                         variant="outlined"
+                                      />
+                                    )}
+                                    {set.calories_burned && parseFloat(String(set.calories_burned)) > 0 && (
+                                      <Chip 
+                                        label={`${Math.round(parseFloat(String(set.calories_burned)))} cal`}
+                                        size="small"
+                                        variant="outlined"
+                                        sx={{ bgcolor: '#fff3e0', color: '#e65100' }}
                                       />
                                     )}
                                   </Stack>

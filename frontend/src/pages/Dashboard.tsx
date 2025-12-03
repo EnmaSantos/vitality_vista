@@ -79,7 +79,7 @@ const Dashboard: React.FC = () => {
             workoutLogModule.getTodaysWorkoutSummary(auth.token!, userWeight)
           ]);
           
-          // Calculate totals from separate API calls
+          // Calculate totals from separate API calls with proper type conversion
           const totalCaloriesConsumed = foodLogData.reduce((sum, entry) => 
             sum + (parseFloat(String(entry.calories_consumed)) || 0), 0
           );
@@ -93,21 +93,25 @@ const Dashboard: React.FC = () => {
             sum + (parseFloat(String(entry.fat_consumed)) || 0), 0
           );
           
-          // Get calories burned from workout summary
+          // Get calories burned from workout summary with proper type conversion
           console.log('Dashboard: Workout summary response:', workoutSummary);
-          const totalCaloriesBurned = workoutSummary.success ? (workoutSummary.data?.totalCaloriesBurned || 0) : 0;
+          const totalCaloriesBurned = workoutSummary.success ? 
+            parseFloat(String(workoutSummary.data?.totalCaloriesBurned)) || 0 : 0;
           const exerciseBreakdown = workoutSummary.success && workoutSummary.data ? {
-            strength: workoutSummary.data.exerciseBreakdown.strength.calories,
-            cardio: workoutSummary.data.exerciseBreakdown.cardio.calories,
-            stretching: workoutSummary.data.exerciseBreakdown.stretching.calories
+            strength: parseFloat(String(workoutSummary.data.exerciseBreakdown.strength.calories)) || 0,
+            cardio: parseFloat(String(workoutSummary.data.exerciseBreakdown.cardio.calories)) || 0,
+            stretching: parseFloat(String(workoutSummary.data.exerciseBreakdown.stretching.calories)) || 0
           } : { strength: 0, cardio: 0, stretching: 0 };
+          
+          // Calculate net calories ensuring both values are numbers
+          const netCalories = totalCaloriesConsumed - totalCaloriesBurned;
           
           // Create fallback summary structure
           const fallbackSummary = {
             date: todayStr,
             calories_consumed: totalCaloriesConsumed,
             calories_burned: totalCaloriesBurned,
-            net_calories: totalCaloriesConsumed - totalCaloriesBurned,
+            net_calories: netCalories,
             macros: {
               protein_consumed: totalProtein,
               carbs_consumed: totalCarbs,
@@ -124,6 +128,11 @@ const Dashboard: React.FC = () => {
           
           setDailyCalorieSummary(fallbackSummary);
           console.log("Dashboard: Fallback calorie summary created:", fallbackSummary);
+          console.log("Dashboard: Net calories calculation:", {
+            consumed: totalCaloriesConsumed,
+            burned: totalCaloriesBurned,
+            net: netCalories
+          });
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to load daily calorie summary.";
@@ -162,13 +171,16 @@ const Dashboard: React.FC = () => {
   }, [fetchDashboardProfile, fetchDailyCalorieSummary]); // Dependencies for the initial fetch
 
   const displayTDEE = profile?.tdee !== null && profile?.tdee !== undefined ? Math.round(profile.tdee) : "N/A";
-  const displayConsumed = isLoadingCalories ? "Loading..." : (dailyCalorieSummary?.calories_consumed || 0);
-  const displayBurned = isLoadingCalories ? 0 : (dailyCalorieSummary?.calories_burned || 0);
-  const netCalories = isLoadingCalories ? 0 : (dailyCalorieSummary?.net_calories || 0);
+  const displayConsumed = isLoadingCalories ? "Loading..." : (parseFloat(String(dailyCalorieSummary?.calories_consumed)) || 0);
+  const displayBurned = isLoadingCalories ? 0 : (parseFloat(String(dailyCalorieSummary?.calories_burned)) || 0);
+  // Ensure net calories calculation uses proper number conversion
+  const netCalories = isLoadingCalories ? 0 : 
+    (parseFloat(String(dailyCalorieSummary?.calories_consumed)) || 0) - 
+    (parseFloat(String(dailyCalorieSummary?.calories_burned)) || 0);
   const totalWorkoutTime = dailyCalorieSummary ? 
-    (dailyCalorieSummary.exercise_breakdown.strength || 0) +
-    (dailyCalorieSummary.exercise_breakdown.cardio || 0) +
-    (dailyCalorieSummary.exercise_breakdown.stretching || 0) : 0;
+    (parseFloat(String(dailyCalorieSummary.exercise_breakdown.strength)) || 0) +
+    (parseFloat(String(dailyCalorieSummary.exercise_breakdown.cardio)) || 0) +
+    (parseFloat(String(dailyCalorieSummary.exercise_breakdown.stretching)) || 0) : 0;
 
   return (
     <Box sx={{ padding: 3, backgroundColor: '#fefae0ff', minHeight: '100vh' }}>
@@ -239,7 +251,7 @@ const Dashboard: React.FC = () => {
                 <CardContent>
                   <Typography color="#606c38ff" gutterBottom>Protein</Typography>
                   <Typography variant="h5" sx={{ color: '#283618ff' }}>
-                    {isLoadingCalories ? "..." : Math.round(dailyCalorieSummary?.macros.protein_consumed || 0)}g
+                    {isLoadingCalories ? "..." : Math.round(parseFloat(String(dailyCalorieSummary?.macros.protein_consumed)) || 0)}g
                   </Typography>
                 </CardContent>
               </Card>
@@ -248,7 +260,7 @@ const Dashboard: React.FC = () => {
                 <CardContent>
                   <Typography color="#606c38ff" gutterBottom>Carbs</Typography>
                   <Typography variant="h5" sx={{ color: '#283618ff' }}>
-                    {isLoadingCalories ? "..." : Math.round(dailyCalorieSummary?.macros.carbs_consumed || 0)}g
+                    {isLoadingCalories ? "..." : Math.round(parseFloat(String(dailyCalorieSummary?.macros.carbs_consumed)) || 0)}g
                   </Typography>
                 </CardContent>
               </Card>
@@ -257,7 +269,7 @@ const Dashboard: React.FC = () => {
                 <CardContent>
                   <Typography color="#606c38ff" gutterBottom>Fat</Typography>
                   <Typography variant="h5" sx={{ color: '#283618ff' }}>
-                    {isLoadingCalories ? "..." : Math.round(dailyCalorieSummary?.macros.fat_consumed || 0)}g
+                    {isLoadingCalories ? "..." : Math.round(parseFloat(String(dailyCalorieSummary?.macros.fat_consumed)) || 0)}g
                   </Typography>
                 </CardContent>
               </Card>
@@ -346,7 +358,7 @@ const Dashboard: React.FC = () => {
         </Grid>
 
         <Grid item xs={12}>
-          <Paper elevation={2} sx={{ p: 2, borderLeft: '4px solid #606c38ff' }}>
+          <Paper elevation={2} sx={{ p: 2, borderLeft: '4px solid #606c38ff', padding: 3 }}>
             <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
               Today's Plan
             </Typography>

@@ -405,7 +405,7 @@ const ExercisesPage: React.FC = () => {
             set_number: parseInt(logWorkoutForm.sets),
             reps_achieved: logWorkoutForm.reps ? parseInt(logWorkoutForm.reps) : undefined,
             weight_kg_used: logWorkoutForm.weight ? parseFloat(logWorkoutForm.weight) : undefined,
-            duration_achieved_seconds: logWorkoutForm.duration ? parseInt(logWorkoutForm.duration) : undefined,
+            duration_achieved_seconds: logWorkoutForm.duration ? parseInt(logWorkoutForm.duration) * 60 : undefined, // Convert minutes to seconds
             notes: logWorkoutForm.notes || undefined
           },
           token
@@ -420,7 +420,7 @@ const ExercisesPage: React.FC = () => {
             set_number: parseInt(logWorkoutForm.sets),
             reps_achieved: logWorkoutForm.reps ? parseInt(logWorkoutForm.reps) : undefined,
             weight_kg_used: logWorkoutForm.weight ? parseFloat(logWorkoutForm.weight) : undefined,
-            duration_achieved_seconds: logWorkoutForm.duration ? parseInt(logWorkoutForm.duration) : undefined,
+            duration_achieved_seconds: logWorkoutForm.duration ? parseInt(logWorkoutForm.duration) * 60 : undefined, // Convert minutes to seconds
             notes: logWorkoutForm.notes || undefined
           },
           token

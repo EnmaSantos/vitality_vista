@@ -134,6 +134,7 @@ export interface LogExerciseDetailPayload {
     reps_achieved?: number;
     weight_kg_used?: number;
     duration_achieved_seconds?: number;
+    use_body_weight?: boolean;
 }
 
 // API Functions

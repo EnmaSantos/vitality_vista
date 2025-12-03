@@ -21,6 +21,7 @@ interface RegisterDTO {
   password: string;
   firstName: string;
   lastName: string;
+  weight: number;
 }
 
 // Data Transfer Object for login payload
@@ -75,10 +76,10 @@ async function createUser(data: RegisterDTO, passwordHash: string): Promise<User
   try {
     // Use INSERT ... RETURNING * to get the created user data back
     const result = await dbClient.queryObject<UserSchema>(
-      `INSERT INTO ${USER_TABLE_NAME} (email, password_hash, first_name, last_name)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO ${USER_TABLE_NAME} (email, password_hash, first_name, last_name, weight_kg)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [data.email, passwordHash, data.firstName, data.lastName],
+      [data.email, passwordHash, data.firstName, data.lastName, data.weight],
     );
     // Assuming the insert was successful, return the first row (the new user)
     if (!result.rows[0]) {
@@ -133,7 +134,7 @@ export async function register(ctx: Context) {
     const result = ctx.request.body({ type: "json" });
     const body: RegisterDTO = await result.value;
 
-    if (!body.email || !body.password || !body.firstName || !body.lastName) {
+    if (!body.email || !body.password || !body.firstName || !body.lastName || !body.weight) {
       ctx.response.status = 400;
       ctx.response.body = { success: false, message: "Missing required fields" };
       return;

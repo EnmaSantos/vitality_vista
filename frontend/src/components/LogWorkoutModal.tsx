@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Stack, Typography, TextField, IconButton, Button, CircularProgress, Snackbar, Alert, Box } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Stack, Typography, TextField, IconButton, Button, CircularProgress, Snackbar, Alert, Box, Checkbox, FormControlLabel } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import { Exercise } from '../services/exerciseApi';
@@ -27,6 +27,7 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
     calories: '',
     notes: '' 
   });
+  const [useBodyWeight, setUseBodyWeight] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [snackbar, setSnackbar] = useState<{open:boolean; msg:string; severity:'success'|'error'}>({open:false,msg:'',severity:'success'});
 
@@ -136,6 +137,7 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
         payload.set_number = parseInt(form.sets);
         payload.reps_achieved = form.reps ? parseInt(form.reps) : undefined;
         payload.weight_kg_used = form.weight ? parseFloat(form.weight) : undefined;
+        payload.use_body_weight = useBodyWeight;
       } else {
         // For cardio and stretching, use set_number = 1 since they're typically single sessions
         payload.set_number = 1;
@@ -339,6 +341,10 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
               onChange={handleChange} 
               fullWidth 
               InputProps={{ inputProps:{min:0, step:'0.25'} }} 
+            />
+            <FormControlLabel
+              control={<Checkbox checked={useBodyWeight} onChange={(e) => setUseBodyWeight(e.target.checked)} name="useBodyWeight" />}
+              label="Use Body Weight"
             />
             <TextField 
               label="Duration (minutes) - Optional" 

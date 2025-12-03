@@ -279,8 +279,9 @@ export async function getDailyCalorieSummaryHandler(ctx: RouterContext) {
       }
     }
 
-    // Calculate net calories
-    summary.net_calories = summary.calories_consumed - summary.calories_burned;
+    // Calculate net calories (User requested to treat them separately, so we won't subtract burned from consumed)
+    // We'll just return the consumed calories as the "net" for now, or the frontend can ignore this field.
+    summary.net_calories = summary.calories_consumed;
 
     ctx.response.status = 200;
     ctx.response.body = {
@@ -299,5 +300,296 @@ export async function getDailyCalorieSummaryHandler(ctx: RouterContext) {
   }
 }
 
+/**
+ * Get comprehensive progress data for charts and analysis
+ * GET /api/progress?timeRange=week|month|quarter|year
+ */
+export async function getProgressDataHandler(ctx: RouterContext) {
+  try {
+    const userId = ctx.state.userId as string;
+    if (!userId) {
+      ctx.response.status = 401;
+      ctx.response.body = { success: false, error: "User not authenticated" };
+      return;
+    }
+
+    const timeRange = ctx.request.url.searchParams.get("timeRange") || "month";
+    
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    
+    switch (timeRange) {
+      case "week":
+        startDate.setDate(endDate.getDate() - 7);
+        break;
+      case "month":
+        startDate.setDate(endDate.getDate() - 30);
+        break;
+      case "quarter":
+        startDate.setDate(endDate.getDate() - 90);
+        break;
+      case "year":
+        startDate.setFullYear(endDate.getFullYear() - 1);
+        break;
+      default:
+        startDate.setDate(endDate.getDate() - 30);
+    }
+
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    console.log(`Fetching progress data for user ${userId}, range: ${timeRange} (${startDateStr} to ${endDateStr})`);
+
+    // Get weight data
+    const weightQuery = `
+      SELECT value, TO_CHAR(log_date, 'YYYY-MM-DD') as log_date
+      FROM user_body_metric_logs 
+      WHERE user_id = $1 AND metric_type = 'weight' 
+      AND log_date >= $2 AND log_date <= $3
+      ORDER BY log_date ASC
+    `;
+    const weightResult = await dbClient.queryObject<{ value: number; log_date: string }>(
+      weightQuery, [userId, startDateStr, endDateStr]
+    );
+
+    // Get body fat data
+    const bodyFatQuery = `
+      SELECT value, TO_CHAR(log_date, 'YYYY-MM-DD') as log_date
+      FROM user_body_metric_logs 
+      WHERE user_id = $1 AND metric_type = 'body_fat' 
+      AND log_date >= $2 AND log_date <= $3
+      ORDER BY log_date ASC
+    `;
+    const bodyFatResult = await dbClient.queryObject<{ value: number; log_date: string }>(
+      bodyFatQuery, [userId, startDateStr, endDateStr]
+    );
+
+    // Get daily calorie data
+    const calorieQuery = `
+      SELECT 
+        DATE(log_date) as log_date,
+        SUM(calories_consumed) as total_calories
+      FROM food_log_entries 
+      WHERE user_id = $1 AND log_date >= $2 AND log_date <= $3
+      GROUP BY DATE(log_date)
+      ORDER BY log_date ASC
+    `;
+    const calorieResult = await dbClient.queryObject<{ log_date: string; total_calories: number }>(
+      calorieQuery, [userId, startDateStr, endDateStr]
+    );
+
+    // Get workout data
+    const workoutQuery = `
+      SELECT 
+        DATE(wl.log_date) as log_date,
+        COUNT(DISTINCT wl.log_id) as workout_count,
+        SUM(COALESCE(led.duration_achieved_seconds, 0)) as total_duration_seconds,
+        SUM(COALESCE(led.calories_burned, 0)) as total_calories_burned
+      FROM workout_logs wl
+      LEFT JOIN log_exercise_details led ON wl.log_id = led.log_id
+      WHERE wl.user_id = $1 AND wl.log_date >= $2 AND wl.log_date <= $3
+      GROUP BY DATE(wl.log_date)
+      ORDER BY log_date ASC
+    `;
+    const workoutResult = await dbClient.queryObject<{
+      log_date: string;
+      workout_count: number;
+      total_duration_seconds: number;
+      total_calories_burned: number;
+    }>(workoutQuery, [userId, startDateStr, endDateStr]);
+
+    // Calculate summary statistics
+    const currentWeight = weightResult.rows.length > 0 ? weightResult.rows[weightResult.rows.length - 1].value : null;
+    const previousWeight = weightResult.rows.length > 1 ? weightResult.rows[weightResult.rows.length - 2].value : currentWeight;
+    const weightChange = currentWeight && previousWeight ? currentWeight - previousWeight : 0;
+
+    const currentBodyFat = bodyFatResult.rows.length > 0 ? bodyFatResult.rows[bodyFatResult.rows.length - 1].value : null;
+    const previousBodyFat = bodyFatResult.rows.length > 1 ? bodyFatResult.rows[bodyFatResult.rows.length - 2].value : currentBodyFat;
+    const bodyFatChange = currentBodyFat && previousBodyFat ? currentBodyFat - previousBodyFat : 0;
+
+    const avgDailyCalories = calorieResult.rows.length > 0 
+      ? Math.round(calorieResult.rows.reduce((sum, row) => sum + row.total_calories, 0) / calorieResult.rows.length)
+      : 0;
+
+    const totalWorkouts = workoutResult.rows.reduce((sum, row) => sum + row.workout_count, 0);
+    const workoutFrequency = timeRange === "week" 
+      ? totalWorkouts 
+      : Math.round((totalWorkouts / getDaysInRange(timeRange)) * 7);
+
+    const progressData = {
+      summary: {
+        currentWeight: currentWeight ? Math.round(currentWeight * 2.20462 * 10) / 10 : "N/A", // Convert kg to lbs
+        weightChange: Math.round(weightChange * 2.20462 * 10) / 10, // Convert kg to lbs
+        bodyFatPercentage: currentBodyFat ? Math.round(currentBodyFat * 10) / 10 : "N/A",
+        bodyFatChange: Math.round(bodyFatChange * 10) / 10,
+        avgDailyCalories,
+        calorieChange: 0, // Could calculate weekly trend
+        workoutFrequency,
+        workoutFrequencyChange: 0 // Could calculate weekly trend
+      },
+      charts: {
+        weight: {
+          labels: weightResult.rows.map(row => row.log_date),
+          data: weightResult.rows.map(row => Math.round(row.value * 2.20462 * 10) / 10) // Convert to lbs
+        },
+        bodyFat: {
+          labels: bodyFatResult.rows.map(row => row.log_date),
+          data: bodyFatResult.rows.map(row => Math.round(row.value * 10) / 10)
+        },
+        calories: {
+          labels: calorieResult.rows.map(row => row.log_date),
+          data: calorieResult.rows.map(row => Math.round(row.total_calories))
+        },
+        workoutDuration: {
+          labels: workoutResult.rows.map(row => row.log_date),
+          data: workoutResult.rows.map(row => Math.round(row.total_duration_seconds / 60)) // Convert to minutes
+        },
+        workoutTypes: {
+          labels: workoutResult.rows.map(row => row.log_date),
+          strengthData: workoutResult.rows.map(row => row.workout_count), // Simplified for now
+          cardioData: workoutResult.rows.map(() => 0),
+          stretchingData: workoutResult.rows.map(() => 0)
+        },
+        macros: {
+          labels: calorieResult.rows.map(row => row.log_date),
+          proteinData: calorieResult.rows.map(() => 0), // Would need separate query
+          carbsData: calorieResult.rows.map(() => 0),
+          fatData: calorieResult.rows.map(() => 0)
+        }
+      },
+      goals: {
+        weight: {
+          target: currentWeight ? currentWeight - 5 : 150, // Example goal
+          progress: 65,
+          remaining: 5
+        }
+      }
+    };
+
+    ctx.response.status = 200;
+    ctx.response.body = {
+      success: true,
+      data: progressData,
+      message: `Progress data for ${timeRange} range`
+    };
+
+  } catch (error) {
+    console.error("Error in getProgressDataHandler:", error);
+    ctx.response.status = 500;
+    ctx.response.body = {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred"
+    };
+  }
+}
+
+function getDaysInRange(timeRange: string): number {
+  switch (timeRange) {
+    case "week": return 7;
+    case "month": return 30;
+    case "quarter": return 90;
+    case "year": return 365;
+    default: return 30;
+  }
+}
+
 // TODO: Add handler for creating/logging a new body metric
-// export async function logUserBodyMetricHandler(ctx: Context) { ... } 
+// export async function logUserBodyMetricHandler(ctx: Context) { ... }
+
+/**
+ * Get exercise progress and PRs
+ * GET /api/progress/exercises
+ */
+export async function getExerciseProgressHandler(ctx: RouterContext) {
+  try {
+    const userId = ctx.state.userId as string;
+    if (!userId) {
+      ctx.response.status = 401;
+      ctx.response.body = { success: false, error: "User not authenticated" };
+      return;
+    }
+
+    console.log(`Fetching exercise progress for user ${userId}`);
+
+    // Get overall stats per exercise
+    const statsQuery = `
+      SELECT 
+        led.exercise_name,
+        MAX(led.weight_kg_used) as max_weight,
+        MAX(led.reps_achieved) as max_reps,
+        MAX(led.duration_achieved_seconds) as max_duration,
+        COUNT(*) as total_sessions,
+        MAX(wl.log_date) as last_performed
+      FROM log_exercise_details led
+      JOIN workout_logs wl ON led.log_id = wl.log_id
+      WHERE wl.user_id = $1
+      GROUP BY led.exercise_name
+      ORDER BY last_performed DESC
+    `;
+    
+    const statsResult = await dbClient.queryObject<{
+      exercise_name: string;
+      max_weight: number | null;
+      max_reps: number | null;
+      max_duration: number | null;
+      total_sessions: number;
+      last_performed: Date;
+    }>(statsQuery, [userId]);
+
+    // Get detailed history for charts (all logs)
+    // We might want to filter this by exercise if the dataset is large, but for now fetch all
+    // so the frontend can filter/display charts for any selected exercise.
+    const historyQuery = `
+      SELECT 
+        led.exercise_name,
+        led.weight_kg_used,
+        led.reps_achieved,
+        led.duration_achieved_seconds,
+        wl.log_date
+      FROM log_exercise_details led
+      JOIN workout_logs wl ON led.log_id = wl.log_id
+      WHERE wl.user_id = $1
+      ORDER BY wl.log_date ASC
+    `;
+
+    const historyResult = await dbClient.queryObject<{
+      exercise_name: string;
+      weight_kg_used: number | null;
+      reps_achieved: number | null;
+      duration_achieved_seconds: number | null;
+      log_date: Date;
+    }>(historyQuery, [userId]);
+
+    // Group history by exercise
+    const historyByExercise: Record<string, any[]> = {};
+    for (const row of historyResult.rows) {
+      if (!historyByExercise[row.exercise_name]) {
+        historyByExercise[row.exercise_name] = [];
+      }
+      historyByExercise[row.exercise_name].push({
+        date: row.log_date,
+        weight: row.weight_kg_used,
+        reps: row.reps_achieved,
+        duration: row.duration_achieved_seconds
+      });
+    }
+
+    ctx.response.status = 200;
+    ctx.response.body = {
+      success: true,
+      data: {
+        stats: statsResult.rows,
+        history: historyByExercise
+      }
+    };
+
+  } catch (error) {
+    console.error("Error in getExerciseProgressHandler:", error);
+    ctx.response.status = 500;
+    ctx.response.body = {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred"
+    };
+  }
+} 
