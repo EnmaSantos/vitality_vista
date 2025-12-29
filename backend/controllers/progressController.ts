@@ -578,17 +578,26 @@ export async function getExerciseProgressHandler(ctx: RouterContext) {
       }
       historyByExercise[row.exercise_name].push({
         date: row.log_date,
-        weight: row.weight_kg_used,
-        reps: row.reps_achieved,
-        duration: row.duration_achieved_seconds
+        weight: Number(row.weight_kg_used),
+        reps: Number(row.reps_achieved),
+        duration: Number(row.duration_achieved_seconds)
       });
     }
+
+    // Convert stats BigInts to Numbers
+    const stats = statsResult.rows.map(stat => ({
+      ...stat,
+      max_weight: Number(stat.max_weight),
+      max_reps: Number(stat.max_reps),
+      max_duration: Number(stat.max_duration),
+      total_sessions: Number(stat.total_sessions)
+    }));
 
     ctx.response.status = 200;
     ctx.response.body = {
       success: true,
       data: {
-        stats: statsResult.rows,
+        stats: stats,
         history: historyByExercise
       }
     };
