@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
-  IconButton, 
-  Drawer, 
-  List, 
-  ListItem, 
-  ListItemText, 
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
   Box,
   useMediaQuery,
   useTheme,
@@ -17,13 +17,12 @@ import {
   MenuItem,
   Divider
 } from '@mui/material';
-import { 
+import {
   Menu as MenuIcon,
   AccountCircle as AccountCircleIcon,
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
 // Navigation items - path and label pairs
@@ -42,14 +41,7 @@ const Navbar: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentThemeColor } = useThemeContext();
   const { logout } = useAuth();
-
-  // Check if we're on the dashboard page
-  const isDashboard = location.pathname === '/' || location.pathname === '/dashboard';
-  
-  // Set text color based on current page
-  const textColor = isDashboard ? '#283618' : 'white';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -76,32 +68,33 @@ const Navbar: React.FC = () => {
   };
 
   const drawer = (
-    <Box sx={{ width: 250 }} role="presentation" onClick={handleDrawerToggle}>
+    <Box sx={{ width: 250, bgcolor: 'var(--color-bg)', height: '100%' }} role="presentation" onClick={handleDrawerToggle}>
       <List>
         {navItems.map((item) => (
-          <ListItem 
-            button 
-            component={Link} 
-            to={item.path} 
+          <ListItem
+            button
+            component={Link}
+            to={item.path}
             key={item.label}
-            sx={{ 
-              backgroundColor: isActive(item.path) ? 'rgba(0, 0, 0, 0.08)' : 'transparent',
+            sx={{
+              backgroundColor: isActive(item.path) ? 'rgba(96, 108, 56, 0.1)' : 'transparent',
               '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                backgroundColor: 'rgba(96, 108, 56, 0.05)',
               }
             }}
           >
-            <ListItemText 
-              primary={item.label} 
-              primaryTypographyProps={{ 
-                fontWeight: isActive(item.path) ? 'bold' : 'normal' 
+            <ListItemText
+              primary={item.label}
+              primaryTypographyProps={{
+                fontWeight: isActive(item.path) ? 'bold' : 'normal',
+                color: 'var(--color-primary-dark)'
               }}
             />
           </ListItem>
         ))}
-        <Divider sx={{ my: 1 }} />
+        <Divider sx={{ my: 1, borderColor: 'var(--color-primary)' }} />
         <ListItem button onClick={handleLogout}>
-          <ListItemText primary="Logout" />
+          <ListItemText primary="Logout" primaryTypographyProps={{ color: 'var(--color-primary-dark)' }} />
         </ListItem>
       </List>
     </Box>
@@ -109,11 +102,13 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <AppBar 
-        position="static" 
-        sx={{ 
-          backgroundColor: currentThemeColor || '#3c6e71',
-          transition: 'background-color 0.3s ease'
+      <AppBar
+        position="static"
+        elevation={0}
+        sx={{
+          backgroundColor: 'var(--color-bg)',
+          borderBottom: '1px solid rgba(96, 108, 56, 0.2)',
+          color: 'var(--color-primary-dark)'
         }}
       >
         <Toolbar>
@@ -123,41 +118,42 @@ const Navbar: React.FC = () => {
               aria-label="open drawer"
               edge="start"
               onClick={handleDrawerToggle}
-              sx={{ mr: 2, color: textColor }}
+              sx={{ mr: 2, color: 'var(--color-primary-dark)' }}
             >
               <MenuIcon />
             </IconButton>
           )}
-          
-          <Typography 
-            variant="h6" 
-            component={Link} 
-            to="/" 
-            sx={{ 
-              flexGrow: 1, 
-              color: textColor, 
+
+          <Typography
+            variant="h6"
+            component={Link}
+            to="/"
+            sx={{
+              flexGrow: 1,
+              color: 'var(--color-primary-dark)',
               textDecoration: 'none',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              fontFamily: 'Outfit, sans-serif'
             }}
           >
             Vitality Vista
           </Typography>
-          
+
           {!isMobile && (
             <Box sx={{ display: 'flex' }}>
               {navItems.map((item) => (
-                <Button 
-                  component={Link} 
+                <Button
+                  component={Link}
                   to={item.path}
                   key={item.label}
-                  sx={{ 
-                    color: textColor, 
+                  sx={{
+                    color: 'var(--color-primary-dark)',
                     mx: 1,
                     fontWeight: isActive(item.path) ? 'bold' : 'normal',
-                    borderBottom: isActive(item.path) ? `2px solid ${textColor}` : 'none',
+                    borderBottom: isActive(item.path) ? '2px solid var(--color-primary)' : '2px solid transparent',
                     borderRadius: 0,
                     '&:hover': {
-                      backgroundColor: isDashboard ? 'rgba(40, 54, 24, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+                      backgroundColor: 'rgba(96, 108, 56, 0.05)',
                     }
                   }}
                 >
@@ -175,9 +171,9 @@ const Navbar: React.FC = () => {
               aria-controls="menu-appbar"
               aria-haspopup="true"
               onClick={handleProfileMenuOpen}
-              sx={{ color: textColor }}
+              sx={{ color: 'var(--color-primary-dark)' }}
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: isDashboard ? '#283618' : '#1d3e40' }}>
+              <Avatar sx={{ width: 32, height: 32, bgcolor: 'var(--color-primary)' }}>
                 <AccountCircleIcon />
               </Avatar>
             </IconButton>
@@ -195,6 +191,13 @@ const Navbar: React.FC = () => {
               }}
               open={Boolean(anchorEl)}
               onClose={handleProfileMenuClose}
+              PaperProps={{
+                sx: {
+                  bgcolor: 'var(--color-bg)',
+                  color: 'var(--color-primary-dark)',
+                  border: '1px solid var(--color-primary)',
+                }
+              }}
             >
               <MenuItem component={Link} to="/profile" onClick={handleProfileMenuClose}>
                 My Profile
@@ -202,7 +205,7 @@ const Navbar: React.FC = () => {
               <MenuItem component={Link} to="/settings" onClick={handleProfileMenuClose}>
                 Settings
               </MenuItem>
-              <Divider />
+              <Divider sx={{ borderColor: 'rgba(96, 108, 56, 0.2)' }} />
               <MenuItem onClick={handleLogout}>
                 <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
                 Logout
@@ -211,7 +214,7 @@ const Navbar: React.FC = () => {
           </Box>
         </Toolbar>
       </AppBar>
-      
+
       {/* Mobile drawer */}
       <Drawer
         variant="temporary"
@@ -222,7 +225,7 @@ const Navbar: React.FC = () => {
         }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 250 },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 250, bgcolor: 'var(--color-bg)' },
         }}
       >
         {drawer}

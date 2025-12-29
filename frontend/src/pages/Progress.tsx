@@ -18,7 +18,10 @@ import {
   Alert
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
-import { useThemeContext, themeColors } from '../context/ThemeContext';
+import { useThemeContext } from '../context/ThemeContext'; // Keep for now if deeply integrated, but remove usage
+import { themeColors } from '../context/ThemeContext'; // We might need values for charts, or replace them.
+// Actually, let's just remove useThemeContext usage.
+
 import { getProgressData, getExerciseProgress } from '../services/progressApi';
 
 // Import Chart.js components
@@ -74,7 +77,7 @@ const TabPanel = (props: TabPanelProps) => {
 const ProgressPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [timeRange, setTimeRange] = useState('week');
-  const { setCurrentThemeColor } = useThemeContext();
+  // const { setCurrentThemeColor } = useThemeContext(); // Removed
   const [progressData, setProgressData] = useState<any>(null);
   const [exerciseData, setExerciseData] = useState<any>(null);
   const [selectedExercise, setSelectedExercise] = useState<string>('');
@@ -82,7 +85,7 @@ const ProgressPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setCurrentThemeColor(themeColors.pakistanGreen);
+    // setCurrentThemeColor(themeColors.pakistanGreen);
     let isMounted = true;
 
     const fetchData = async () => {
@@ -116,11 +119,7 @@ const ProgressPage: React.FC = () => {
     };
 
     fetchData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [timeRange, setCurrentThemeColor]);
+  }, [timeRange]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -190,13 +189,15 @@ const ProgressPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ padding: 3, backgroundColor: '#edf0e4', minHeight: '100vh' }}>
-      <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}>
-        Progress Tracking
-      </Typography>
-      <Typography variant="subtitle1" sx={{ mb: 4, color: '#606c38ff' }}>
-        Track your fitness journey and see your improvements over time.
-      </Typography>
+    <Box sx={{ padding: { xs: 2, md: 4 }, backgroundColor: 'var(--color-bg)', minHeight: '100vh' }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h3" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>
+          Progress Tracking
+        </Typography>
+        <Typography variant="subtitle1" sx={{ color: 'var(--color-secondary)', mt: 1 }}>
+          Track your fitness journey and see your improvements over time.
+        </Typography>
+      </Box>
 
       {isLoading ? (
         <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
@@ -347,13 +348,31 @@ const ProgressPage: React.FC = () => {
           </Grid>
 
           {/* Progress Charts */}
-          <Paper elevation={2} sx={{ mb: 3 }}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          {/* Progress Charts */}
+          <Paper elevation={0} sx={{ mb: 4, borderRadius: 4, overflow: 'hidden', bgcolor: 'white', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'rgba(96, 108, 56, 0.1)' }}>
               <Tabs
                 value={tabValue}
                 onChange={handleTabChange}
                 aria-label="progress tracking tabs"
                 centered
+                sx={{
+                  '& .MuiTab-root': {
+                    fontFamily: 'Outfit, sans-serif',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    color: 'var(--color-secondary)',
+                    '&.Mui-selected': {
+                      color: 'var(--color-primary-dark)',
+                    },
+                  },
+                  '& .MuiTabs-indicator': {
+                    backgroundColor: 'var(--color-primary)',
+                    height: 3,
+                    borderRadius: '3px 3px 0 0'
+                  }
+                }}
               >
                 <Tab label="Body Metrics" />
                 <Tab label="Nutrition" />
@@ -363,20 +382,24 @@ const ProgressPage: React.FC = () => {
               </Tabs>
             </Box>
 
-            <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h6" sx={{ color: '#283618ff', fontWeight: 600 }}>
-                📈 Progress Charts
+            <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#fafbf7' }}>
+              <Typography variant="h6" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>
+                Stats Overview
               </Typography>
               <FormControl variant="outlined" size="small" sx={{ minWidth: 150 }}>
-                <InputLabel sx={{ color: '#606c38ff' }}>Time Range</InputLabel>
+                <InputLabel sx={{ color: 'var(--color-primary)' }}>Time Range</InputLabel>
                 <Select
                   value={timeRange}
                   onChange={handleTimeRangeChange}
                   label="Time Range"
                   sx={{
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#606c38ff' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#283618ff' },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#283618ff' }
+                    borderRadius: 2,
+                    bgcolor: 'white',
+                    color: 'var(--color-primary-dark)',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
+                    '& .MuiSvgIcon-root': { color: 'var(--color-primary)' }
                   }}
                 >
                   <MenuItem value="week">Last 7 Days</MenuItem>
@@ -388,178 +411,148 @@ const ProgressPage: React.FC = () => {
             </Box>
 
             <TabPanel value={tabValue} index={0}>
-              <Grid container spacing={3}>
+              <Grid container spacing={4}>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="h6" gutterBottom>
-                    Weight Trend
-                  </Typography>
-                  <Paper
-                    sx={{
-                      height: 300,
-                      p: 2, // Added padding for the chart area
-                      bgcolor: '#f5f5f5',
-                      border: '1px solid #e0e0e0' // Changed from dashed to solid for a cleaner look
-                    }}
-                  >
-                    {/* Specific options for this chart instance, overriding generic title */}
-                    <Line
-                      options={{
-                        ...lineChartOptions,
-                        plugins: {
-                          ...lineChartOptions.plugins,
-                          title: {
-                            ...lineChartOptions.plugins.title,
-                            text: 'Weight Trend',
+                  <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: '100%' }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
+                      Weight Trend
+                    </Typography>
+                    <Box sx={{ height: 300, mt: 2 }}>
+                      <Line
+                        options={{
+                          ...lineChartOptions,
+                          plugins: {
+                            ...lineChartOptions.plugins,
+                            title: { display: false },
                           },
-                        },
-                      }}
-                      data={{
-                        labels: progressData.charts.weight.labels,
-                        datasets: [
-                          {
-                            label: 'Weight (lbs)',
-                            data: progressData.charts.weight.data,
-                            borderColor: themeColors.pakistanGreen,
-                            backgroundColor: `${themeColors.pakistanGreen}66`,
-                            tension: 0.1,
-                          },
-                        ],
-                      }}
-                    />
-                  </Paper>
+                        }}
+                        data={{
+                          labels: progressData.charts.weight.labels,
+                          datasets: [
+                            {
+                              label: 'Weight (lbs)',
+                              data: progressData.charts.weight.data,
+                              borderColor: '#606c38',
+                              backgroundColor: 'rgba(96, 108, 56, 0.2)',
+                              tension: 0.3,
+                              fill: true
+                            },
+                          ],
+                        }}
+                      />
+                    </Box>
+                  </Box>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="h6" gutterBottom>
-                    Body Fat Percentage
-                  </Typography>
-                  <Paper
-                    sx={{
-                      height: 300,
-                      p: 2, // Added padding for the chart area
-                      bgcolor: '#f5f5f5',
-                      border: '1px solid #e0e0e0' // Changed from dashed to solid for a cleaner look
-                    }}
-                  >
-                    <Line
-                      options={{
-                        ...lineChartOptions,
-                        plugins: {
-                          ...lineChartOptions.plugins,
-                          title: {
-                            ...lineChartOptions.plugins.title,
-                            text: 'Body Fat Percentage',
+                  <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: '100%' }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
+                      Body Fat Percentage
+                    </Typography>
+                    <Box sx={{ height: 300, mt: 2 }}>
+                      <Line
+                        options={{
+                          ...lineChartOptions,
+                          plugins: {
+                            ...lineChartOptions.plugins,
+                            title: { display: false },
                           },
-                        },
-                      }}
-                      data={{
-                        labels: progressData.charts.bodyFat.labels,
-                        datasets: [
-                          {
-                            label: 'Body Fat (%)',
-                            data: progressData.charts.bodyFat.data,
-                            borderColor: themeColors.pakistanGreen,
-                            backgroundColor: `${themeColors.pakistanGreen}66`,
-                            tension: 0.1,
-                          },
-                        ],
-                      }}
-                    />
-                  </Paper>
+                        }}
+                        data={{
+                          labels: progressData.charts.bodyFat.labels,
+                          datasets: [
+                            {
+                              label: 'Body Fat (%)',
+                              data: progressData.charts.bodyFat.data,
+                              borderColor: '#dda15e',
+                              backgroundColor: 'rgba(221, 161, 94, 0.2)',
+                              tension: 0.3,
+                              fill: true
+                            },
+                          ],
+                        }}
+                      />
+                    </Box>
+                  </Box>
                 </Grid>
               </Grid>
             </TabPanel>
 
             <TabPanel value={tabValue} index={1}>
-              <Grid container spacing={3}>
+              <Grid container spacing={4}>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="h6" gutterBottom>
-                    Daily Calorie Intake
-                  </Typography>
-                  <Paper
-                    sx={{
-                      height: 300,
-                      p: 2, // Added padding for the chart area
-                      bgcolor: '#f5f5f5',
-                      border: '1px solid #e0e0e0' // Changed from dashed to solid for a cleaner look
-                    }}
-                  >
-                    <Line
-                      options={{
-                        ...lineChartOptions,
-                        plugins: {
-                          ...lineChartOptions.plugins,
-                          title: {
-                            ...lineChartOptions.plugins.title,
-                            text: 'Daily Calorie Intake',
+                  <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: '100%' }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
+                      Daily Calorie Intake
+                    </Typography>
+                    <Box sx={{ height: 300, mt: 2 }}>
+                      <Line
+                        options={{
+                          ...lineChartOptions,
+                          plugins: {
+                            ...lineChartOptions.plugins,
+                            title: { display: false },
                           },
-                        },
-                      }}
-                      data={{
-                        labels: progressData.charts.calories.labels,
-                        datasets: [
-                          {
-                            label: 'Calories',
-                            data: progressData.charts.calories.data,
-                            borderColor: themeColors.pakistanGreen,
-                            backgroundColor: `${themeColors.pakistanGreen}66`,
-                            tension: 0.1,
-                          },
-                        ],
-                      }}
-                    />
-                  </Paper>
+                        }}
+                        data={{
+                          labels: progressData.charts.calories.labels,
+                          datasets: [
+                            {
+                              label: 'Calories',
+                              data: progressData.charts.calories.data,
+                              borderColor: '#bc6c25',
+                              backgroundColor: 'rgba(188, 108, 37, 0.2)',
+                              tension: 0.3,
+                              fill: true
+                            },
+                          ],
+                        }}
+                      />
+                    </Box>
+                  </Box>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="h6" gutterBottom>
-                    Macronutrient Distribution
-                  </Typography>
-                  <Paper
-                    sx={{
-                      height: 300,
-                      p: 2, // Added padding for the chart area
-                      bgcolor: '#f5f5f5',
-                      border: '1px solid #e0e0e0' // Changed from dashed to solid for a cleaner look
-                    }}
-                  >
-                    <Line
-                      options={{
-                        ...lineChartOptions,
-                        plugins: {
-                          ...lineChartOptions.plugins,
-                          title: {
-                            ...lineChartOptions.plugins.title,
-                            text: 'Macronutrient Distribution',
+                  <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: '100%' }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
+                      Macronutrient Distribution
+                    </Typography>
+                    <Box sx={{ height: 300, mt: 2 }}>
+                      <Line
+                        options={{
+                          ...lineChartOptions,
+                          plugins: {
+                            ...lineChartOptions.plugins,
+                            title: { display: false },
                           },
-                        },
-                      }}
-                      data={{
-                        labels: progressData.charts.macros.labels,
-                        datasets: [
-                          {
-                            label: 'Protein (g)',
-                            data: progressData.charts.macros.proteinData,
-                            borderColor: themeColors.pakistanGreen,
-                            backgroundColor: `${themeColors.pakistanGreen}66`,
-                            tension: 0.1,
-                          },
-                          {
-                            label: 'Carbs (g)',
-                            data: progressData.charts.macros.carbsData,
-                            borderColor: themeColors.earthYellow,
-                            backgroundColor: `${themeColors.earthYellow}66`,
-                            tension: 0.1,
-                          },
-                          {
-                            label: 'Fat (g)',
-                            data: progressData.charts.macros.fatData,
-                            borderColor: themeColors.tigersEye,
-                            backgroundColor: `${themeColors.tigersEye}66`,
-                            tension: 0.1,
-                          },
-                        ],
-                      }}
-                    />
-                  </Paper>
+                        }}
+                        data={{
+                          labels: progressData.charts.macros.labels,
+                          datasets: [
+                            {
+                              label: 'Protein (g)',
+                              data: progressData.charts.macros.proteinData,
+                              borderColor: '#606c38',
+                              backgroundColor: 'rgba(96, 108, 56, 0.5)',
+                              tension: 0.3,
+                            },
+                            {
+                              label: 'Carbs (g)',
+                              data: progressData.charts.macros.carbsData,
+                              borderColor: '#dda15e',
+                              backgroundColor: 'rgba(221, 161, 94, 0.5)',
+                              tension: 0.3,
+                            },
+                            {
+                              label: 'Fat (g)',
+                              data: progressData.charts.macros.fatData,
+                              borderColor: '#bc6c25',
+                              backgroundColor: 'rgba(188, 108, 37, 0.5)',
+                              tension: 0.3,
+                            },
+                          ],
+                        }}
+                      />
+                    </Box>
+                  </Box>
                 </Grid>
               </Grid>
             </TabPanel>

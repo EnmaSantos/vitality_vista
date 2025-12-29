@@ -21,6 +21,7 @@ import fatsecretProxyRouter from "./routes/fatsecretProxy.ts";
 import foodLogRouter from "./routes/foodLogRoutes.ts";
 import waterRouter from "./routes/water.ts";
 import setupRouter from "./routes/setup.ts";
+import goalsRouter from "./routes/goals.ts";
 
 // Initialize the app
 const app = new Application();
@@ -69,6 +70,9 @@ apiRouter.use("/food-logs", foodLogRouter.routes(), foodLogRouter.allowedMethods
 
 // Mount Water Logging routes
 apiRouter.use("/water-logs", waterRouter.routes(), waterRouter.allowedMethods());
+
+// Mount Daily Goals routes
+apiRouter.use("/goals", goalsRouter.routes(), goalsRouter.allowedMethods());
 
 // Mount Setup routes (Temporary)
 apiRouter.use("/setup-db", setupRouter.routes(), setupRouter.allowedMethods());

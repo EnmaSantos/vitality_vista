@@ -1,12 +1,20 @@
-import { Router } from "../deps.ts";
-import dbClient from "../services/db.ts";
+import { Client } from "https://deno.land/x/postgres@v0.19.3/mod.ts";
+import { load } from "https://deno.land/std@0.208.0/dotenv/mod.ts";
 
-const setupRouter = new Router();
+const env = await load();
+const databaseUrl = env["DATABASE_URL"] || Deno.env.get("DATABASE_URL");
 
-// GET /api/setup-db/water
-// Run SQL to create water_logs table
-setupRouter.get("/water", async (ctx) => {
+if (!databaseUrl) {
+  console.error("DATABASE_URL is not set.");
+  Deno.exit(1);
+}
+
+const client = new Client(databaseUrl);
+
+async function runSetup() {
+  await client.connect();
   try {
+    console.log("Creating water_logs table...");
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS water_logs (
         log_id SERIAL PRIMARY KEY,
@@ -16,14 +24,15 @@ setupRouter.get("/water", async (ctx) => {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
+    await client.queryArray(createTableQuery);
 
-    await dbClient.queryArray(createTableQuery);
-
+    console.log("Creating index...");
     const createIndexQuery = `
       CREATE INDEX IF NOT EXISTS idx_water_logs_user_date ON water_logs(user_id, log_date);
     `;
-    await dbClient.queryArray(createIndexQuery);
+    await client.queryArray(createIndexQuery);
 
+    console.log("Creating daily_goals table...");
     const createGoalsTableQuery = `
       CREATE TABLE IF NOT EXISTS daily_goals (
         goal_id SERIAL PRIMARY KEY,
@@ -34,19 +43,20 @@ setupRouter.get("/water", async (ctx) => {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
-    await dbClient.queryArray(createGoalsTableQuery);
+    await client.queryArray(createGoalsTableQuery);
 
+    console.log("Creating goals index...");
     const createGoalsIndexQuery = `
       CREATE INDEX IF NOT EXISTS idx_daily_goals_user_date ON daily_goals(user_id, goal_date);
     `;
-    await dbClient.queryArray(createGoalsIndexQuery);
+    await client.queryArray(createGoalsIndexQuery);
 
-    ctx.response.body = { success: true, message: "Water logs table created successfully." };
-  } catch (error) {
-    console.error("Setup error:", error);
-    ctx.response.status = 500;
-    ctx.response.body = { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    console.log("Setup completed successfully.");
+  } catch (err) {
+    console.error("Error running setup:", err);
+  } finally {
+    await client.end();
   }
-});
+}
 
-export default setupRouter;
+runSetup();

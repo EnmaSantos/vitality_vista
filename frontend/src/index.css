@@ -6,10 +6,20 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+
+  /* Vitality Vista Color Palette */
+  --color-bg: #FDFCF4;
+  --color-primary: #606c38;
+  --color-primary-dark: #283618;
+  --color-secondary: #bc6c25;
+  --color-accent: #dda15e;
+  --color-surface: #fefae0;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-primary-dark);
 }

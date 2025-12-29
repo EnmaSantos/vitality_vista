@@ -23,6 +23,8 @@ import {
   List,
   ListItem,
   ListItemText,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useAuth } from '../context/AuthContext';
@@ -61,6 +63,26 @@ const genderOptions = [
   { value: 'prefer_not_to_say', label: 'Prefer not to say' },
 ];
 
+
+const cmToFtIn = (cm: number) => {
+  const realFeet = (cm * 0.393700787) / 12;
+  const feet = Math.floor(realFeet);
+  const inches = Math.round((realFeet - feet) * 12);
+  return { feet, inches: inches === 12 ? 0 : inches }; // Handle 12 inches case
+};
+
+const ftInToCm = (feet: number, inches: number) => {
+  return Math.round((feet * 30.48) + (inches * 2.54));
+};
+
+const kgToLbs = (kg: number) => {
+  return parseFloat((kg * 2.20462).toFixed(1));
+};
+
+const lbsToKg = (lbs: number) => {
+  return parseFloat((lbs / 2.20462).toFixed(1));
+};
+
 const ProfilePage: React.FC = () => {
   const { user, token } = useAuth();
   const { setCurrentThemeColor } = useThemeContext();
@@ -74,6 +96,15 @@ const ProfilePage: React.FC = () => {
     fitness_goals: '',
     dietary_restrictions: '',
   });
+
+  // Unit States
+  const [heightUnit, setHeightUnit] = useState<'cm' | 'ft'>('cm');
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg');
+
+  // Display States (what user sees in inputs)
+  const [heightDisplay, setHeightDisplay] = useState<{ ft: string, in: string, cm: string }>({ ft: '', in: '', cm: '' });
+  const [weightDisplay, setWeightDisplay] = useState<{ kg: string, lbs: string }>({ kg: '', lbs: '' });
+
 
   // State for metabolic data
   const [metabolicData, setMetabolicData] = useState<MetabolicDataState>({
@@ -108,6 +139,23 @@ const ProfilePage: React.FC = () => {
     setProfileData(formattedData);
     setOriginalProfileData(formattedData);
 
+    // Initialize Display Values
+    if (fetchedProfile.height_cm) {
+      const { feet, inches } = cmToFtIn(fetchedProfile.height_cm);
+      setHeightDisplay({
+        cm: fetchedProfile.height_cm.toString(),
+        ft: feet.toString(),
+        in: inches.toString()
+      });
+    }
+    if (fetchedProfile.weight_kg) {
+      const lbs = kgToLbs(fetchedProfile.weight_kg);
+      setWeightDisplay({
+        kg: fetchedProfile.weight_kg.toString(),
+        lbs: lbs.toString()
+      });
+    }
+
     setMetabolicData({
       age: fetchedProfile.age === undefined ? null : fetchedProfile.age,
       bmr: fetchedProfile.bmr === undefined ? null : fetchedProfile.bmr,
@@ -137,10 +185,66 @@ const ProfilePage: React.FC = () => {
     fetchProfile();
   }, [fetchProfile]);
 
+  const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDisplay = { ...heightDisplay, [e.target.name]: e.target.value };
+    setHeightDisplay(newDisplay);
+
+    let newCm = '';
+    if (heightUnit === 'cm') {
+      newCm = e.target.value;
+      // Sync ft/in display for when user swaps toggle
+      if (newCm) {
+        const { feet, inches } = cmToFtIn(parseFloat(newCm));
+        newDisplay.ft = feet.toString();
+        newDisplay.in = inches.toString();
+      } else {
+        newDisplay.ft = '';
+        newDisplay.in = '';
+      }
+    } else {
+      const ft = parseFloat(newDisplay.ft) || 0;
+      const inch = parseFloat(newDisplay.in) || 0;
+      if (newDisplay.ft || newDisplay.in) {
+        newCm = ftInToCm(ft, inch).toString();
+      }
+      newDisplay.cm = newCm;
+    }
+
+    setProfileData(prev => ({ ...prev, height_cm: newCm }));
+  };
+
+  const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVal = e.target.value;
+    const newDisplay = { ...weightDisplay, [weightUnit]: newVal };
+    setWeightDisplay(newDisplay);
+
+    let newKg = '';
+    if (weightUnit === 'kg') {
+      newKg = newVal;
+      // Sync lbs
+      if (newKg) {
+        newDisplay.lbs = kgToLbs(parseFloat(newKg)).toString();
+      } else {
+        newDisplay.lbs = '';
+      }
+    } else {
+      // Unit is lbs
+      if (newVal) {
+        newKg = lbsToKg(parseFloat(newVal)).toString();
+        newDisplay.kg = newKg;
+      } else {
+        newKg = '';
+        newDisplay.kg = '';
+      }
+    }
+    setProfileData(prev => ({ ...prev, weight_kg: newKg }));
+  };
+
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>
   ) => {
     const { name, value } = event.target;
+    if (name === 'height_cm' || name === 'weight_kg') return; // Handled separately
     setProfileData(prev => ({
       ...prev,
       [name as string]: value,
@@ -166,6 +270,10 @@ const ProfilePage: React.FC = () => {
       setError("Authentication token not found. Please log in again.");
       return;
     }
+
+    // Check modification
+    const isModified = pendingChanges.length > 0 || (originalProfileData && JSON.stringify(profileData) !== JSON.stringify(originalProfileData));
+    if (!isModified) return;
 
     if (profileData.date_of_birth) {
       const today = new Date();
@@ -376,27 +484,85 @@ const ProfilePage: React.FC = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                name="height_cm"
-                label="Height (cm)"
-                type="number"
-                variant="outlined"
-                value={profileData.height_cm}
-                onChange={handleChange}
-                InputProps={{ inputProps: { min: 0, step: "0.1" } }}
-                disabled={isLoading}
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Typography variant="body2" sx={{ mr: 2 }}>Height Unit:</Typography>
+                <ToggleButtonGroup
+                  value={heightUnit}
+                  exclusive
+                  onChange={(_, newUnit) => newUnit && setHeightUnit(newUnit)}
+                  size="small"
+                  aria-label="height unit"
+                >
+                  <ToggleButton value="cm">CM</ToggleButton>
+                  <ToggleButton value="ft">FT/IN</ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+              {heightUnit === 'cm' ? (
+                <TextField
+                  fullWidth
+                  name="cm"
+                  label="Height (cm)"
+                  type="number"
+                  variant="outlined"
+                  value={heightDisplay.cm}
+                  onChange={handleHeightChange}
+                  InputProps={{ inputProps: { min: 0, step: "1" } }}
+                  disabled={isLoading}
+                />
+              ) : (
+                <Grid container spacing={1}>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      name="ft"
+                      label="Feet"
+                      type="number"
+                      variant="outlined"
+                      value={heightDisplay.ft}
+                      onChange={handleHeightChange}
+                      InputProps={{ inputProps: { min: 0, step: "1" } }}
+                      disabled={isLoading}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      name="in"
+                      label="Inches"
+                      type="number"
+                      variant="outlined"
+                      value={heightDisplay.in}
+                      onChange={handleHeightChange}
+                      InputProps={{ inputProps: { min: 0, max: 11, step: "1" } }}
+                      disabled={isLoading}
+                    />
+                  </Grid>
+                </Grid>
+              )}
             </Grid>
+
             <Grid item xs={12} sm={6}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Typography variant="body2" sx={{ mr: 2 }}>Weight Unit:</Typography>
+                <ToggleButtonGroup
+                  value={weightUnit}
+                  exclusive
+                  onChange={(_, newUnit) => newUnit && setWeightUnit(newUnit)}
+                  size="small"
+                  aria-label="weight unit"
+                >
+                  <ToggleButton value="kg">KG</ToggleButton>
+                  <ToggleButton value="lbs">LBS</ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
               <TextField
                 fullWidth
-                name="weight_kg"
-                label="Weight (kg)"
+                name={weightUnit}
+                label={`Weight (${weightUnit})`}
                 type="number"
                 variant="outlined"
-                value={profileData.weight_kg}
-                onChange={handleChange}
+                value={weightUnit === 'kg' ? weightDisplay.kg : weightDisplay.lbs}
+                onChange={handleWeightChange}
                 InputProps={{ inputProps: { min: 0, step: "0.1" } }}
                 disabled={isLoading}
               />
@@ -462,8 +628,12 @@ const ProfilePage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                disabled={isLoading || isFetchingProfile}
-                sx={{ bgcolor: '#283618ff', '&:hover': { bgcolor: '#1e2a10ff' } }}
+                disabled={isLoading || isFetchingProfile || (originalProfileData !== null && JSON.stringify(profileData) === JSON.stringify(originalProfileData))}
+                sx={{
+                  bgcolor: '#283618ff',
+                  '&:hover': { bgcolor: '#1e2a10ff' },
+                  '&.Mui-disabled': { bgcolor: '#e0e0e0' }
+                }}
               >
                 {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Save Profile'}
               </Button>

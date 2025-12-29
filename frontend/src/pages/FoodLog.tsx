@@ -31,7 +31,6 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, Search as SearchIcon } from '@mui/icons-material';
 import { SelectChangeEvent } from '@mui/material/Select';
-import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import {
   NutritionData,
@@ -71,7 +70,6 @@ interface CurrentFoodEntry {
 }
 
 const FoodLog: React.FC = () => {
-  const { setCurrentThemeColor } = useThemeContext();
   const auth = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -133,9 +131,7 @@ const FoodLog: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    setCurrentThemeColor(themeColors.earthYellow);
-  }, [setCurrentThemeColor]);
+
 
   const fetchLoggedEntries = useCallback(async (date: string) => {
     if (!auth.token) return;
@@ -395,15 +391,17 @@ const FoodLog: React.FC = () => {
   }, [loggedEntries]);
 
   return (
-    <Box sx={{ padding: 3, backgroundColor: '#fff9e6', minHeight: '100vh' }}>
-      <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}>
-        Food Log
-      </Typography>
-      <Typography variant="subtitle1" sx={{ mb: 4, color: '#606c38ff' }}>
-        Track your daily food intake and nutrition.
-      </Typography>
+    <Box sx={{ padding: { xs: 2, md: 4 }, backgroundColor: 'var(--color-bg)', minHeight: '100vh' }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h3" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>
+          Food Log
+        </Typography>
+        <Typography variant="subtitle1" sx={{ color: 'var(--color-secondary)', mt: 1 }}>
+          Track your daily food intake and nutrition.
+        </Typography>
+      </Box>
 
-      <Grid container spacing={2} sx={{ mb: 3 }} alignItems="center">
+      <Grid container spacing={3} sx={{ mb: 4 }} alignItems="center">
         <Grid item xs={12} sm={6} md={4}>
           <TextField
             fullWidth
@@ -414,11 +412,13 @@ const FoodLog: React.FC = () => {
             InputLabelProps={{ shrink: true }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                '& fieldset': { borderColor: '#dda15eff' },
-                '&:hover fieldset': { borderColor: '#bc6c25ff' },
-                '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                bgcolor: 'white',
+                borderRadius: 2,
+                '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+                '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
               },
-              '& .MuiInputLabel-root': { color: '#606c38ff' }
+              '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
             }}
           />
         </Grid>
@@ -427,58 +427,80 @@ const FoodLog: React.FC = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleClickOpenManualAddDialog}
-            sx={{ bgcolor: '#dda15eff', '&:hover': { bgcolor: '#bc6c25ff' } }}
+            disableElevation
+            sx={{
+              bgcolor: 'var(--color-primary)',
+              color: 'white',
+              fontWeight: 'bold',
+              px: 3,
+              py: 1.5,
+              borderRadius: 2,
+              '&:hover': { bgcolor: 'var(--color-primary-dark)' }
+            }}
           >
             Add Manually
           </Button>
         </Grid>
       </Grid>
 
-      <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>Search Food (FatSecret)</Typography>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 4,
+          bgcolor: 'white',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
+        }}
+      >
+        <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>Search Food (FatSecret)</Typography>
         <TextField
           fullWidth
           variant="outlined"
-          label="Search for a food item..."
+          placeholder="Search for a food item (e.g., 'avocado toast')..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon />
+                <SearchIcon sx={{ color: 'var(--color-primary)' }} />
               </InputAdornment>
             ),
           }}
           sx={{
-            mb: 2,
+            mb: 3,
             '& .MuiOutlinedInput-root': {
-              '& fieldset': { borderColor: '#dda15eff' },
-              '&:hover fieldset': { borderColor: '#bc6c25ff' },
-              '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
-            },
-            '& .MuiInputLabel-root': { color: '#606c38ff' }
+              bgcolor: 'var(--color-bg)',
+              borderRadius: 3,
+              '& fieldset': { border: 'none' }, // Cleaner look
+              '&:hover': { bgcolor: '#fbfbf0' },
+              '&.Mui-focused': { bgcolor: '#fbfbf0', boxShadow: '0 0 0 2px var(--color-primary)' },
+            }
           }}
         />
-        {isLoadingSearch && <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}><CircularProgress sx={{ color: '#bc6c25ff' }} /></Box>}
+        {isLoadingSearch && <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}><CircularProgress sx={{ color: 'var(--color-primary)' }} /></Box>}
         {searchError && <Alert severity="error" sx={{ mb: 2 }}>{searchError}</Alert>}
         {!isLoadingSearch && searchResults.length > 0 && (
-          <Paper variant="outlined" sx={{ maxHeight: 300, overflow: 'auto', borderColor: '#dda15eff' }}>
+          <Paper variant="outlined" sx={{ maxHeight: 300, overflow: 'auto', borderRadius: 2, borderColor: 'rgba(96, 108, 56, 0.1)', bgcolor: 'var(--color-bg)', p: 1 }}>
             <List dense>
               {searchResults.map((food) => (
                 <ListItem
                   key={food.id}
                   divider
+                  sx={{ borderColor: 'rgba(96, 108, 56, 0.05)', borderRadius: 1, mb: 0.5, '&:hover': { bgcolor: 'rgba(96, 108, 56, 0.05)' } }}
                   secondaryAction={
                     <Button
                       variant="outlined"
                       size="small"
                       onClick={() => handleOpenLogDialog(food)}
                       sx={{
-                        borderColor: '#bc6c25ff',
-                        color: '#bc6c25ff',
+                        borderColor: 'var(--color-primary)',
+                        color: 'var(--color-primary)',
+                        borderRadius: 2,
                         '&:hover': {
-                          borderColor: '#a05a2c',
-                          backgroundColor: 'rgba(188, 108, 37, 0.04)'
+                          bgcolor: 'var(--color-primary)',
+                          color: 'white',
+                          borderColor: 'var(--color-primary)'
                         }
                       }}
                     >
@@ -487,7 +509,7 @@ const FoodLog: React.FC = () => {
                   }
                 >
                   <ListItemText
-                    primary={food.name}
+                    primary={<Typography sx={{ fontWeight: '500', color: 'var(--color-primary-dark)' }}>{food.name}</Typography>}
                     secondary={`${food.brandName ? `${food.brandName} - ` : ''}${food.calories} ${food.calorieUnit || 'kcal'} per ${food.servingSize}`}
                   />
                 </ListItem>
@@ -496,84 +518,174 @@ const FoodLog: React.FC = () => {
           </Paper>
         )}
         {!isLoadingSearch && searchQuery.trim() !== '' && searchResults.length === 0 && !searchError && (
-          <Typography sx={{ my: 2, color: '#606c38ff' }}>No results found for "{searchQuery}".</Typography>
+          <Typography sx={{ my: 2, color: 'var(--color-secondary)', textAlign: 'center', fontStyle: 'italic' }}>No results found for "{searchQuery}".</Typography>
         )}
       </Paper>
 
-      <Paper elevation={2} sx={{ p: 2, mb: 3, backgroundColor: '#fefae0' }}>
-        <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}> Daily Nutrition Summary </Typography>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 4,
+          bgcolor: 'white',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
+        }}
+      >
+        <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>Daily Nutrition Summary</Typography>
         <Grid container spacing={2}>
-          <Grid item xs={6} sm={3}><Card sx={{ bgcolor: '#faf0e0' }}><CardContent>
-            <Typography variant="subtitle2" color="textSecondary">Calories</Typography>
-            <Typography variant="h5" sx={{ color: '#bc6c25ff' }}>{dailyTotals.calories.toFixed(0)}</Typography>
-          </CardContent></Card></Grid>
-          <Grid item xs={6} sm={3}><Card sx={{ bgcolor: '#faf0e0' }}><CardContent>
-            <Typography variant="subtitle2" color="textSecondary">Protein</Typography>
-            <Typography variant="h5" sx={{ color: '#bc6c25ff' }}>{dailyTotals.protein.toFixed(1)}g</Typography>
-          </CardContent></Card></Grid>
-          <Grid item xs={6} sm={3}><Card sx={{ bgcolor: '#faf0e0' }}><CardContent>
-            <Typography variant="subtitle2" color="textSecondary">Carbs</Typography>
-            <Typography variant="h5" sx={{ color: '#bc6c25ff' }}>{dailyTotals.carbs.toFixed(1)}g</Typography>
-          </CardContent></Card></Grid>
-          <Grid item xs={6} sm={3}><Card sx={{ bgcolor: '#faf0e0' }}><CardContent>
-            <Typography variant="subtitle2" color="textSecondary">Fat</Typography>
-            <Typography variant="h5" sx={{ color: '#bc6c25ff' }}>{dailyTotals.fat.toFixed(1)}g</Typography>
-          </CardContent></Card></Grid>
+          <Grid item xs={6} sm={3}>
+            <Card elevation={0} sx={{ bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+              <CardContent>
+                <Typography variant="subtitle2" sx={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>Calories</Typography>
+                <Typography variant="h5" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mt: 1 }}>{dailyTotals.calories.toFixed(0)}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <Card elevation={0} sx={{ bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+              <CardContent>
+                <Typography variant="subtitle2" sx={{ color: '#606c38', fontWeight: 'bold' }}>Protein</Typography>
+                <Typography variant="h5" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mt: 1 }}>{dailyTotals.protein.toFixed(1)}g</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <Card elevation={0} sx={{ bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+              <CardContent>
+                <Typography variant="subtitle2" sx={{ color: '#dda15e', fontWeight: 'bold' }}>Carbs</Typography>
+                <Typography variant="h5" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mt: 1 }}>{dailyTotals.carbs.toFixed(1)}g</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <Card elevation={0} sx={{ bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+              <CardContent>
+                <Typography variant="subtitle2" sx={{ color: '#bc6c25', fontWeight: 'bold' }}>Fat</Typography>
+                <Typography variant="h5" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mt: 1 }}>{dailyTotals.fat.toFixed(1)}g</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
       </Paper>
 
       {/* Water Tracking Section */}
-      <Paper elevation={2} sx={{ p: 2, mb: 3, backgroundColor: '#e0f7fa' }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 4,
+          bgcolor: '#effcf4', // Very light green/mint 
+          border: '1px solid #dcfce7'
+        }}
+      >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <LocalDrinkIcon sx={{ color: '#00bcd4' }} />
-            <Typography variant="h6" sx={{ color: '#006064' }}>Water Intake</Typography>
+            <Box sx={{ p: 1, bgcolor: '#dcfce7', borderRadius: '50%', display: 'flex' }}>
+              <LocalDrinkIcon sx={{ color: '#166534' }} />
+            </Box>
+            <Typography variant="h6" sx={{ color: '#14532d', fontWeight: 'bold' }}>Water Intake</Typography>
           </Box>
-          <Typography variant="h5" sx={{ color: '#00838f', fontWeight: 'bold' }}>
-            {dailyWater} <Typography component="span" variant="body2" color="textSecondary">/ 2500 ml</Typography>
+          <Typography variant="h5" sx={{ color: '#14532d', fontWeight: 'bold' }}>
+            {dailyWater} <Typography component="span" variant="body2" sx={{ color: '#166534' }}>/ 2500 ml</Typography>
           </Typography>
         </Box>
         <Grid container spacing={2}>
           <Grid item>
-            <Button variant="outlined" onClick={() => handleAddWater(250)} sx={{ borderColor: '#00bcd4', color: '#00838f' }}>+ 250ml</Button>
+            <Button
+              variant="outlined"
+              onClick={() => handleAddWater(250)}
+              sx={{
+                borderColor: '#166534',
+                color: '#166534',
+                bgcolor: 'white',
+                borderRadius: 2,
+                '&:hover': { bgcolor: '#dcfce7', borderColor: '#14532d' }
+              }}
+            >
+              + 250ml
+            </Button>
           </Grid>
           <Grid item>
-            <Button variant="outlined" onClick={() => handleAddWater(500)} sx={{ borderColor: '#00bcd4', color: '#00838f' }}>+ 500ml</Button>
+            <Button
+              variant="outlined"
+              onClick={() => handleAddWater(500)}
+              sx={{
+                borderColor: '#166534',
+                color: '#166534',
+                bgcolor: 'white',
+                borderRadius: 2,
+                '&:hover': { bgcolor: '#dcfce7', borderColor: '#14532d' }
+              }}
+            >
+              + 500ml
+            </Button>
           </Grid>
           <Grid item>
-            <Button variant="outlined" onClick={() => handleAddWater(1000)} sx={{ borderColor: '#00bcd4', color: '#00838f' }}>+ 1L</Button>
+            <Button
+              variant="outlined"
+              onClick={() => handleAddWater(1000)}
+              sx={{
+                borderColor: '#166534',
+                color: '#166534',
+                bgcolor: 'white',
+                borderRadius: 2,
+                '&:hover': { bgcolor: '#dcfce7', borderColor: '#14532d' }
+              }}
+            >
+              + 1L
+            </Button>
           </Grid>
         </Grid>
       </Paper>
 
-      {isLoadingLog && <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress sx={{ color: '#bc6c25ff' }} /></Box>}
+      {isLoadingLog && <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress sx={{ color: 'var(--color-primary)' }} /></Box>}
       {logError && <Alert severity="error" sx={{ my: 2 }}>{logError}</Alert>}
       {!isLoadingLog && !logError && loggedEntries.length === 0 && (
-        <Paper sx={{ p: 3, textAlign: 'center', my: 2, backgroundColor: '#fefae0' }}>
-          <Typography sx={{ color: '#606c38ff' }}>No food logged for {currentDate}. Add some from the search above or add manually!</Typography>
+        <Paper elevation={0} sx={{ p: 4, textAlign: 'center', my: 2, bgcolor: 'white', borderRadius: 3, border: '1px dashed rgba(96, 108, 56, 0.3)' }}>
+          <Typography sx={{ color: 'var(--color-secondary)' }}>No food logged for {currentDate}. Add some from the search above or add manually!</Typography>
         </Paper>
       )}
       {!isLoadingLog && !logError && loggedEntries.length > 0 && ['breakfast', 'lunch', 'dinner', 'snack'].map((mealType) => (
         (groupedEntries[mealType] && groupedEntries[mealType].length > 0) && (
-          <Paper elevation={1} sx={{ p: 2, mb: 2, backgroundColor: '#fefae0' }} key={mealType}>
-            <Typography variant="h6" sx={{ textTransform: 'capitalize', color: '#283618ff' }}>{mealType}</Typography>
-            <Divider sx={{ my: 1, borderColor: '#dda15eff' }} />
-            <List>
+          <Paper
+            key={mealType}
+            elevation={0}
+            sx={{
+              p: 3,
+              mb: 3,
+              bgcolor: 'white',
+              borderRadius: 4,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
+            }}
+          >
+            <Typography variant="h6" sx={{ textTransform: 'capitalize', color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>{mealType}</Typography>
+            <Divider sx={{ my: 2, borderColor: 'rgba(96, 108, 56, 0.1)' }} />
+            <List disablePadding>
               {groupedEntries[mealType].map((entry) => (
-                <ListItem key={entry.log_entry_id} divider sx={{ borderColor: 'rgba(221, 161, 94, 0.5)' }}>
+                <ListItem
+                  key={entry.log_entry_id}
+                  divider
+                  sx={{
+                    borderColor: 'rgba(96, 108, 56, 0.05)',
+                    py: 2,
+                    '&:last-child': { borderBottom: 'none' }
+                  }}
+                >
                   <Grid container alignItems="center" spacing={1}>
                     <Grid item xs={12} sm={4} md={3}>
                       <ListItemText
-                        primary={<Typography sx={{ fontWeight: '500', color: '#606c38ff' }}>{entry.food_name || "Unknown Food"}</Typography>}
-                        secondary={`${parseFloat(String(entry.logged_quantity)).toFixed(1)} x ${entry.logged_serving_description}`}
+                        primary={<Typography sx={{ fontWeight: '600', color: 'var(--color-primary-dark)' }}>{entry.food_name || "Unknown Food"}</Typography>}
+                        secondary={<Typography variant="body2" sx={{ color: 'var(--color-secondary)' }}>{`${parseFloat(String(entry.logged_quantity)).toFixed(1)} x ${entry.logged_serving_description}`}</Typography>}
                       />
                     </Grid>
                     <Grid item xs={10} sm={6} md={7}>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: { xs: 'flex-start', sm: 'space-around' }, alignItems: 'center', pl: { xs: 0, sm: 1 }, gap: { xs: 1, sm: 0.5 } }}>
-                        <Typography variant="body2" sx={{ color: '#bc6c25ff', minWidth: '70px', textAlign: 'right' }}>{(parseFloat(String(entry.calories_consumed)) || 0).toFixed(0)} kcal</Typography>
-                        <Typography variant="body2" sx={{ color: '#606c38ff', minWidth: '60px', textAlign: 'right' }}>P: {parseFloat(String(entry.protein_consumed)).toFixed(1)}g</Typography>
-                        <Typography variant="body2" sx={{ color: '#606c38ff', minWidth: '60px', textAlign: 'right' }}>C: {parseFloat(String(entry.carbs_consumed)).toFixed(1)}g</Typography>
-                        <Typography variant="body2" sx={{ color: '#606c38ff', minWidth: '60px', textAlign: 'right' }}>F: {parseFloat(String(entry.fat_consumed)).toFixed(1)}g</Typography>
+                        <Typography variant="body2" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', minWidth: '70px', textAlign: 'right' }}>{(parseFloat(String(entry.calories_consumed)) || 0).toFixed(0)} kcal</Typography>
+                        <Typography variant="body2" sx={{ color: '#606c38', minWidth: '60px', textAlign: 'right' }}>P: {parseFloat(String(entry.protein_consumed)).toFixed(1)}g</Typography>
+                        <Typography variant="body2" sx={{ color: '#dda15e', minWidth: '60px', textAlign: 'right' }}>C: {parseFloat(String(entry.carbs_consumed)).toFixed(1)}g</Typography>
+                        <Typography variant="body2" sx={{ color: '#bc6c25', minWidth: '60px', textAlign: 'right' }}>F: {parseFloat(String(entry.fat_consumed)).toFixed(1)}g</Typography>
                       </Box>
                     </Grid>
                     <Grid item xs={2} sm={2} md={2} sx={{ textAlign: 'right', pt: { xs: 1, md: 0 } }}>
@@ -583,7 +695,7 @@ const FoodLog: React.FC = () => {
                           aria-label="delete"
                           onClick={() => handleDeleteLogEntry(entry.log_entry_id)}
                           size="small"
-                          sx={{ color: '#bc6c25ff', '&:hover': { color: '#a05a2c' } }}
+                          sx={{ color: '#ef4444', opacity: 0.6, '&:hover': { opacity: 1, bgcolor: '#fee2e2' } }}
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
@@ -597,22 +709,27 @@ const FoodLog: React.FC = () => {
         )
       ))}
 
-      <Dialog open={openAddDialog} onClose={handleCloseAddDialog} maxWidth="sm" fullWidth
-        PaperProps={{ sx: { backgroundColor: '#fff9e6' } }}
+      <Dialog
+        open={openAddDialog}
+        onClose={handleCloseAddDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { bgcolor: 'white', borderRadius: 3 } }}
       >
-        <DialogTitle sx={{ color: '#283618ff' }}>
+        <DialogTitle sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
           Log "{selectedFoodForDialog?.name || (formDataForDialog.food_name || 'New Food Item')}"
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ mt: 2 }}>
           {selectedFoodForDialog && (
-            <Box sx={{ mb: 2, p: 1.5, backgroundColor: '#fefae0', borderRadius: 1, border: '1px solid #dda15eff' }}>
-              <DialogContentText component="div" sx={{ color: '#606c38ff' }}>
-                <strong>Reference:</strong> {selectedFoodForDialog.servingSize} ({selectedFoodForDialog.calories} {selectedFoodForDialog.calorieUnit || 'kcal'})
-                <br />
-                <strong>Nutrition per reference:</strong>
-                P: {selectedFoodForDialog.protein}{selectedFoodForDialog.proteinUnit || 'g'},
-                C: {selectedFoodForDialog.carbs}{selectedFoodForDialog.carbsUnit || 'g'},
-                F: {selectedFoodForDialog.fat}{selectedFoodForDialog.fatUnit || 'g'}
+            <Box sx={{ mb: 3, p: 2, bgcolor: 'var(--color-bg)', borderRadius: 2, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+              <DialogContentText component="div" sx={{ color: 'var(--color-primary-dark)' }}>
+                <Typography variant="subtitle2" sx={{ color: 'var(--color-secondary)', mb: 0.5 }}>Reference Serving</Typography>
+                <strong>{selectedFoodForDialog.servingSize}</strong> ({selectedFoodForDialog.calories} {selectedFoodForDialog.calorieUnit || 'kcal'})
+                <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                  <Typography variant="body2" sx={{ color: '#606c38' }}>P: {selectedFoodForDialog.protein}{selectedFoodForDialog.proteinUnit || 'g'}</Typography>
+                  <Typography variant="body2" sx={{ color: '#dda15e' }}>C: {selectedFoodForDialog.carbs}{selectedFoodForDialog.carbsUnit || 'g'}</Typography>
+                  <Typography variant="body2" sx={{ color: '#bc6c25' }}>F: {selectedFoodForDialog.fat}{selectedFoodForDialog.fatUnit || 'g'}</Typography>
+                </Box>
               </DialogContentText>
             </Box>
           )}
@@ -628,11 +745,12 @@ const FoodLog: React.FC = () => {
                   required
                   sx={{
                     '& .MuiOutlinedInput-root': {
-                      '& fieldset': { borderColor: '#dda15eff' },
-                      '&:hover fieldset': { borderColor: '#bc6c25ff' },
-                      '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                      borderRadius: 2,
+                      '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                      '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+                      '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                     },
-                    '& .MuiInputLabel-root': { color: '#606c38ff' }
+                    '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
                   }}
                 />
               </Grid>
@@ -644,11 +762,12 @@ const FoodLog: React.FC = () => {
                 InputProps={{ inputProps: { min: 0.5, step: 0.5 } }} required autoFocus={!selectedFoodForDialog}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    '& fieldset': { borderColor: '#dda15eff' },
-                    '&:hover fieldset': { borderColor: '#bc6c25ff' },
-                    '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                    borderRadius: 2,
+                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                    '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                   },
-                  '& .MuiInputLabel-root': { color: '#606c38ff' }
+                  '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
                 }}
               />
             </Grid>
@@ -656,23 +775,24 @@ const FoodLog: React.FC = () => {
               <FormControl fullWidth required
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    '& fieldset': { borderColor: '#dda15eff' },
-                    '&:hover fieldset': { borderColor: '#bc6c25ff' },
-                    '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                    borderRadius: 2,
+                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                    '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                   },
-                  '& .MuiInputLabel-root': { color: '#606c38ff' }
+                  '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
                 }}
               >
                 <InputLabel>Meal Type</InputLabel>
                 <Select
                   name="meal_type" value={formDataForDialog.meal_type} label="Meal Type"
                   onChange={handleDialogFormChange}
-                  MenuProps={{ PaperProps: { sx: { backgroundColor: '#fff9e6' } } }}
+                  MenuProps={{ PaperProps: { sx: { bgcolor: 'white' } } }}
                 >
-                  <MenuItem value="breakfast" sx={{ color: '#283618ff' }}>Breakfast</MenuItem>
-                  <MenuItem value="lunch" sx={{ color: '#283618ff' }}>Lunch</MenuItem>
-                  <MenuItem value="dinner" sx={{ color: '#283618ff' }}>Dinner</MenuItem>
-                  <MenuItem value="snack" sx={{ color: '#283618ff' }}>Snack</MenuItem>
+                  <MenuItem value="breakfast">Breakfast</MenuItem>
+                  <MenuItem value="lunch">Lunch</MenuItem>
+                  <MenuItem value="dinner">Dinner</MenuItem>
+                  <MenuItem value="snack">Snack</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -683,11 +803,12 @@ const FoodLog: React.FC = () => {
                 InputLabelProps={{ shrink: true }} required
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    '& fieldset': { borderColor: '#dda15eff' },
-                    '&:hover fieldset': { borderColor: '#bc6c25ff' },
-                    '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                    borderRadius: 2,
+                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                    '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                   },
-                  '& .MuiInputLabel-root': { color: '#606c38ff' }
+                  '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
                 }}
               />
             </Grid>
@@ -697,70 +818,76 @@ const FoodLog: React.FC = () => {
                 onChange={handleDialogFormChange} multiline rows={selectedFoodForDialog ? 2 : 3}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    '& fieldset': { borderColor: '#dda15eff' },
-                    '&:hover fieldset': { borderColor: '#bc6c25ff' },
-                    '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                    borderRadius: 2,
+                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                    '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                   },
-                  '& .MuiInputLabel-root': { color: '#606c38ff' }
+                  '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
                 }}
               />
             </Grid>
             {!selectedFoodForDialog && (
               <>
-                <Grid item xs={12}><Typography variant="caption" sx={{ color: '#606c38ff' }}>Manually enter nutrition for the reference serving:</Typography></Grid>
+                <Grid item xs={12}><Typography variant="caption" sx={{ color: 'var(--color-secondary)' }}>Manually enter nutrition for the reference serving:</Typography></Grid>
                 <Grid item xs={12}>
                   <TextField fullWidth label="Reference Serving Description (e.g., 1 cup, 100g)" name="reference_serving_description" value={formDataForDialog.reference_serving_description || ''} onChange={handleDialogFormChange} required
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        '& fieldset': { borderColor: '#dda15eff' },
-                        '&:hover fieldset': { borderColor: '#bc6c25ff' },
-                        '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                        borderRadius: 2,
+                        '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                        '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+                        '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                       },
-                      '& .MuiInputLabel-root': { color: '#606c38ff' }
+                      '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
                     }} />
                 </Grid>
                 <Grid item xs={6} sm={3}>
                   <TextField fullWidth label="Calories (base)" type="number" name="base_calories" value={formDataForDialog.base_calories} onChange={handleDialogFormChange} required InputProps={{ inputProps: { min: 0 } }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        '& fieldset': { borderColor: '#dda15eff' },
-                        '&:hover fieldset': { borderColor: '#bc6c25ff' },
-                        '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                        borderRadius: 2,
+                        '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                        '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+                        '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                       },
-                      '& .MuiInputLabel-root': { color: '#606c38ff' }
+                      '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
                     }} InputLabelProps={{ shrink: true }} />
                 </Grid>
                 <Grid item xs={6} sm={3}>
                   <TextField fullWidth label="Protein (g, base)" type="number" name="base_protein" value={formDataForDialog.base_protein} onChange={handleDialogFormChange} required InputProps={{ inputProps: { min: 0 } }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        '& fieldset': { borderColor: '#dda15eff' },
-                        '&:hover fieldset': { borderColor: '#bc6c25ff' },
-                        '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                        borderRadius: 2,
+                        '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                        '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+                        '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                       },
-                      '& .MuiInputLabel-root': { color: '#606c38ff' }
+                      '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
                     }} InputLabelProps={{ shrink: true }} />
                 </Grid>
                 <Grid item xs={6} sm={3}>
                   <TextField fullWidth label="Carbs (g, base)" type="number" name="base_carbs" value={formDataForDialog.base_carbs} onChange={handleDialogFormChange} required InputProps={{ inputProps: { min: 0 } }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        '& fieldset': { borderColor: '#dda15eff' },
-                        '&:hover fieldset': { borderColor: '#bc6c25ff' },
-                        '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                        borderRadius: 2,
+                        '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                        '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+                        '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                       },
-                      '& .MuiInputLabel-root': { color: '#606c38ff' }
+                      '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
                     }} InputLabelProps={{ shrink: true }} />
                 </Grid>
                 <Grid item xs={6} sm={3}>
                   <TextField fullWidth label="Fat (g, base)" type="number" name="base_fat" value={formDataForDialog.base_fat} onChange={handleDialogFormChange} required InputProps={{ inputProps: { min: 0 } }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        '& fieldset': { borderColor: '#dda15eff' },
-                        '&:hover fieldset': { borderColor: '#bc6c25ff' },
-                        '&.Mui-focused fieldset': { borderColor: '#bc6c25ff' },
+                        borderRadius: 2,
+                        '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                        '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+                        '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                       },
-                      '& .MuiInputLabel-root': { color: '#606c38ff' }
+                      '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
                     }} InputLabelProps={{ shrink: true }} />
                 </Grid>
               </>
@@ -768,9 +895,21 @@ const FoodLog: React.FC = () => {
           </Grid>
           {dialogError && <Alert severity="error" sx={{ mt: 2 }}>{dialogError}</Alert>}
         </DialogContent>
-        <DialogActions sx={{ padding: '16px 24px' }}>
-          <Button onClick={handleCloseAddDialog} sx={{ color: '#606c38ff', '&:hover': { backgroundColor: 'rgba(188, 108, 37, 0.08)' } }}>Cancel</Button>
-          <Button onClick={handleSaveFoodLog} variant="contained" disabled={isSubmittingLog} sx={{ bgcolor: '#dda15eff', '&:hover': { bgcolor: '#bc6c25ff' } }}>
+        <DialogActions sx={{ padding: '16px 24px', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+          <Button onClick={handleCloseAddDialog} sx={{ color: 'var(--color-secondary)', fontWeight: 'bold' }}>Cancel</Button>
+          <Button
+            onClick={handleSaveFoodLog}
+            variant="contained"
+            disableElevation
+            disabled={isSubmittingLog}
+            sx={{
+              bgcolor: 'var(--color-primary)',
+              color: 'white',
+              fontWeight: 'bold',
+              px: 3,
+              '&:hover': { bgcolor: 'var(--color-primary-dark)' }
+            }}
+          >
             {isSubmittingLog ? <CircularProgress size={24} sx={{ color: 'white' }} /> : "Save Log"}
           </Button>
         </DialogActions>
