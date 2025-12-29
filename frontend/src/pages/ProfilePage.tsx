@@ -85,7 +85,7 @@ const ProfilePage: React.FC = () => {
 
   const processFetchedProfile = (fetchedProfile: UserProfileData) => {
     setProfileData({
-      date_of_birth: fetchedProfile.date_of_birth || '',
+      date_of_birth: fetchedProfile.date_of_birth ? fetchedProfile.date_of_birth.split('T')[0] : '',
       height_cm: fetchedProfile.height_cm?.toString() || '',
       weight_kg: fetchedProfile.weight_kg?.toString() || '',
       gender: fetchedProfile.gender || '',
@@ -138,6 +138,16 @@ const ProfilePage: React.FC = () => {
       setError("Authentication token not found. Please log in again.");
       return;
     }
+
+    if (profileData.date_of_birth) {
+      const today = new Date();
+      const dob = new Date(profileData.date_of_birth);
+      if (dob > today) {
+        setError("Date of birth cannot be in the future.");
+        return;
+      }
+    }
+
     setIsLoading(true);
     setError(null);
     setSuccessMessage(null);
@@ -203,40 +213,40 @@ const ProfilePage: React.FC = () => {
 
         {/* Basic User Info (Read-Only from AuthContext) */}
         <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField 
-                label="First Name" 
-                value={user.firstName || ''} 
-                fullWidth 
-                InputProps={{ readOnly: true }} 
-                variant="filled" 
-                sx={{ bgcolor: 'grey.200' }} 
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField 
-                label="Last Name" 
-                value={user.lastName || ''} 
-                fullWidth 
-                InputProps={{ readOnly: true }} 
-                variant="filled" 
-                sx={{ bgcolor: 'grey.200' }} 
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField 
-                label="Email" 
-                value={maskEmail(user.email)} 
-                fullWidth 
-                InputProps={{ readOnly: true }} 
-                variant="filled" 
-                sx={{ bgcolor: 'grey.200' }} 
-              />
-            </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="First Name"
+              value={user.firstName || ''}
+              fullWidth
+              InputProps={{ readOnly: true }}
+              variant="filled"
+              sx={{ bgcolor: 'grey.200' }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Last Name"
+              value={user.lastName || ''}
+              fullWidth
+              InputProps={{ readOnly: true }}
+              variant="filled"
+              sx={{ bgcolor: 'grey.200' }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Email"
+              value={maskEmail(user.email)}
+              fullWidth
+              InputProps={{ readOnly: true }}
+              variant="filled"
+              sx={{ bgcolor: 'grey.200' }}
+            />
+          </Grid>
         </Grid>
-        
+
         <Divider sx={{ my: 3 }}><Typography variant="overline">Metabolic Estimates</Typography></Divider>
-        
+
         {/* Metabolic Data Display */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={4}>
@@ -255,9 +265,9 @@ const ProfilePage: React.FC = () => {
               label="BMR (Basal Metabolic Rate)"
               value={metabolicData.bmr !== null ? metabolicData.bmr.toString() : 'N/A'}
               fullWidth
-              InputProps={{ 
-                readOnly: true, 
-                endAdornment: metabolicData.bmr !== null ? <InputAdornment position="end">cal/day</InputAdornment> : null 
+              InputProps={{
+                readOnly: true,
+                endAdornment: metabolicData.bmr !== null ? <InputAdornment position="end">cal/day</InputAdornment> : null
               }}
               variant="filled"
               sx={{ bgcolor: 'grey.200' }}
@@ -269,9 +279,9 @@ const ProfilePage: React.FC = () => {
               label="TDEE (Total Daily Energy)"
               value={metabolicData.tdee !== null ? metabolicData.tdee.toString() : 'N/A'}
               fullWidth
-              InputProps={{ 
-                readOnly: true, 
-                endAdornment: metabolicData.tdee !== null ? <InputAdornment position="end">cal/day</InputAdornment> : null 
+              InputProps={{
+                readOnly: true,
+                endAdornment: metabolicData.tdee !== null ? <InputAdornment position="end">cal/day</InputAdornment> : null
               }}
               variant="filled"
               sx={{ bgcolor: 'grey.200' }}
@@ -286,26 +296,27 @@ const ProfilePage: React.FC = () => {
           <Grid container spacing={3}>
             {/* Profile Data (Editable) */}
             <Grid item xs={12} sm={6}>
-              <TextField 
-                fullWidth 
-                name="date_of_birth" 
-                label="Date of Birth" 
-                type="date" 
-                variant="outlined" 
-                value={profileData.date_of_birth} 
-                onChange={handleChange} 
-                InputLabelProps={{ shrink: true }} 
-                disabled={isLoading} 
+              <TextField
+                fullWidth
+                name="date_of_birth"
+                label="Date of Birth"
+                type="date"
+                variant="outlined"
+                value={profileData.date_of_birth}
+                onChange={handleChange}
+                InputLabelProps={{ shrink: true }}
+                inputProps={{ max: new Date().toISOString().split('T')[0] }}
+                disabled={isLoading}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth variant="outlined" disabled={isLoading}>
                 <InputLabel id="gender-label">Gender</InputLabel>
-                <Select 
-                  labelId="gender-label" 
-                  name="gender" 
-                  value={profileData.gender} 
-                  onChange={handleChange} 
+                <Select
+                  labelId="gender-label"
+                  name="gender"
+                  value={profileData.gender}
+                  onChange={handleChange}
                   label="Gender"
                 >
                   <MenuItem value=""><em>None</em></MenuItem>
@@ -316,39 +327,39 @@ const ProfilePage: React.FC = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField 
-                fullWidth 
-                name="height_cm" 
-                label="Height (cm)" 
-                type="number" 
-                variant="outlined" 
-                value={profileData.height_cm} 
-                onChange={handleChange} 
-                InputProps={{ inputProps: { min: 0, step: "0.1" } }} 
-                disabled={isLoading} 
+              <TextField
+                fullWidth
+                name="height_cm"
+                label="Height (cm)"
+                type="number"
+                variant="outlined"
+                value={profileData.height_cm}
+                onChange={handleChange}
+                InputProps={{ inputProps: { min: 0, step: "0.1" } }}
+                disabled={isLoading}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField 
-                fullWidth 
-                name="weight_kg" 
-                label="Weight (kg)" 
-                type="number" 
-                variant="outlined" 
-                value={profileData.weight_kg} 
-                onChange={handleChange} 
-                InputProps={{ inputProps: { min: 0, step: "0.1" } }} 
-                disabled={isLoading} 
+              <TextField
+                fullWidth
+                name="weight_kg"
+                label="Weight (kg)"
+                type="number"
+                variant="outlined"
+                value={profileData.weight_kg}
+                onChange={handleChange}
+                InputProps={{ inputProps: { min: 0, step: "0.1" } }}
+                disabled={isLoading}
               />
             </Grid>
             <Grid item xs={12}>
-               <FormControl fullWidth variant="outlined" disabled={isLoading}>
+              <FormControl fullWidth variant="outlined" disabled={isLoading}>
                 <InputLabel id="activity-level-label">Activity Level</InputLabel>
-                <Select 
-                  labelId="activity-level-label" 
-                  name="activity_level" 
-                  value={profileData.activity_level} 
-                  onChange={handleChange} 
+                <Select
+                  labelId="activity-level-label"
+                  name="activity_level"
+                  value={profileData.activity_level}
+                  onChange={handleChange}
                   label="Activity Level"
                 >
                   <MenuItem value=""><em>None</em></MenuItem>
@@ -359,31 +370,31 @@ const ProfilePage: React.FC = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12}>
-              <TextField 
-                fullWidth 
-                name="fitness_goals" 
-                label="Fitness Goals" 
-                multiline 
-                rows={3} 
-                variant="outlined" 
-                value={profileData.fitness_goals} 
-                onChange={handleChange} 
-                placeholder="e.g., lose 10kg, run a 5k, build muscle" 
-                disabled={isLoading} 
+              <TextField
+                fullWidth
+                name="fitness_goals"
+                label="Fitness Goals"
+                multiline
+                rows={3}
+                variant="outlined"
+                value={profileData.fitness_goals}
+                onChange={handleChange}
+                placeholder="e.g., lose 10kg, run a 5k, build muscle"
+                disabled={isLoading}
               />
             </Grid>
             <Grid item xs={12}>
-              <TextField 
-                fullWidth 
-                name="dietary_restrictions" 
-                label="Dietary Restrictions / Allergies" 
-                multiline 
-                rows={3} 
-                variant="outlined" 
-                value={profileData.dietary_restrictions} 
-                onChange={handleChange} 
-                placeholder="e.g., vegetarian, gluten-free, peanut allergy" 
-                disabled={isLoading} 
+              <TextField
+                fullWidth
+                name="dietary_restrictions"
+                label="Dietary Restrictions / Allergies"
+                multiline
+                rows={3}
+                variant="outlined"
+                value={profileData.dietary_restrictions}
+                onChange={handleChange}
+                placeholder="e.g., vegetarian, gluten-free, peanut allergy"
+                disabled={isLoading}
               />
             </Grid>
 
@@ -399,10 +410,10 @@ const ProfilePage: React.FC = () => {
             )}
 
             <Grid item xs={12} sx={{ textAlign: 'right' }}>
-              <Button 
-                type="submit" 
-                variant="contained" 
-                disabled={isLoading || isFetchingProfile} 
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={isLoading || isFetchingProfile}
                 sx={{ bgcolor: '#283618ff', '&:hover': { bgcolor: '#1e2a10ff' } }}
               >
                 {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Save Profile'}
