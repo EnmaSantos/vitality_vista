@@ -16,17 +16,37 @@ export interface Exercise {
   instructions: string[];
   category: string;
   images: string[];
-  id: number; 
+  id: number;
   calories_per_hour: number | null;
   duration_minutes: number | null;
   total_calories: number | null;
 }
 
+const CACHE_KEY = "vitality_exercises_cache";
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
 /**
  * Fetches all exercises from the API.
+ * Uses cached data if available and fresh.
  * @returns {Promise<Exercise[]>} A promise that resolves to an array of all exercises.
  */
 export async function getAllExercises(): Promise<Exercise[]> {
+  // 1. Try to get from cache
+  const cached = localStorage.getItem(CACHE_KEY);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      // Check if cache is still valid
+      if (Date.now() - parsed.timestamp < CACHE_DURATION) {
+        console.log("✅ Using cached exercises data");
+        return parsed.data as Exercise[];
+      }
+    } catch (e) {
+      console.warn("Error parsing exercises cache, refreshing...", e);
+      localStorage.removeItem(CACHE_KEY);
+    }
+  }
+
   const url = `${API_BASE_URL}exercises`;
   console.log(`🔍 getAllExercises - Fetching all exercises from: ${url}`);
 
@@ -39,6 +59,17 @@ export async function getAllExercises(): Promise<Exercise[]> {
   }
 
   const data = await response.json();
+
+  // 2. Save to cache
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      timestamp: Date.now(),
+      data: data
+    }));
+  } catch (e) {
+    console.warn("Failed to save exercises to cache (likely quota exceeded):", e);
+  }
+
   return data as Exercise[];
 }
 

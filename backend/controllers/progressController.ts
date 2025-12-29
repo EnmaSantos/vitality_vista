@@ -1,5 +1,5 @@
 import { Context } from "../deps.ts";
-import { type RouterContext } from "https://deno.land/x/oak@v12.6.1/mod.ts";
+import { RouterContext } from "../deps.ts";
 import dbClient, { ensureConnection } from "../services/db.ts";
 import { UserBodyMetricLogSchema } from "../models/userBodyMetricLog.model.ts";
 
@@ -112,7 +112,7 @@ const MET_VALUES = {
  */
 function getExerciseTypeForCalories(exerciseName: string): keyof typeof MET_VALUES {
   const name = exerciseName.toLowerCase();
-  
+
   // Specific cardio types
   if (name.includes('run') || name.includes('jog')) return 'running';
   if (name.includes('cycle') || name.includes('bike')) return 'cycling';
@@ -121,11 +121,11 @@ function getExerciseTypeForCalories(exerciseName: string): keyof typeof MET_VALU
   if (name.includes('row')) return 'rowing';
   if (name.includes('hiit') || name.includes('interval')) return 'hiit';
   if (name.includes('elliptical')) return 'elliptical';
-  
+
   // General categories
   if (name.includes('cardio') || name.includes('treadmill')) return 'cardio';
   if (name.includes('stretch') || name.includes('yoga') || name.includes('flexibility')) return 'stretching';
-  
+
   // Default to strength
   return 'strength';
 }
@@ -260,16 +260,16 @@ export async function getDailyCalorieSummaryHandler(ctx: RouterContext) {
       for (const detail of exerciseDetailsResult.rows) {
         // Use stored calories_burned from database (calculated when exercise was logged)
         const caloriesBurned = parseFloat(String(detail.calories_burned)) || 0;
-        
+
         summary.calories_burned += caloriesBurned;
 
         // Determine exercise type for breakdown categorization
         const exerciseType = getExerciseTypeForCalories(detail.exercise_name);
 
         // Add to exercise breakdown
-        if (exerciseType === 'running' || exerciseType === 'cycling' || exerciseType === 'swimming' || 
-            exerciseType === 'walking' || exerciseType === 'rowing' || exerciseType === 'hiit' || 
-            exerciseType === 'elliptical' || exerciseType === 'cardio') {
+        if (exerciseType === 'running' || exerciseType === 'cycling' || exerciseType === 'swimming' ||
+          exerciseType === 'walking' || exerciseType === 'rowing' || exerciseType === 'hiit' ||
+          exerciseType === 'elliptical' || exerciseType === 'cardio') {
           summary.exercise_breakdown.cardio += caloriesBurned;
         } else if (exerciseType === 'stretching') {
           summary.exercise_breakdown.stretching += caloriesBurned;
@@ -314,11 +314,11 @@ export async function getProgressDataHandler(ctx: RouterContext) {
     }
 
     const timeRange = ctx.request.url.searchParams.get("timeRange") || "month";
-    
+
     // Calculate date range
     const endDate = new Date();
     const startDate = new Date();
-    
+
     switch (timeRange) {
       case "week":
         startDate.setDate(endDate.getDate() - 7);
@@ -342,6 +342,7 @@ export async function getProgressDataHandler(ctx: RouterContext) {
     console.log(`Fetching progress data for user ${userId}, range: ${timeRange} (${startDateStr} to ${endDateStr})`);
 
     // Get weight data
+    console.log("Fetching weight data...");
     const weightQuery = `
       SELECT value, TO_CHAR(log_date, 'YYYY-MM-DD') as log_date
       FROM user_body_metric_logs 
@@ -352,8 +353,10 @@ export async function getProgressDataHandler(ctx: RouterContext) {
     const weightResult = await dbClient.queryObject<{ value: number; log_date: string }>(
       weightQuery, [userId, startDateStr, endDateStr]
     );
+    console.log(`Weight data fetched: ${weightResult.rows.length} rows`);
 
     // Get body fat data
+    console.log("Fetching body fat data...");
     const bodyFatQuery = `
       SELECT value, TO_CHAR(log_date, 'YYYY-MM-DD') as log_date
       FROM user_body_metric_logs 
@@ -364,8 +367,10 @@ export async function getProgressDataHandler(ctx: RouterContext) {
     const bodyFatResult = await dbClient.queryObject<{ value: number; log_date: string }>(
       bodyFatQuery, [userId, startDateStr, endDateStr]
     );
+    console.log(`Body fat data fetched: ${bodyFatResult.rows.length} rows`);
 
     // Get daily calorie data
+    console.log("Fetching calorie data...");
     const calorieQuery = `
       SELECT 
         DATE(log_date) as log_date,
@@ -378,8 +383,10 @@ export async function getProgressDataHandler(ctx: RouterContext) {
     const calorieResult = await dbClient.queryObject<{ log_date: string; total_calories: number }>(
       calorieQuery, [userId, startDateStr, endDateStr]
     );
+    console.log(`Calorie data fetched: ${calorieResult.rows.length} rows`);
 
     // Get workout data
+    console.log("Fetching workout data...");
     const workoutQuery = `
       SELECT 
         DATE(wl.log_date) as log_date,
@@ -398,23 +405,25 @@ export async function getProgressDataHandler(ctx: RouterContext) {
       total_duration_seconds: number;
       total_calories_burned: number;
     }>(workoutQuery, [userId, startDateStr, endDateStr]);
+    console.log(`Workout data fetched: ${workoutResult.rows.length} rows`);
 
     // Calculate summary statistics
-    const currentWeight = weightResult.rows.length > 0 ? weightResult.rows[weightResult.rows.length - 1].value : null;
-    const previousWeight = weightResult.rows.length > 1 ? weightResult.rows[weightResult.rows.length - 2].value : currentWeight;
+    // Calculate summary statistics
+    const currentWeight = weightResult.rows.length > 0 ? Number(weightResult.rows[weightResult.rows.length - 1].value) : null;
+    const previousWeight = weightResult.rows.length > 1 ? Number(weightResult.rows[weightResult.rows.length - 2].value) : currentWeight;
     const weightChange = currentWeight && previousWeight ? currentWeight - previousWeight : 0;
 
-    const currentBodyFat = bodyFatResult.rows.length > 0 ? bodyFatResult.rows[bodyFatResult.rows.length - 1].value : null;
-    const previousBodyFat = bodyFatResult.rows.length > 1 ? bodyFatResult.rows[bodyFatResult.rows.length - 2].value : currentBodyFat;
+    const currentBodyFat = bodyFatResult.rows.length > 0 ? Number(bodyFatResult.rows[bodyFatResult.rows.length - 1].value) : null;
+    const previousBodyFat = bodyFatResult.rows.length > 1 ? Number(bodyFatResult.rows[bodyFatResult.rows.length - 2].value) : currentBodyFat;
     const bodyFatChange = currentBodyFat && previousBodyFat ? currentBodyFat - previousBodyFat : 0;
 
-    const avgDailyCalories = calorieResult.rows.length > 0 
-      ? Math.round(calorieResult.rows.reduce((sum, row) => sum + row.total_calories, 0) / calorieResult.rows.length)
+    const avgDailyCalories = calorieResult.rows.length > 0
+      ? Math.round(calorieResult.rows.reduce((sum: number, row: { total_calories: any }) => sum + Number(row.total_calories), 0) / calorieResult.rows.length)
       : 0;
 
-    const totalWorkouts = workoutResult.rows.reduce((sum, row) => sum + row.workout_count, 0);
-    const workoutFrequency = timeRange === "week" 
-      ? totalWorkouts 
+    const totalWorkouts = workoutResult.rows.reduce((sum: number, row: { workout_count: any }) => sum + Number(row.workout_count), 0);
+    const workoutFrequency = timeRange === "week"
+      ? totalWorkouts
       : Math.round((totalWorkouts / getDaysInRange(timeRange)) * 7);
 
     const progressData = {
@@ -431,23 +440,23 @@ export async function getProgressDataHandler(ctx: RouterContext) {
       charts: {
         weight: {
           labels: weightResult.rows.map(row => row.log_date),
-          data: weightResult.rows.map(row => Math.round(row.value * 2.20462 * 10) / 10) // Convert to lbs
+          data: weightResult.rows.map(row => Math.round(Number(row.value) * 2.20462 * 10) / 10) // Convert to lbs
         },
         bodyFat: {
           labels: bodyFatResult.rows.map(row => row.log_date),
-          data: bodyFatResult.rows.map(row => Math.round(row.value * 10) / 10)
+          data: bodyFatResult.rows.map(row => Math.round(Number(row.value) * 10) / 10)
         },
         calories: {
           labels: calorieResult.rows.map(row => row.log_date),
-          data: calorieResult.rows.map(row => Math.round(row.total_calories))
+          data: calorieResult.rows.map(row => Math.round(Number(row.total_calories)))
         },
         workoutDuration: {
           labels: workoutResult.rows.map(row => row.log_date),
-          data: workoutResult.rows.map(row => Math.round(row.total_duration_seconds / 60)) // Convert to minutes
+          data: workoutResult.rows.map(row => Math.round(Number(row.total_duration_seconds) / 60)) // Convert to minutes
         },
         workoutTypes: {
           labels: workoutResult.rows.map(row => row.log_date),
-          strengthData: workoutResult.rows.map(row => row.workout_count), // Simplified for now
+          strengthData: workoutResult.rows.map(row => Number(row.workout_count)), // Simplified for now
           cardioData: workoutResult.rows.map(() => 0),
           stretchingData: workoutResult.rows.map(() => 0)
         },
@@ -527,7 +536,7 @@ export async function getExerciseProgressHandler(ctx: RouterContext) {
       GROUP BY led.exercise_name
       ORDER BY last_performed DESC
     `;
-    
+
     const statsResult = await dbClient.queryObject<{
       exercise_name: string;
       max_weight: number | null;

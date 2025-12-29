@@ -19,6 +19,8 @@ import progressRouter from "./routes/progress.ts"; // Import the progress router
 // Import new specific routers
 import fatsecretProxyRouter from "./routes/fatsecretProxy.ts";
 import foodLogRouter from "./routes/foodLogRoutes.ts";
+import waterRouter from "./routes/water.ts";
+import setupRouter from "./routes/setup.ts";
 
 // Initialize the app
 const app = new Application();
@@ -55,15 +57,21 @@ apiRouter.use(authRouter.allowedMethods());
 
 // --- Define FatSecret Recipe routes DIRECTLY under apiRouter ---
 apiRouter
-    .get("/fatsecret/recipes/search", handleSearchFatSecretRecipes)
-    .get("/fatsecret/recipes/types", handleGetFatSecretRecipeTypes)
-    .get("/fatsecret/recipes/:id", handleGetFatSecretRecipeById);
+  .get("/fatsecret/recipes/search", handleSearchFatSecretRecipes)
+  .get("/fatsecret/recipes/types", handleGetFatSecretRecipeTypes)
+  .get("/fatsecret/recipes/:id", handleGetFatSecretRecipeById);
 
 // Mount FatSecret Food Search/Details proxy routes
 apiRouter.use("/fatsecret/foods", fatsecretProxyRouter.routes(), fatsecretProxyRouter.allowedMethods());
 
 // Mount Food Logging routes
 apiRouter.use("/food-logs", foodLogRouter.routes(), foodLogRouter.allowedMethods());
+
+// Mount Water Logging routes
+apiRouter.use("/water-logs", waterRouter.routes(), waterRouter.allowedMethods());
+
+// Mount Setup routes (Temporary)
+apiRouter.use("/setup-db", setupRouter.routes(), setupRouter.allowedMethods());
 
 // Mount Workout routes
 apiRouter.use(workoutRouter.routes(), workoutRouter.allowedMethods());
