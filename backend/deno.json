@@ -1,3 +1,6 @@
 {
-    "deno.enable": true
-  }
+  "tasks": {
+    "start": "deno run --allow-net --allow-env --allow-read server.ts"
+  },
+  "deno.enable": true
+}
