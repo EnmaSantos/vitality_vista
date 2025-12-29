@@ -15,6 +15,14 @@ import {
   MenuItem,
   Divider,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText,
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useAuth } from '../context/AuthContext';
@@ -79,12 +87,16 @@ const ProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const [originalProfileData, setOriginalProfileData] = useState<ProfileFormState | null>(null);
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [pendingChanges, setPendingChanges] = useState<string[]>([]);
+
   useEffect(() => {
     setCurrentThemeColor(themeColors.pakistanGreen);
   }, [setCurrentThemeColor]);
 
   const processFetchedProfile = (fetchedProfile: UserProfileData) => {
-    setProfileData({
+    const formattedData = {
       date_of_birth: fetchedProfile.date_of_birth ? fetchedProfile.date_of_birth.split('T')[0] : '',
       height_cm: fetchedProfile.height_cm?.toString() || '',
       weight_kg: fetchedProfile.weight_kg?.toString() || '',
@@ -92,7 +104,10 @@ const ProfilePage: React.FC = () => {
       activity_level: fetchedProfile.activity_level || '',
       fitness_goals: fetchedProfile.fitness_goals || '',
       dietary_restrictions: fetchedProfile.dietary_restrictions || '',
-    });
+    };
+    setProfileData(formattedData);
+    setOriginalProfileData(formattedData);
+
     setMetabolicData({
       age: fetchedProfile.age === undefined ? null : fetchedProfile.age,
       bmr: fetchedProfile.bmr === undefined ? null : fetchedProfile.bmr,
@@ -132,7 +147,20 @@ const ProfilePage: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const getReadableLabel = (key: string) => {
+    const labels: Record<string, string> = {
+      date_of_birth: "Date of Birth",
+      height_cm: "Height",
+      weight_kg: "Weight",
+      gender: "Gender",
+      activity_level: "Activity Level",
+      fitness_goals: "Fitness Goals",
+      dietary_restrictions: "Dietary Restrictions"
+    };
+    return labels[key] || key;
+  };
+
+  const handleSaveClick = (event: React.FormEvent) => {
     event.preventDefault();
     if (!token) {
       setError("Authentication token not found. Please log in again.");
@@ -148,6 +176,27 @@ const ProfilePage: React.FC = () => {
       }
     }
 
+    const changes: string[] = [];
+    if (originalProfileData) {
+      (Object.keys(profileData) as Array<keyof ProfileFormState>).forEach((key) => {
+        if (profileData[key] !== originalProfileData[key]) {
+          const label = getReadableLabel(key);
+          changes.push(label);
+        }
+      });
+    }
+
+    if (changes.length === 0) {
+      setSuccessMessage("No changes detected.");
+      return;
+    }
+
+    setPendingChanges(changes);
+    setOpenConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    setOpenConfirmDialog(false);
     setIsLoading(true);
     setError(null);
     setSuccessMessage(null);
@@ -292,7 +341,7 @@ const ProfilePage: React.FC = () => {
 
         <Divider sx={{ my: 3 }}><Typography variant="overline">Profile Details</Typography></Divider>
 
-        <Box component="form" onSubmit={handleSubmit} noValidate>
+        <Box component="form" onSubmit={handleSaveClick} noValidate>
           <Grid container spacing={3}>
             {/* Profile Data (Editable) */}
             <Grid item xs={12} sm={6}>
@@ -421,6 +470,46 @@ const ProfilePage: React.FC = () => {
             </Grid>
           </Grid>
         </Box>
+
+        {/* Confirmation Dialog */}
+        <Dialog
+          open={openConfirmDialog}
+          onClose={() => setOpenConfirmDialog(false)}
+          PaperProps={{ sx: { bgcolor: '#fefae0' } }}
+        >
+          <DialogTitle sx={{ color: '#283618ff', fontWeight: 'bold' }}>
+            Confirm Changes
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText sx={{ color: '#606c38ff', mb: 2 }}>
+              Are you sure you want to submit the following changes?
+            </DialogContentText>
+            <List dense>
+              {pendingChanges.map((change, index) => (
+                <ListItem key={index}>
+                  <Box component="span" sx={{ mr: 1, color: '#bc6c25ff', fontSize: '20px' }}>•</Box>
+                  <ListItemText
+                    primary={change}
+                    primaryTypographyProps={{ color: '#283618ff' }}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setOpenConfirmDialog(false)} sx={{ color: '#bc6c25ff' }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmSubmit}
+              variant="contained"
+              autoFocus
+              sx={{ bgcolor: '#283618ff', '&:hover': { bgcolor: '#1e2a10ff' } }}
+            >
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Paper>
     </Container>
   );

@@ -585,7 +585,7 @@ export async function getExerciseProgressHandler(ctx: RouterContext) {
     }
 
     // Convert stats BigInts to Numbers
-    const stats = statsResult.rows.map(stat => ({
+    const stats = statsResult.rows.map((stat: any) => ({
       ...stat,
       max_weight: Number(stat.max_weight),
       max_reps: Number(stat.max_reps),
