@@ -2,7 +2,24 @@
 import { Application, oakCors, loadEnv, Router, Context } from "./deps.ts";
 
 // Load environment variables for the server itself (e.g., PORT)
-await loadEnv({ export: true });
+// Load environment variables for the server itself (e.g., PORT)
+try {
+  await loadEnv({ export: true });
+} catch (_e) {
+  // On Deno Deploy, .env might not exist, which is fine.
+}
+
+// Global error handlers to catch crashes
+globalThis.addEventListener("error", (evt) => {
+  console.error("💥 Uncaught Global Error:", evt.error);
+  evt.preventDefault();
+});
+
+globalThis.addEventListener("unhandledrejection", (evt) => {
+  console.error("💥 Unhandled Rejection:", evt.reason);
+  evt.preventDefault();
+});
+
 
 // Remove the temporary import for db.ts - it's no longer needed here
 // import "./services/db.ts"; // <-- REMOVE OR COMMENT OUT THIS LINE
