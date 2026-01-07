@@ -1,4 +1,4 @@
-import { Router } from "../deps.ts";
+import { Router, Context } from "../deps.ts";
 import {
     getDailyGoalsHandler,
     addGoalHandler,
@@ -11,7 +11,7 @@ import { key } from "../utils/api_key.ts";
 const goalsRouter = new Router();
 
 // Middleware to verify JWT for all goal routes
-goalsRouter.use(async (ctx, next) => {
+goalsRouter.use(async (ctx: Context, next: () => Promise<unknown>) => {
     try {
         const authHeader = ctx.request.headers.get("Authorization");
         if (!authHeader) {
