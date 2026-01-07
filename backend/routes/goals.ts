@@ -6,7 +6,7 @@ import {
     deleteGoalHandler
 } from "../controllers/goalController.ts";
 import { verifyJwt } from "../deps.ts";
-import { key } from "../utils/apiKey.ts";
+import { key } from "../utils/api_key.ts";
 
 const goalsRouter = new Router();
 
