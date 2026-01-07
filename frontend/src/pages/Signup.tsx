@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Typography, 
-  Box, 
-  Paper, 
-  TextField, 
-  Button, 
-  Grid, 
+import {
+  Typography,
+  Box,
+  Paper,
+  TextField,
+  Button,
+  Grid,
   Link,
   InputAdornment,
   IconButton,
@@ -29,10 +29,10 @@ const Signup: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  
+
   const { register, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +42,7 @@ const Signup: React.FC = () => {
       [name]: value
     }));
   };
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -93,42 +93,44 @@ const Signup: React.FC = () => {
   }
 
   return (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
         alignItems: 'center',
         minHeight: 'calc(100vh - 64px)',
         padding: 3,
-        backgroundColor: '#f5f7fa'
+        backgroundColor: 'var(--color-bg)'
       }}
     >
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 4, 
-          width: '100%', 
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 3, sm: 5 },
+          width: '100%',
           maxWidth: 550,
-          borderRadius: 2
+          borderRadius: 4,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+          border: '1px solid rgba(96, 108, 56, 0.1)'
         }}
       >
         <Box sx={{ mb: 4, textAlign: 'center' }}>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#3c6e71' }}>
+          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', fontFamily: 'Outfit, sans-serif', color: 'var(--color-primary-dark)' }}>
             Create Your Account
           </Typography>
-          <Typography variant="body1" color="textSecondary">
+          <Typography variant="body1" sx={{ color: 'var(--color-secondary)' }}>
             Join Vitality Vista and start your fitness journey
           </Typography>
         </Box>
 
         {submitError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
             {submitError}
           </Alert>
         )}
 
         <form onSubmit={handleSubmit}>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -140,6 +142,13 @@ const Signup: React.FC = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
+                InputProps={{ sx: { borderRadius: 3 } }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': { color: 'var(--color-primary)' }
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -153,6 +162,13 @@ const Signup: React.FC = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
+                InputProps={{ sx: { borderRadius: 3 } }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': { color: 'var(--color-primary)' }
+                }}
               />
             </Grid>
 
@@ -168,6 +184,13 @@ const Signup: React.FC = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
+                InputProps={{ sx: { borderRadius: 3 } }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': { color: 'var(--color-primary)' }
+                }}
               />
             </Grid>
 
@@ -184,6 +207,13 @@ const Signup: React.FC = () => {
                 required
                 autoComplete="email"
                 disabled={isSubmitting}
+                InputProps={{ sx: { borderRadius: 3 } }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': { color: 'var(--color-primary)' }
+                }}
               />
             </Grid>
 
@@ -200,6 +230,7 @@ const Signup: React.FC = () => {
                 required
                 disabled={isSubmitting}
                 InputProps={{
+                  sx: { borderRadius: 3 },
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
@@ -207,11 +238,18 @@ const Signup: React.FC = () => {
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
                         disabled={isSubmitting}
+                        sx={{ color: 'var(--color-secondary)' }}
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
                   )
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': { color: 'var(--color-primary)' }
                 }}
               />
             </Grid>
@@ -230,40 +268,50 @@ const Signup: React.FC = () => {
                 disabled={isSubmitting}
                 error={formData.password !== formData.confirmPassword && formData.confirmPassword !== ''}
                 helperText={
-                  formData.password !== formData.confirmPassword && formData.confirmPassword !== '' 
-                    ? "Passwords don't match" 
+                  formData.password !== formData.confirmPassword && formData.confirmPassword !== ''
+                    ? "Passwords don't match"
                     : ''
                 }
+                InputProps={{ sx: { borderRadius: 3 } }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': { color: 'var(--color-primary)' }
+                }}
               />
             </Grid>
 
             <Grid item xs={12}>
               <FormControlLabel
                 control={
-                  <Checkbox 
-                    checked={agreeToTerms} 
+                  <Checkbox
+                    checked={agreeToTerms}
                     onChange={() => setAgreeToTerms(!agreeToTerms)}
-                    color="primary"
+                    sx={{
+                      color: 'var(--color-secondary)',
+                      '&.Mui-checked': { color: 'var(--color-primary)' },
+                    }}
                     required
                     disabled={isSubmitting}
                   />
                 }
                 label={
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                     I agree to the{' '}
-                    <Link 
-                      component={RouterLink} 
-                      to="/terms" 
-                      sx={{ color: '#3c6e71' }}
+                    <Link
+                      component={RouterLink}
+                      to="/terms"
+                      sx={{ color: 'var(--color-primary)', fontWeight: 500, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                       tabIndex={isSubmitting ? -1 : 0}
                     >
                       Terms of Service
                     </Link>
                     {' '}and{' '}
-                    <Link 
-                      component={RouterLink} 
-                      to="/privacy" 
-                      sx={{ color: '#3c6e71' }}
+                    <Link
+                      component={RouterLink}
+                      to="/privacy"
+                      sx={{ color: 'var(--color-primary)', fontWeight: 500, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                       tabIndex={isSubmitting ? -1 : 0}
                     >
                       Privacy Policy
@@ -274,16 +322,23 @@ const Signup: React.FC = () => {
             </Grid>
 
             <Grid item xs={12}>
-              <Button 
-                type="submit" 
-                fullWidth 
-                variant="contained" 
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
                 disabled={!agreeToTerms || formData.password !== formData.confirmPassword || isSubmitting}
-                sx={{ 
-                  py: 1.5, 
-                  bgcolor: '#3c6e71',
+                sx={{
+                  py: 1.5,
+                  bgcolor: 'var(--color-primary)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  boxShadow: '0 4px 12px rgba(96, 108, 56, 0.2)',
                   '&:hover': {
-                    bgcolor: '#2c5a5c'
+                    bgcolor: 'var(--color-primary-dark)',
+                    boxShadow: '0 6px 16px rgba(96, 108, 56, 0.3)'
                   },
                   position: 'relative'
                 }}
@@ -293,14 +348,14 @@ const Signup: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sx={{ textAlign: 'center' }}>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 Already have an account?{' '}
-                <Link 
-                  component={RouterLink} 
+                <Link
+                  component={RouterLink}
                   to="/login"
-                  sx={{ 
+                  sx={{
                     fontWeight: 'bold',
-                    color: '#3c6e71',
+                    color: 'var(--color-primary-dark)',
                     textDecoration: 'none',
                     '&:hover': {
                       textDecoration: 'underline'

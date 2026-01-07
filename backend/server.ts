@@ -1,5 +1,5 @@
 // server.ts
-import { Application, oakCors, loadEnv, Router } from "./deps.ts";
+import { Application, oakCors, loadEnv, Router, Context } from "./deps.ts";
 
 // Load environment variables for the server itself (e.g., PORT)
 await loadEnv({ export: true });
@@ -26,7 +26,7 @@ import goalsRouter from "./routes/goals.ts";
 // Initialize the app
 const app = new Application();
 // Access environment variables for Deno deployment
-const port = parseInt(globalThis.Deno?.env.get("PORT") || "8000");
+const port = parseInt((globalThis as any).Deno?.env.get("PORT") || "8000");
 
 
 // Basic middleware with improved CORS configuration
@@ -41,7 +41,7 @@ app.use(oakCors({
 }));
 
 // Logger middleware
-app.use(async (ctx, next) => {
+app.use(async (ctx: Context, next: () => Promise<unknown>) => {
   const start = Date.now();
   await next();
   const ms = Date.now() - start;

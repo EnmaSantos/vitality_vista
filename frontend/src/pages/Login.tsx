@@ -76,9 +76,9 @@ const Login: React.FC = () => {
   // or if the user is already authenticated (and will be redirected shortly)
   if (isAuthLoading || (!isAuthLoading && isAuthenticated)) {
     return (
-       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-         <CircularProgress />
-       </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
@@ -89,38 +89,40 @@ const Login: React.FC = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: 'calc(100vh - 64px)', // Adjust if needed
+        minHeight: 'calc(100vh - 64px)',
         padding: 3,
-        backgroundColor: '#f5f7fa'
+        backgroundColor: 'var(--color-bg)' // Updated background color
       }}
     >
       <Paper
-        elevation={3}
+        elevation={0} // Removed elevation for flatter look
         sx={{
-          p: { xs: 2, sm: 4 },
+          p: { xs: 3, sm: 5 },
           width: '100%',
           maxWidth: 450,
-          borderRadius: 2
+          borderRadius: 4, // Increased border radius
+          boxShadow: '0 4px 20px rgba(0,0,0,0.05)', // Soft shadow
+          border: '1px solid rgba(96, 108, 56, 0.1)' // Subtle border
         }}
       >
         <Box sx={{ mb: 4, textAlign: 'center' }}>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#3c6e71' }}>
+          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', fontFamily: 'Outfit, sans-serif', color: 'var(--color-primary-dark)' }}>
             Welcome Back
           </Typography>
-          <Typography variant="body1" color="textSecondary">
+          <Typography variant="body1" sx={{ color: 'var(--color-secondary)' }}>
             Log in to track your fitness journey
           </Typography>
         </Box>
 
         {/* Display Error Message */}
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
             {error}
           </Alert>
         )}
 
         <form onSubmit={handleSubmit}>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -131,7 +133,20 @@ const Login: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                disabled={isLoading} // Disable field when submitting
+                disabled={isLoading}
+                InputProps={{
+                  sx: { borderRadius: 3 }
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'var(--color-primary)',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: 'var(--color-primary)',
+                  }
+                }}
               />
             </Grid>
 
@@ -146,8 +161,9 @@ const Login: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                disabled={isLoading} // Disable field when submitting
+                disabled={isLoading}
                 InputProps={{
+                  sx: { borderRadius: 3 },
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
@@ -155,11 +171,22 @@ const Login: React.FC = () => {
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
                         disabled={isLoading}
+                        sx={{ color: 'var(--color-secondary)' }}
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
                   )
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'var(--color-primary)',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: 'var(--color-primary)',
+                  }
                 }}
               />
             </Grid>
@@ -170,7 +197,7 @@ const Login: React.FC = () => {
                   component={RouterLink}
                   to="/forgot-password"
                   variant="body2"
-                  sx={{ color: '#3c6e71' }}
+                  sx={{ color: 'var(--color-primary)', fontWeight: 500, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                   tabIndex={isLoading ? -1 : 0}
                 >
                   Forgot password?
@@ -183,28 +210,36 @@ const Login: React.FC = () => {
                 type="submit"
                 fullWidth
                 variant="contained"
-                disabled={isLoading} // Disable button when submitting
+                disabled={isLoading}
                 sx={{
                   py: 1.5,
-                  bgcolor: '#3c6e71',
-                  '&:hover': { bgcolor: '#2c5a5c' },
+                  bgcolor: 'var(--color-primary)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  boxShadow: '0 4px 12px rgba(96, 108, 56, 0.2)',
+                  '&:hover': {
+                    bgcolor: 'var(--color-primary-dark)',
+                    boxShadow: '0 6px 16px rgba(96, 108, 56, 0.3)'
+                  },
                   position: 'relative'
                 }}
               >
-                {/* Show spinner when loading */}
-                {isLoading ? <CircularProgress size={24} sx={{ color: 'white', position: 'absolute' }}/> : 'Log In'}
+                {isLoading ? <CircularProgress size={24} sx={{ color: 'white', position: 'absolute' }} /> : 'Log In'}
               </Button>
             </Grid>
 
             <Grid item xs={12} sx={{ textAlign: 'center', mt: 1 }}>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 Don't have an account?{' '}
                 <Link
                   component={RouterLink}
                   to="/signup"
                   sx={{
                     fontWeight: 'bold',
-                    color: '#3c6e71',
+                    color: 'var(--color-primary-dark)',
                     textDecoration: 'none',
                     '&:hover': { textDecoration: 'underline' }
                   }}

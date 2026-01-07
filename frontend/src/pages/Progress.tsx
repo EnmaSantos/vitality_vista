@@ -18,9 +18,6 @@ import {
   Alert
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
-import { useThemeContext } from '../context/ThemeContext'; // Keep for now if deeply integrated, but remove usage
-import { themeColors } from '../context/ThemeContext'; // We might need values for charts, or replace them.
-// Actually, let's just remove useThemeContext usage.
 
 import { getProgressData, getExerciseProgress } from '../services/progressApi';
 
@@ -74,7 +71,11 @@ const TabPanel = (props: TabPanelProps) => {
   );
 };
 
+import { usePageTheme, themePalette } from '../hooks/usePageTheme';
+
 const ProgressPage: React.FC = () => {
+  usePageTheme(themePalette.gold);
+
   const [tabValue, setTabValue] = useState(0);
   const [timeRange, setTimeRange] = useState('week');
   // const { setCurrentThemeColor } = useThemeContext(); // Removed
@@ -558,162 +559,154 @@ const ProgressPage: React.FC = () => {
             </TabPanel>
 
             <TabPanel value={tabValue} index={2}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h5" sx={{ color: '#283618ff' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Typography variant="h5" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
                   Workout Progress
                 </Typography>
                 <Button
                   variant="outlined"
                   onClick={() => window.location.href = '/workout-history'}
                   sx={{
-                    color: '#606c38ff',
-                    borderColor: '#606c38ff',
-                    '&:hover': { bgcolor: 'rgba(96,108,56,0.05)' }
+                    color: 'var(--color-primary)',
+                    borderColor: 'var(--color-primary)',
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    '&:hover': { bgcolor: 'rgba(96,108,56,0.05)', borderColor: 'var(--color-primary-dark)' }
                   }}
                 >
                   View Detailed History
                 </Button>
               </Box>
-              <Grid container spacing={3}>
+              <Grid container spacing={4}>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="h6" gutterBottom>
-                    Workout Duration
-                  </Typography>
-                  <Paper
-                    sx={{
-                      height: 300,
-                      p: 2, // Added padding for the chart area
-                      bgcolor: '#f5f5f5',
-                      border: '1px solid #e0e0e0' // Changed from dashed to solid for a cleaner look
-                    }}
-                  >
-                    <Line
-                      options={{
-                        ...lineChartOptions,
-                        plugins: {
-                          ...lineChartOptions.plugins,
-                          title: {
-                            ...lineChartOptions.plugins.title,
-                            text: 'Workout Duration',
+                  <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: '100%' }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
+                      Workout Duration
+                    </Typography>
+                    <Box sx={{ height: 300, mt: 2 }}>
+                      <Line
+                        options={{
+                          ...lineChartOptions,
+                          plugins: {
+                            ...lineChartOptions.plugins,
+                            title: { display: false },
                           },
-                        },
-                      }}
-                      data={{
-                        labels: progressData.charts.workoutDuration.labels,
-                        datasets: [
-                          {
-                            label: 'Duration (min)',
-                            data: progressData.charts.workoutDuration.data,
-                            borderColor: themeColors.pakistanGreen,
-                            backgroundColor: `${themeColors.pakistanGreen}66`,
-                            tension: 0.1,
-                          },
-                        ],
-                      }}
-                    />
-                  </Paper>
+                        }}
+                        data={{
+                          labels: progressData.charts.workoutDuration.labels,
+                          datasets: [
+                            {
+                              label: 'Duration (min)',
+                              data: progressData.charts.workoutDuration.data,
+                              borderColor: '#606c38',
+                              backgroundColor: 'rgba(96, 108, 56, 0.2)',
+                              tension: 0.3,
+                              fill: true
+                            },
+                          ],
+                        }}
+                      />
+                    </Box>
+                  </Box>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="h6" gutterBottom>
-                    Workout Types
-                  </Typography>
-                  <Paper
-                    sx={{
-                      height: 300,
-                      p: 2, // Added padding for the chart area
-                      bgcolor: '#f5f5f5',
-                      border: '1px solid #e0e0e0' // Changed from dashed to solid for a cleaner look
-                    }}
-                  >
-                    <Line
-                      options={{
-                        ...lineChartOptions,
-                        plugins: {
-                          ...lineChartOptions.plugins,
-                          title: {
-                            ...lineChartOptions.plugins.title,
-                            text: 'Workout Types',
+                  <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: '100%' }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
+                      Workout Types
+                    </Typography>
+                    <Box sx={{ height: 300, mt: 2 }}>
+                      <Line
+                        options={{
+                          ...lineChartOptions,
+                          plugins: {
+                            ...lineChartOptions.plugins,
+                            title: { display: false },
                           },
-                        },
-                      }}
-                      data={{
-                        labels: progressData.charts.workoutTypes.labels,
-                        datasets: [
-                          {
-                            label: 'Strength',
-                            data: progressData.charts.workoutTypes.strengthData,
-                            borderColor: themeColors.pakistanGreen,
-                            backgroundColor: `${themeColors.pakistanGreen}66`,
-                            tension: 0.1,
-                          },
-                          {
-                            label: 'Cardio',
-                            data: progressData.charts.workoutTypes.cardioData,
-                            borderColor: themeColors.earthYellow,
-                            backgroundColor: `${themeColors.earthYellow}66`,
-                            tension: 0.1,
-                          },
-                          {
-                            label: 'Stretching',
-                            data: progressData.charts.workoutTypes.stretchingData,
-                            borderColor: themeColors.tigersEye,
-                            backgroundColor: `${themeColors.tigersEye}66`,
-                            tension: 0.1,
-                          },
-                        ],
-                      }}
-                    />
-                  </Paper>
+                        }}
+                        data={{
+                          labels: progressData.charts.workoutTypes.labels,
+                          datasets: [
+                            {
+                              label: 'Strength',
+                              data: progressData.charts.workoutTypes.strengthData,
+                              borderColor: '#606c38',
+                              backgroundColor: 'rgba(96, 108, 56, 0.5)',
+                              tension: 0.3,
+                            },
+                            {
+                              label: 'Cardio',
+                              data: progressData.charts.workoutTypes.cardioData,
+                              borderColor: '#dda15e',
+                              backgroundColor: 'rgba(221, 161, 94, 0.5)',
+                              tension: 0.3,
+                            },
+                            {
+                              label: 'Stretching',
+                              data: progressData.charts.workoutTypes.stretchingData,
+                              borderColor: '#bc6c25',
+                              backgroundColor: 'rgba(188, 108, 37, 0.5)',
+                              tension: 0.3,
+                            },
+                          ],
+                        }}
+                      />
+                    </Box>
+                  </Box>
                 </Grid>
               </Grid>
             </TabPanel>
 
             <TabPanel value={tabValue} index={3}>
-              <Grid container spacing={3}>
+              <Grid container spacing={4}>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="h6" gutterBottom>
-                    Goal Progress
-                  </Typography>
-                  <Paper
-                    sx={{
-                      p: 2,
-                      bgcolor: '#f5f5f5',
-                    }}
-                  >
-                    <Typography variant="subtitle1" gutterBottom>
-                      Weight Goal: {progressData.goals.weight.target} lbs
+                  <Box sx={{ p: 4, bgcolor: 'white', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: '100%' }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mb: 3 }}>
+                      Goal Progress
                     </Typography>
-                    <Box sx={{
-                      width: '100%',
-                      height: 20,
-                      bgcolor: '#e0e0e0',
-                      borderRadius: 5,
-                      mb: 2
-                    }}>
+                    <Box sx={{ mb: 4 }}>
+                      <Typography variant="subtitle1" gutterBottom sx={{ color: 'var(--color-secondary)', fontWeight: 600 }}>
+                        Weight Goal: <span style={{ color: 'var(--color-primary-dark)' }}>{progressData.goals.weight.target} lbs</span>
+                      </Typography>
                       <Box sx={{
-                        width: `${progressData.goals.weight.progress} %`,
-                        height: '100%',
-                        bgcolor: 'primary.main',
-                        borderRadius: 5
-                      }} />
+                        width: '100%',
+                        height: 12,
+                        bgcolor: 'rgba(96, 108, 56, 0.1)',
+                        borderRadius: 6,
+                        mb: 1
+                      }}>
+                        <Box sx={{
+                          width: `${progressData.goals.weight.progress} %`,
+                          height: '100%',
+                          bgcolor: 'var(--color-primary)',
+                          borderRadius: 6,
+                          transition: 'width 0.5s ease-in-out'
+                        }} />
+                      </Box>
+                      <Typography variant="body2" sx={{ color: 'var(--color-secondary)' }}>
+                        {progressData.goals.weight.remaining} lbs to go! ({progressData.goals.weight.progress}% complete)
+                      </Typography>
                     </Box>
-                    <Typography variant="body2" color="textSecondary">
-                      {progressData.goals.weight.remaining} lbs to go! ({progressData.goals.weight.progress}% complete)
-                    </Typography>
-                  </Paper>
+                  </Box>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="h6" gutterBottom>
-                    Add New Goal
-                  </Typography>
-                  <Paper sx={{ p: 2 }}>
-                    <Grid container spacing={2}>
+                  <Box sx={{ p: 4, bgcolor: 'white', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: '100%' }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mb: 3 }}>
+                      Add New Goal
+                    </Typography>
+                    <Grid container spacing={3}>
                       <Grid item xs={12}>
                         <FormControl fullWidth variant="outlined">
-                          <InputLabel>Goal Type</InputLabel>
+                          <InputLabel sx={{ color: 'var(--color-primary)' }}>Goal Type</InputLabel>
                           <Select
                             label="Goal Type"
                             value="weight"
+                            sx={{
+                              borderRadius: 2,
+                              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
+                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' }
+                            }}
                           >
                             <MenuItem value="weight">Weight</MenuItem>
                             <MenuItem value="bodyfat">Body Fat %</MenuItem>
@@ -723,10 +716,16 @@ const ProgressPage: React.FC = () => {
                       </Grid>
                       <Grid item xs={12}>
                         <FormControl fullWidth>
-                          <InputLabel>Target Value</InputLabel>
+                          <InputLabel sx={{ color: 'var(--color-primary)' }}>Target Value</InputLabel>
                           <Select
                             label="Target Value"
                             value="165"
+                            sx={{
+                              borderRadius: 2,
+                              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
+                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' }
+                            }}
                           >
                             <MenuItem value="165">165 lbs</MenuItem>
                             <MenuItem value="160">160 lbs</MenuItem>
@@ -735,28 +734,46 @@ const ProgressPage: React.FC = () => {
                         </FormControl>
                       </Grid>
                       <Grid item xs={12}>
-                        <Button variant="contained" color="primary" fullWidth>
+                        <Button
+                          variant="contained"
+                          disableElevation
+                          fullWidth
+                          sx={{
+                            bgcolor: 'var(--color-primary)',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            py: 1.5,
+                            borderRadius: 2,
+                            '&:hover': { bgcolor: 'var(--color-primary-dark)' }
+                          }}
+                        >
                           Set New Goal
                         </Button>
                       </Grid>
                     </Grid>
-                  </Paper>
+                  </Box>
                 </Grid>
               </Grid>
             </TabPanel>
 
             <TabPanel value={tabValue} index={4}>
-              <Grid container spacing={3}>
+              <Grid container spacing={4}>
                 <Grid item xs={12}>
-                  <Paper sx={{ p: 2, mb: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                      <Typography variant="h6">Select Exercise</Typography>
+                  <Box sx={{ p: 4, bgcolor: 'white', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                      <Typography variant="h6" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>Select Exercise</Typography>
                       <FormControl variant="outlined" size="small" sx={{ minWidth: 200 }}>
-                        <InputLabel>Exercise</InputLabel>
+                        <InputLabel sx={{ color: 'var(--color-primary)' }}>Exercise</InputLabel>
                         <Select
                           value={selectedExercise}
                           onChange={(e) => setSelectedExercise(e.target.value as string)}
                           label="Exercise"
+                          sx={{
+                            borderRadius: 2,
+                            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                            '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
+                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' }
+                          }}
                         >
                           {exerciseData?.stats.map((stat: any) => (
                             <MenuItem key={stat.exercise_name} value={stat.exercise_name}>
@@ -768,64 +785,69 @@ const ProgressPage: React.FC = () => {
                     </Box>
 
                     {selectedExercise && exerciseData && (
-                      <Grid container spacing={3}>
+                      <Grid container spacing={4}>
                         <Grid item xs={12} md={3}>
-                          <Card sx={{ bgcolor: '#f5f5f5' }}>
-                            <CardContent>
-                              <Typography color="textSecondary" gutterBottom>Max Weight (PR)</Typography>
-                              <Typography variant="h4">
-                                {exerciseData.stats.find((s: any) => s.exercise_name === selectedExercise)?.max_weight || 0} kg
-                              </Typography>
-                            </CardContent>
-                          </Card>
+                          <Box sx={{ p: 3, bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+                            <Typography variant="body2" sx={{ color: 'var(--color-secondary)', fontWeight: 600, textTransform: 'uppercase', mb: 1 }}>Max Weight (PR)</Typography>
+                            <Typography variant="h4" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
+                              {exerciseData.stats.find((s: any) => s.exercise_name === selectedExercise)?.max_weight || 0} <span style={{ fontSize: '1rem', opacity: 0.7 }}>kg</span>
+                            </Typography>
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <Card sx={{ bgcolor: '#f5f5f5' }}>
-                            <CardContent>
-                              <Typography color="textSecondary" gutterBottom>Max Reps</Typography>
-                              <Typography variant="h4">
-                                {exerciseData.stats.find((s: any) => s.exercise_name === selectedExercise)?.max_reps || 0}
-                              </Typography>
-                            </CardContent>
-                          </Card>
+                          <Box sx={{ p: 3, bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+                            <Typography variant="body2" sx={{ color: 'var(--color-secondary)', fontWeight: 600, textTransform: 'uppercase', mb: 1 }}>Max Reps</Typography>
+                            <Typography variant="h4" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
+                              {exerciseData.stats.find((s: any) => s.exercise_name === selectedExercise)?.max_reps || 0}
+                            </Typography>
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <Card sx={{ bgcolor: '#f5f5f5' }}>
-                            <CardContent>
-                              <Typography color="textSecondary" gutterBottom>Total Sessions</Typography>
-                              <Typography variant="h4">
-                                {exerciseData.stats.find((s: any) => s.exercise_name === selectedExercise)?.total_sessions || 0}
-                              </Typography>
-                            </CardContent>
-                          </Card>
+                          <Box sx={{ p: 3, bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+                            <Typography variant="body2" sx={{ color: 'var(--color-secondary)', fontWeight: 600, textTransform: 'uppercase', mb: 1 }}>Total Sessions</Typography>
+                            <Typography variant="h4" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
+                              {exerciseData.stats.find((s: any) => s.exercise_name === selectedExercise)?.total_sessions || 0}
+                            </Typography>
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <Card sx={{ bgcolor: '#f5f5f5' }}>
-                            <CardContent>
-                              <Typography color="textSecondary" gutterBottom>Last Performed</Typography>
-                              <Typography variant="h6">
-                                {new Date(exerciseData.stats.find((s: any) => s.exercise_name === selectedExercise)?.last_performed).toLocaleDateString()}
-                              </Typography>
-                            </CardContent>
-                          </Card>
+                          <Box sx={{ p: 3, bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+                            <Typography variant="body2" sx={{ color: 'var(--color-secondary)', fontWeight: 600, textTransform: 'uppercase', mb: 1 }}>Last Performed</Typography>
+                            <Typography variant="h6" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
+                              {new Date(exerciseData.stats.find((s: any) => s.exercise_name === selectedExercise)?.last_performed).toLocaleDateString()}
+                            </Typography>
+                          </Box>
                         </Grid>
                       </Grid>
                     )}
-                  </Paper>
+                  </Box>
                 </Grid>
 
                 <Grid item xs={12}>
-                  <Typography variant="h6" gutterBottom>Performance History</Typography>
-                  <Paper sx={{ height: 400, p: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ mt: 2, color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
+                    Performance History
+                  </Typography>
+                  <Box sx={{ height: 400, mt: 2 }}>
                     {selectedExercise && exerciseData && exerciseData.history[selectedExercise] ? (
                       <Line
                         options={{
                           ...lineChartOptions,
                           plugins: {
                             ...lineChartOptions.plugins,
-                            title: {
+                            title: { display: false },
+                          },
+                          scales: {
+                            y: {
+                              type: 'linear' as const,
                               display: true,
-                              text: `${selectedExercise} Progress`,
+                              position: 'left' as const,
+                              grid: { color: 'rgba(0,0,0,0.05)' }
+                            },
+                            y1: {
+                              type: 'linear' as const,
+                              display: true,
+                              position: 'right' as const,
+                              grid: { display: false },
                             },
                           },
                         }}
@@ -835,28 +857,28 @@ const ProgressPage: React.FC = () => {
                             {
                               label: 'Weight (kg)',
                               data: exerciseData.history[selectedExercise].map((h: any) => h.weight),
-                              borderColor: themeColors.pakistanGreen,
-                              backgroundColor: `${themeColors.pakistanGreen}66`,
-                              tension: 0.1,
+                              borderColor: '#606c38',
+                              backgroundColor: 'rgba(96, 108, 56, 0.2)',
                               yAxisID: 'y',
+                              tension: 0.2,
                             },
                             {
                               label: 'Reps',
                               data: exerciseData.history[selectedExercise].map((h: any) => h.reps),
-                              borderColor: themeColors.earthYellow,
-                              backgroundColor: `${themeColors.earthYellow}66`,
-                              tension: 0.1,
+                              borderColor: '#dda15e',
+                              backgroundColor: 'rgba(221, 161, 94, 0.2)',
                               yAxisID: 'y1',
+                              tension: 0.2,
                             }
                           ],
                         }}
                       />
                     ) : (
                       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                        <Typography>No history data available for this exercise.</Typography>
+                        <Typography sx={{ color: 'var(--color-secondary)' }}>No history data available for this exercise.</Typography>
                       </Box>
                     )}
-                  </Paper>
+                  </Box>
                 </Grid>
               </Grid>
             </TabPanel>

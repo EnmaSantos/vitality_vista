@@ -28,18 +28,19 @@ import {
   ListItem,
   ListItemText,
   Stack,
-  Snackbar
+  Snackbar,
+  Chip
 } from '@mui/material';
 import { Search as SearchIcon, Close as CloseIcon, FitnessCenter as FitnessCenterIcon, Add as AddIcon, PlayCircleOutline as PlayCircleOutlineIcon } from '@mui/icons-material';
 import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { getAllExercises, searchExercisesByName, Exercise } from '../services/exerciseApi';
-import { 
-  getUserWorkoutPlans, 
-  createWorkoutPlan, 
+import {
+  getUserWorkoutPlans,
+  createWorkoutPlan,
   addExerciseToPlan,
-  WorkoutPlan, 
+  WorkoutPlan,
   CreateWorkoutPlanPayload,
-  AddExerciseToPlanPayload 
+  AddExerciseToPlanPayload
 } from '../api/workoutApi';
 import { useAuth } from '../context/AuthContext';
 import { createWorkoutLog, logExerciseDetail } from '../services/workoutLogApi';
@@ -63,7 +64,10 @@ interface NewWorkoutPlanForm {
   description: string;
 }
 
+import { usePageTheme, themePalette } from '../hooks/usePageTheme';
+
 const ExercisesPage: React.FC = () => {
+  usePageTheme(themePalette.orange);
   console.log('--- ExercisesPage Component Rendered ---'); // <-- ADD THIS LINE
 
   // --- State Variables ---
@@ -131,9 +135,10 @@ const ExercisesPage: React.FC = () => {
   const location = useLocation(); // Get location object
 
   // --- Effects ---
+  // Theme context is managed globally now
   useEffect(() => {
-    setCurrentThemeColor(themeColors.darkMossGreen);
-  }, [setCurrentThemeColor]);
+    // setCurrentThemeColor(themeColors.darkMossGreen);
+  }, []);
 
   // Effect to fetch all exercises once on component mount
   useEffect(() => {
@@ -178,16 +183,16 @@ const ExercisesPage: React.FC = () => {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
-  
+
   // --- Event Handlers ---
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  
+
   // Reset to page 1 when filters change
   useEffect(() => {
-      setCurrentPage(1);
+    setCurrentPage(1);
   }, [searchQuery, category]);
 
   // --- Added: Handlers for Details Modal ---
@@ -206,7 +211,7 @@ const ExercisesPage: React.FC = () => {
   // --- Added: Function to fetch workout plans ---
   const fetchWorkoutPlans = async () => {
     if (!token) return;
-    
+
     setIsLoadingPlans(true);
     try {
       const response = await getUserWorkoutPlans(token);
@@ -236,7 +241,7 @@ const ExercisesPage: React.FC = () => {
     setNewPlanForm({ name: '', description: '' });
     setIsAddToWorkoutModalOpen(true);
     if (isDetailsModalOpen) handleCloseDetailsModal(); // Close details if open
-    
+
     // Fetch workout plans when modal opens
     fetchWorkoutPlans();
   };
@@ -284,19 +289,19 @@ const ExercisesPage: React.FC = () => {
           setIsSaving(false);
           return;
         }
-        
+
         console.log('Creating new workout plan:', newPlanForm);
         const newPlanResponse = await createWorkoutPlan({
           name: newPlanForm.name.trim(),
           description: newPlanForm.description.trim() || undefined
         }, token);
-        
+
         console.log('New plan created:', newPlanResponse);
-        
+
         if (!newPlanResponse.success || !newPlanResponse.data || !newPlanResponse.data.plan_id) {
           throw new Error(newPlanResponse.error || 'Failed to create workout plan - invalid response');
         }
-        
+
         const newPlan = newPlanResponse.data;
         finalPlanId = newPlan.plan_id;
         // Update the plans list with the new plan
@@ -330,17 +335,17 @@ const ExercisesPage: React.FC = () => {
 
       // Add exercise to plan
       const result = await addExerciseToPlan(finalPlanId, exerciseData, token);
-      
+
       console.log("Exercise added to workout plan:", result);
-      
+
       setSnackbar({
         open: true,
         message: `${exerciseToLog.name} added to workout plan successfully!`,
         severity: 'success'
       });
-      
+
       handleCloseAddToWorkoutModal();
-      
+
     } catch (error) {
       console.error('Error saving workout entry:', error);
       setSnackbar({
@@ -389,13 +394,13 @@ const ExercisesPage: React.FC = () => {
     }
 
     setIsSaving(true);
-    
+
     try {
       // First, create a workout log if we don't have one
       if (!currentWorkoutLog) {
         const newLog = await createWorkoutLog({}, token);
         setCurrentWorkoutLog(newLog.log_id);
-        
+
         // Log the exercise detail
         await logExerciseDetail(
           newLog.log_id,
@@ -426,15 +431,15 @@ const ExercisesPage: React.FC = () => {
           token
         );
       }
-      
+
       setSnackbar({
         open: true,
         message: `${exerciseToLog.name} logged successfully!`,
         severity: 'success'
       });
-      
+
       handleCloseLogWorkoutModal();
-      
+
     } catch (error) {
       console.error('Error logging workout:', error);
       setSnackbar({
@@ -490,7 +495,7 @@ const ExercisesPage: React.FC = () => {
     setIsSavingPlan(true);
     try {
       const newPlanResponse = await createWorkoutPlan(
-        { name: planForm.name.trim(), description: planForm.description.trim() || undefined }, 
+        { name: planForm.name.trim(), description: planForm.description.trim() || undefined },
         token
       );
 
@@ -498,20 +503,20 @@ const ExercisesPage: React.FC = () => {
         const createdPlanId = newPlanResponse.data.plan_id;
 
         if (createdPlanId === undefined || createdPlanId === null) {
-            console.error('Error saving plan: plan_id is missing from createWorkoutPlan response', newPlanResponse);
-            setSnackbar({ open: true, message: 'Error: Could not get new plan ID.', severity: 'error' });
-            setIsSavingPlan(false);
-            return;
+          console.error('Error saving plan: plan_id is missing from createWorkoutPlan response', newPlanResponse);
+          setSnackbar({ open: true, message: 'Error: Could not get new plan ID.', severity: 'error' });
+          setIsSavingPlan(false);
+          return;
         }
-        
+
         console.log(`Successfully created plan with ID: ${createdPlanId}. Now adding exercises.`);
 
         for (const ex of planExercises) {
           // Ensure you are passing all required fields for AddExerciseToPlanPayload if any
           // For now, just exercise_id and exercise_name as per previous structure
           const exercisePayload: AddExerciseToPlanPayload = {
-            exercise_id: ex.id, 
-            exercise_name: ex.name 
+            exercise_id: ex.id,
+            exercise_name: ex.name
             // Populate other fields like sets, reps, notes if they are part of the modal 
             // and meant to be saved with the initial plan creation here.
             // This example assumes they are not, and only id/name are added initially.
@@ -543,536 +548,827 @@ const ExercisesPage: React.FC = () => {
 
   // --- Render Logic ---
   return (
-    <Box sx={{ padding: 3, backgroundColor: '#edf0e9', minHeight: '100vh' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h4" gutterBottom sx={{ color: '#283618ff' }}> Exercise Library </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" onClick={()=>navigate('/workout-history')} sx={{ color:'#606c38ff', borderColor:'#606c38ff', '&:hover':{ bgcolor:'rgba(96,108,56,0.05)'} }}>View History</Button>
-          <Button variant="outlined" onClick={()=>navigate('/my-plans')} sx={{ color:'#606c38ff', borderColor:'#606c38ff', '&:hover':{ bgcolor:'rgba(96,108,56,0.05)'} }}>View My Plans</Button>
-          <Button variant="contained" onClick={handleOpenCreatePlanModal} sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }} startIcon={<AddIcon />}>Create Workout Plan</Button>
-        </Box>
-      </Box>
-      <Typography variant="subtitle1" sx={{ mb: 4, color: '#283618ff' }}> Browse exercises to log workouts or build plans. </Typography>
-
-      {/* Search and Filter Controls */}
-      <Paper elevation={1} sx={{ p: 2, mb: 3, borderLeft: '4px solid #606c38ff' }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              label="Search Exercises"
-              value={searchQuery}
-              onChange={(e) => {
-                const newQuery = e.target.value;
-                console.log('Search input changed:', newQuery);
-                setSearchQuery(newQuery);
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: '#606c38ff' }} />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel id="category-select-label">Category</InputLabel>
-              <Select
-                labelId="category-select-label"
-                id="category-select"
-                value={category}
-                label="Category"
-                onChange={(e) => setCategory(e.target.value as string)}
-                disabled={isLoading}
-              >
-                <MenuItem value="all">
-                  <em>All Categories</em>
-                </MenuItem>
-                {availableCategories.map((cat) => (
-                  <MenuItem key={cat} value={cat}>
-                    {cat}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={2}>
+    <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: 'var(--color-bg)', minHeight: '100vh', pb: 8 }}>
+      <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography variant="h3" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif', mb: 1 }}>
+              Exercise Library
+            </Typography>
+            <Typography variant="subtitle1" sx={{ color: 'var(--color-secondary)' }}>
+              Browse exercises to log workouts or build plans
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1.5 }}>
             <Button
               variant="outlined"
+              onClick={() => navigate('/workout-history')}
               sx={{
-                color: '#606c38ff',
-                borderColor: '#606c38ff',
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                color: 'var(--color-primary)',
+                borderColor: 'var(--color-primary)',
                 '&:hover': {
-                  borderColor: '#283618ff',
-                  backgroundColor: 'rgba(96, 108, 56, 0.05)'
+                  bgcolor: 'rgba(96,108,56,0.05)',
+                  borderColor: 'var(--color-primary-dark)'
                 }
               }}
-              fullWidth
             >
-              Filter
+              View History
             </Button>
-          </Grid>
-        </Grid>
-      </Paper>
-
-      {/* Conditional Rendering & Exercise List */}
-      {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <CircularProgress sx={{ color: '#606c38ff' }} />
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/my-plans')}
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                color: 'var(--color-primary)',
+                borderColor: 'var(--color-primary)',
+                '&:hover': {
+                  bgcolor: 'rgba(96,108,56,0.05)',
+                  borderColor: 'var(--color-primary-dark)'
+                }
+              }}
+            >
+              View My Plans
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleOpenCreatePlanModal}
+              startIcon={<AddIcon />}
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 'bold',
+                bgcolor: 'var(--color-primary)',
+                color: 'white',
+                '&:hover': { bgcolor: 'var(--color-primary-dark)' }
+              }}
+            >
+              Create Workout Plan
+            </Button>
+          </Box>
         </Box>
-      ) : error ? (
-        <Alert severity="error" sx={{ mt: 2 }}>Error: {error}</Alert>
-      ) : (
-        <>
-          <Typography variant="h6" sx={{ color: '#283618ff', mb: 2 }}>
-            {currentExercises.length} Exercises Found
-          </Typography>
-          <Grid container spacing={2}>
-            {currentExercises.map((exercise) => {
-              console.log('Rendering exercise:', exercise);
-              return (
-                <Grid item xs={12} sm={6} md={4} key={exercise.id || exercise.name}>
-                  <Card sx={{ borderTop: '3px solid #606c38ff', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Typography variant="h6" component="div" sx={{ color: '#283618ff' }}>
-                        {exercise.name}
-                      </Typography>
-                      <Typography sx={{ color: '#606c38ff' }} gutterBottom>
-                        {exercise.category?.charAt(0).toUpperCase() + (exercise.category?.slice(1) || '')}
-                        {exercise.level && ` • ${exercise.level.charAt(0).toUpperCase() + exercise.level.slice(1)}`}
-                      </Typography>
-                      <Divider sx={{ my: 1, bgcolor: '#dda15eff' }} />
-                      <Typography variant="body2" sx={{ color: '#283618ff' }}>
-                        <strong>Target:</strong> {exercise.primaryMuscles?.join(', ') || 'N/A'}
-                      </Typography>
-                      {exercise.equipment && (
-                        <Typography variant="caption" display="block" sx={{ color: '#606c38ff', mt: 0.5 }}>
-                          Equipment: {exercise.equipment}
-                        </Typography>
-                      )}
-                      {exercise.images && exercise.images.length > 0 && (
-                        <Box sx={{ mt: 2, textAlign: 'center' }}>
-                          <img 
-                            src={exercise.images[0].startsWith('http') ? exercise.images[0] : `${process.env.PUBLIC_URL}${exercise.images[0]}`} 
-                            alt={exercise.name} 
-                            style={{ 
-                              maxWidth: '100%', 
-                              height: 'auto', 
-                              borderRadius: '4px',
-                              maxHeight: '120px',
-                              objectFit: 'cover'
-                            }} 
-                          />
-                        </Box>
-                      )}
-                    </CardContent>
-                    <Box sx={{ p: 2, pt: 0, mt: 'auto' }}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleOpenDetailsModal(exercise)}
-                        sx={{
-                          borderColor: '#606c38ff',
-                          color: '#606c38ff',
-                          '&:hover': {
-                            borderColor: '#283618ff',
-                            backgroundColor: 'rgba(96, 108, 56, 0.1)'
-                          }
-                        }}
-                      >
-                        View Details
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        onClick={() => navigate(`/workout/session/exercise/${exercise.id}`)}
-                        sx={{ 
-                          ml: 1, 
-                          backgroundColor: '#94e0b2',
-                          color: '#101914',
-                          '&:hover': { backgroundColor: '#7dd19a' }
-                        }}
-                        startIcon={<PlayCircleOutlineIcon />}
-                      >
-                        Start Workout
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="text"
-                        onClick={() => handleOpenLogWorkoutModal(exercise)}
-                        sx={{ ml: 1, color: '#bc6c25ff', '&:hover': { backgroundColor: 'rgba(188, 108, 37, 0.1)' } }}
-                        startIcon={<FitnessCenterIcon />}
-                      >
-                        Log Workout
-                      </Button>
-                    </Box>
-                  </Card>
-                </Grid>
-              );
-            })}
-          </Grid>
-          {currentExercises.length === 0 && (
-            <Paper sx={{ p: 3, textAlign: 'center', mt: 3, borderTop: '3px solid #606c38ff' }}>
-              <Typography variant="subtitle1" color="textSecondary">
-                No exercises found matching your criteria.
-              </Typography>
-            </Paper>
-          )}
-          {totalPages > 1 && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
-              <Pagination
-                count={totalPages}
-                page={currentPage}
-                onChange={handlePageChange}
-                color="primary"
-                sx={{
-                  '& .MuiPaginationItem-root': { color: '#606c38ff' },
-                  '& .Mui-selected': {
-                    backgroundColor: 'rgba(96, 108, 56, 0.2) !important',
-                    color: '#283618ff'
+
+        {/* Search and Filter Controls */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            mb: 4,
+            borderRadius: 4,
+            bgcolor: 'white',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+            border: '1px solid rgba(96, 108, 56, 0.1)'
+          }}
+        >
+          <Grid container spacing={3} alignItems="center">
+            <Grid item xs={12} md={8}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Search Exercises..."
+                value={searchQuery}
+                onChange={(e) => {
+                  const newQuery = e.target.value;
+                  setSearchQuery(newQuery);
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: 'var(--color-primary)' }} />
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    borderRadius: 3,
+                    bgcolor: 'var(--color-bg)',
+                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '&:hover fieldset': { borderColor: 'var(--color-primary) !important' },
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary) !important' },
                   }
                 }}
               />
-            </Box>
-          )}
-        </>
-      )}
-
-      {/* --- Added: Exercise Details Modal --- */}
-      {selectedExerciseForModal && (
-        <Dialog open={isDetailsModalOpen} onClose={handleCloseDetailsModal} maxWidth="md" fullWidth scroll="paper">
-          <DialogTitle sx={{ backgroundColor: '#606c38ff', color: 'white', m: 0, p: 2 }}>
-            {selectedExerciseForModal.name}
-            <IconButton
-              aria-label="close"
-              onClick={handleCloseDetailsModal}
-              sx={{
-                position: 'absolute',
-                right: 8,
-                top: 8,
-                color: (theme) => theme.palette.grey[300]
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent dividers sx={{ backgroundColor: '#fefae0' }}>
-            <Grid container spacing={2} sx={{ pt: 2 }}>
-              <Grid item xs={12} md={selectedExerciseForModal.images && selectedExerciseForModal.images.length > 0 ? 6 : 12}>
-                <Typography variant="subtitle1" gutterBottom sx={{ color: '#283618ff' }}>
-                  <strong>Category:</strong> {selectedExerciseForModal.category}
-                </Typography>
-                <Typography variant="body1" gutterBottom sx={{ color: '#283618ff' }}>
-                  <strong>Level:</strong> {selectedExerciseForModal.level}
-                </Typography>
-                {selectedExerciseForModal.force && (
-                  <Typography variant="body1" gutterBottom sx={{ color: '#283618ff' }}>
-                    <strong>Force:</strong> {selectedExerciseForModal.force}
-                  </Typography>
-                )}
-                {selectedExerciseForModal.mechanic && (
-                  <Typography variant="body1" gutterBottom sx={{ color: '#283618ff' }}>
-                    <strong>Mechanic:</strong> {selectedExerciseForModal.mechanic}
-                  </Typography>
-                )}
-                {selectedExerciseForModal.equipment && (
-                  <Typography variant="body1" gutterBottom sx={{ color: '#283618ff' }}>
-                    <strong>Equipment:</strong> {selectedExerciseForModal.equipment}
-                  </Typography>
-                )}
-                
-                <Divider sx={{ my: 2, borderColor: '#dda15eff' }} />
-                
-                <Typography variant="subtitle1" gutterBottom sx={{ color: '#283618ff' }}>
-                  <strong>Primary Muscles:</strong>
-                </Typography>
-                <Typography variant="body2" paragraph sx={{ color: '#606c38ff' }}>
-                  {selectedExerciseForModal.primaryMuscles?.join(', ') || 'N/A'}
-                </Typography>
-                
-                {selectedExerciseForModal.secondaryMuscles && selectedExerciseForModal.secondaryMuscles.length > 0 && (
-                  <>
-                    <Typography variant="subtitle1" gutterBottom sx={{ color: '#283618ff' }}>
-                      <strong>Secondary Muscles:</strong>
-                    </Typography>
-                    <Typography variant="body2" paragraph sx={{ color: '#606c38ff' }}>
-                      {selectedExerciseForModal.secondaryMuscles.join(', ')}
-                    </Typography>
-                  </>
-                )}
-              </Grid>
-              {selectedExerciseForModal.images && selectedExerciseForModal.images.length > 0 && (
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    {selectedExerciseForModal.images.slice(0, 2).map((imgSrc, index) => (
-                      <img 
-                        key={index}
-                        src={imgSrc.startsWith('http') ? imgSrc : `${process.env.PUBLIC_URL}${imgSrc}`}
-                        alt={`${selectedExerciseForModal.name} - view ${index + 1}`} 
-                        style={{
-                          maxWidth: '100%',
-                          height: 'auto',
-                          borderRadius: '4px',
-                          marginBottom: '10px',
-                          border: '1px solid #dda15eff'
-                        }} 
-                      />
-                    ))}
-                  </Box>
-                </Grid>
-              )}
             </Grid>
 
-            <Divider sx={{ my: 2, borderColor: '#dda15eff' }} />
-
-            <Typography variant="h6" gutterBottom sx={{ color: '#283618ff' }}>
-              Instructions:
-            </Typography>
-            <List dense sx={{ pl: 2 }}>
-              {selectedExerciseForModal.instructions?.map((instruction, index) => (
-                <ListItem key={index} sx={{ display: 'list-item', listStyleType: 'decimal', pl: 1, color: '#283618ff' }}>
-                  <ListItemText primary={instruction} />
-                </ListItem>
-              )) || (
-                <ListItem sx={{ color: '#283618ff' }}>
-                  <ListItemText primary="No instructions available" />
-                </ListItem>
-              )}
-            </List>
-          </DialogContent>
-          <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff', p: '12px 16px' }}>
-            <Button onClick={handleCloseDetailsModal} sx={{ color: '#bc6c25ff' }}>
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
-      {/* --- End Added --- */}
-
-      {/* --- Added: "Add to Workout" Modal --- */}
-      {exerciseToLog && (
-        <Dialog open={isAddToWorkoutModalOpen} onClose={handleCloseAddToWorkoutModal} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{ backgroundColor: '#606c38ff', color: 'white' }}>
-            Add "{exerciseToLog.name}" to Workout
-            <IconButton 
-              aria-label="close" 
-              onClick={handleCloseAddToWorkoutModal} 
-              sx={{ 
-                position: 'absolute', 
-                right: 8, 
-                top: 8, 
-                color: (theme) => theme.palette.grey[300] 
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent dividers sx={{ backgroundColor: '#fefae0' }}>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              {/* Workout Plan Selection */}
+            <Grid item xs={12} md={4}>
               <FormControl fullWidth variant="outlined">
-                <InputLabel>Select Workout Plan</InputLabel>
+                <InputLabel id="category-select-label" sx={{ color: 'var(--color-primary)' }}>Category</InputLabel>
                 <Select
-                  value={selectedPlanId}
-                  onChange={(e) => setSelectedPlanId(e.target.value as number | 'new' | '')}
-                  label="Select Workout Plan"
-                  disabled={isLoadingPlans}
+                  labelId="category-select-label"
+                  id="category-select"
+                  value={category}
+                  label="Category"
+                  onChange={(e) => setCategory(e.target.value as string)}
+                  disabled={isLoading}
+                  sx={{
+                    borderRadius: 3,
+                    bgcolor: 'var(--color-bg)',
+                    color: 'var(--color-primary-dark)',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
+                    '& .MuiSvgIcon-root': { color: 'var(--color-primary)' }
+                  }}
                 >
-                  <MenuItem value="">
-                    <em>Choose a workout plan...</em>
+                  <MenuItem value="all">
+                    <em>All Categories</em>
                   </MenuItem>
-                  {workoutPlans?.map((plan) => (
-                    <MenuItem key={plan.plan_id} value={plan.plan_id}>
-                      {plan.name}
+                  {availableCategories.map((cat) => (
+                    <MenuItem key={cat} value={cat}>
+                      {cat}
                     </MenuItem>
                   ))}
-                  <MenuItem value="new">
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <AddIcon sx={{ mr: 1 }} />
-                      Create New Plan
-                    </Box>
-                  </MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+          </Grid>
+        </Paper>
 
-              {/* New Plan Form (shown when "new" is selected) */}
-              {selectedPlanId === 'new' && (
-                <>
-                  <TextField 
-                    label="New Plan Name" 
-                    name="name"
-                    value={newPlanForm.name} 
-                    onChange={handleNewPlanFormChange} 
-                    variant="outlined" 
-                    fullWidth 
-                    required
-                  />
-                  <TextField 
-                    label="Plan Description (optional)" 
-                    name="description"
-                    value={newPlanForm.description} 
-                    onChange={handleNewPlanFormChange} 
-                    variant="outlined" 
-                    fullWidth 
-                    multiline 
-                    rows={2} 
-                  />
-                </>
-              )}
+        {/* Conditional Rendering & Exercise List */}
+        {isLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <CircularProgress sx={{ color: '#606c38ff' }} />
+          </Box>
+        ) : error ? (
+          <Alert severity="error" sx={{ mt: 2 }}>Error: {error}</Alert>
+        ) : (
+          <>
+            <Typography variant="h6" sx={{ color: 'var(--color-primary-dark)', mb: 2, fontWeight: 600, fontFamily: 'Outfit, sans-serif' }}>
+              {currentExercises.length} Exercises Found
+            </Typography>
+            <Grid container spacing={3}>
+              {currentExercises.map((exercise) => {
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={exercise.id || exercise.name}>
+                    <Card
+                      sx={{
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        borderRadius: 4,
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                        border: 'none',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        '&:hover': {
+                          transform: 'translateY(-4px)',
+                          boxShadow: '0 12px 24px rgba(0,0,0,0.1)'
+                        }
+                      }}
+                    >
+                      <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                          <Typography variant="h6" component="div" sx={{ color: 'var(--color-primary-dark)', fontWeight: 600, fontFamily: 'Outfit, sans-serif', lineHeight: 1.2 }}>
+                            {exercise.name}
+                          </Typography>
+                          <Chip
+                            label={exercise.level || 'General'}
+                            size="small"
+                            sx={{
+                              bgcolor: 'rgba(96, 108, 56, 0.1)',
+                              color: 'var(--color-primary)',
+                              fontSize: '0.7rem',
+                              fontWeight: 600,
+                              height: 24
+                            }}
+                          />
+                        </Box>
 
-              <Divider />
+                        <Typography variant="body2" sx={{ color: 'var(--color-secondary)', mb: 2, textTransform: 'capitalize' }}>
+                          {exercise.category}
+                        </Typography>
 
-              {/* Exercise Details */}
-              <Typography variant="subtitle2" sx={{ color: '#283618ff', fontWeight: 'bold' }}>
-                Exercise Details:
-              </Typography>
-              <TextField 
-                label="Sets" 
-                name="sets" 
-                type="number" 
-                value={addToWorkoutForm.sets} 
-                onChange={handleAddToWorkoutFormChange} 
-                variant="outlined" 
-                fullWidth 
-                InputProps={{ inputProps: { min: 0 } }} 
-              />
-              <TextField 
-                label="Reps (e.g., 8-12, AMRAP)" 
-                name="reps" 
-                value={addToWorkoutForm.reps} 
-                onChange={handleAddToWorkoutFormChange} 
-                variant="outlined" 
-                fullWidth 
-              />
-              <TextField 
-                label="Weight (kg)" 
-                name="weight" 
-                type="number" 
-                value={addToWorkoutForm.weight} 
-                onChange={handleAddToWorkoutFormChange} 
-                variant="outlined" 
-                fullWidth 
-                InputProps={{ inputProps: { min: 0, step: "0.25" } }} 
-              />
-              <TextField 
-                label="Duration (minutes)" 
-                name="duration" 
-                type="number" 
-                value={addToWorkoutForm.duration} 
-                onChange={handleAddToWorkoutFormChange} 
-                variant="outlined" 
-                fullWidth 
-                InputProps={{ inputProps: { min: 0 } }} 
-              />
-              <TextField 
-                label="Notes" 
-                name="notes" 
-                value={addToWorkoutForm.notes} 
-                onChange={handleAddToWorkoutFormChange} 
-                variant="outlined" 
-                fullWidth 
-                multiline 
-                rows={3} 
-              />
-            </Stack>
-          </DialogContent>
-          <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff' }}>
-            <Button onClick={handleCloseAddToWorkoutModal} sx={{ color: '#bc6c25ff' }}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSaveWorkoutEntry} 
-              variant="contained" 
-              sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }}
-              disabled={isSaving || !selectedPlanId}
-            >
-              {isSaving ? <CircularProgress size={20} /> : 'Save to Plan'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
-      {/* --- End Added --- */}
+                        <Divider sx={{ my: 1.5, borderColor: 'rgba(0,0,0,0.05)' }} />
 
-      <LogWorkoutModal
-        open={isLogWorkoutModalOpen}
-        exercise={exerciseToLog}
-        token={token}
-        onClose={handleCloseLogWorkoutModal}
-      />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                            <strong style={{ color: 'var(--color-primary-dark)' }}>Target:</strong> {exercise.primaryMuscles?.join(', ') || 'N/A'}
+                          </Typography>
+                          {exercise.equipment && (
+                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                              <strong style={{ color: 'var(--color-primary-dark)' }}>Equipment:</strong> {exercise.equipment}
+                            </Typography>
+                          )}
+                        </Box>
 
-      {/* --- Create Workout Plan Modal --- */}
-      {isCreatePlanModalOpen && (
-        <Dialog open={isCreatePlanModalOpen} onClose={handleCloseCreatePlanModal} maxWidth="md" fullWidth>
-          <DialogTitle sx={{ backgroundColor: '#606c38ff', color: 'white' }}>
-            Create Workout Plan
-            <IconButton
-              aria-label="close"
-              onClick={handleCloseCreatePlanModal}
-              sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[300] }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent dividers sx={{ backgroundColor: '#fefae0' }}>
-            <Stack spacing={2}>
-              <TextField label="Plan Name" name="name" value={planForm.name} onChange={handlePlanFormChange} fullWidth required />
-              <TextField label="Description" name="description" value={planForm.description} onChange={handlePlanFormChange} fullWidth multiline rows={3} />
-              <Divider />
-              <TextField label="Search Exercises" value={planSearchQuery} onChange={(e)=>setPlanSearchQuery(e.target.value)} fullWidth InputProps={{ endAdornment: <SearchIcon /> }} />
-              {/* Search results */}
-              {planSearchResults.length > 0 && (
-                <Paper variant="outlined" sx={{ maxHeight: 200, overflowY: 'auto' }}>
-                  <List dense>
-                    {planSearchResults.map(ex => (
-                      <ListItem key={ex.id} button onClick={()=>addExerciseToPlanList(ex)}>
-                        <ListItemText primary={ex.name} secondary={ex.category} />
-                      </ListItem>
+                        {exercise.images && exercise.images.length > 0 && (
+                          <Box
+                            sx={{
+                              mt: 2,
+                              borderRadius: 2,
+                              overflow: 'hidden',
+                              height: 140,
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              bgcolor: 'var(--color-bg)'
+                            }}
+                          >
+                            <img
+                              src={exercise.images[0].startsWith('http') ? exercise.images[0] : `${process.env.PUBLIC_URL}${exercise.images[0]}`}
+                              alt={exercise.name}
+                              style={{
+                                maxWidth: '100%',
+                                height: '100%',
+                                objectFit: 'contain'
+                              }}
+                            />
+                          </Box>
+                        )}
+                      </CardContent>
+
+                      <Box sx={{ p: 3, pt: 0, mt: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => navigate(`/workout/session/exercise/${exercise.id}`)}
+                          fullWidth
+                          sx={{
+                            bgcolor: 'var(--color-primary)',
+                            color: 'white',
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            fontWeight: 'bold',
+                            '&:hover': { bgcolor: 'var(--color-primary-dark)' }
+                          }}
+                          startIcon={<PlayCircleOutlineIcon />}
+                        >
+                          Start Workout
+                        </Button>
+
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleOpenDetailsModal(exercise)}
+                            fullWidth
+                            sx={{
+                              borderRadius: 2,
+                              textTransform: 'none',
+                              fontWeight: 600,
+                              borderColor: 'var(--color-primary)',
+                              color: 'var(--color-primary)',
+                              '&:hover': {
+                                borderColor: 'var(--color-primary-dark)',
+                                backgroundColor: 'rgba(96, 108, 56, 0.05)'
+                              }
+                            }}
+                          >
+                            Details
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={() => handleOpenLogWorkoutModal(exercise)}
+                            fullWidth
+                            sx={{
+                              borderRadius: 2,
+                              textTransform: 'none',
+                              fontWeight: 600,
+                              color: 'var(--color-accent)',
+                              '&:hover': { backgroundColor: 'rgba(188, 108, 37, 0.1)' }
+                            }}
+                            startIcon={<FitnessCenterIcon />}
+                          >
+                            Log
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+            {currentExercises.length === 0 && (
+              <Paper sx={{ p: 4, textAlign: 'center', mt: 3, borderRadius: 4, bgcolor: 'white', boxShadow: 'none', border: '1px dashed rgba(0,0,0,0.1)' }}>
+                <Typography variant="subtitle1" color="textSecondary">
+                  No exercises found matching your criteria.
+                </Typography>
+              </Paper>
+            )}
+            {totalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', padding: '40px 0 20px' }}>
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={handlePageChange}
+                  color="primary"
+                  size="large"
+                  sx={{
+                    '& .MuiPaginationItem-root': { color: 'var(--color-primary)' },
+                    '& .Mui-selected': {
+                      backgroundColor: 'rgba(96, 108, 56, 0.1) !important',
+                      color: 'var(--color-primary-dark)',
+                      fontWeight: 'bold'
+                    }
+                  }}
+                />
+              </Box>
+            )}  </>
+        )}
+
+        {/* --- Added: Exercise Details Modal --- */}
+        {selectedExerciseForModal && (
+          <Dialog
+            open={isDetailsModalOpen}
+            onClose={handleCloseDetailsModal}
+            maxWidth="md"
+            fullWidth
+            scroll="paper"
+            PaperProps={{
+              sx: {
+                borderRadius: 4,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+              }
+            }}
+          >
+            <DialogTitle sx={{ m: 0, p: 3, borderBottom: '1px solid rgba(0,0,0,0.05)', fontFamily: 'Outfit, sans-serif', fontWeight: 'bold', color: 'var(--color-primary-dark)' }}>
+              {selectedExerciseForModal.name}
+              <IconButton
+                aria-label="close"
+                onClick={handleCloseDetailsModal}
+                sx={{
+                  position: 'absolute',
+                  right: 8,
+                  top: 8,
+                  color: 'var(--color-secondary)',
+                  '&:hover': { color: 'var(--color-primary)' }
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent dividers sx={{ p: 4, borderColor: 'rgba(0,0,0,0.05)' }}>
+              <Grid container spacing={4}>
+                <Grid item xs={12} md={selectedExerciseForModal.images && selectedExerciseForModal.images.length > 0 ? 6 : 12}>
+                  <Box sx={{ mb: 3 }}>
+                    <Chip
+                      label={selectedExerciseForModal.category}
+                      sx={{
+                        bgcolor: 'var(--color-primary)',
+                        color: 'white',
+                        fontWeight: 600,
+                        mr: 1
+                      }}
+                    />
+                    <Chip
+                      label={selectedExerciseForModal.level}
+                      variant="outlined"
+                      sx={{
+                        borderColor: 'var(--color-primary)',
+                        color: 'var(--color-primary)',
+                        fontWeight: 600
+                      }}
+                    />
+                  </Box>
+
+                  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 3 }}>
+                    <Paper elevation={0} sx={{ p: 2, bgcolor: 'var(--color-bg)', borderRadius: 3 }}>
+                      <Typography variant="caption" sx={{ color: 'var(--color-secondary)', display: 'block', mb: 0.5 }}>Force</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600, color: 'var(--color-primary-dark)', textTransform: 'capitalize' }}>
+                        {selectedExerciseForModal.force || '-'}
+                      </Typography>
+                    </Paper>
+                    <Paper elevation={0} sx={{ p: 2, bgcolor: 'var(--color-bg)', borderRadius: 3 }}>
+                      <Typography variant="caption" sx={{ color: 'var(--color-secondary)', display: 'block', mb: 0.5 }}>Mechanic</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600, color: 'var(--color-primary-dark)', textTransform: 'capitalize' }}>
+                        {selectedExerciseForModal.mechanic || '-'}
+                      </Typography>
+                    </Paper>
+                    <Paper elevation={0} sx={{ p: 2, bgcolor: 'var(--color-bg)', borderRadius: 3 }}>
+                      <Typography variant="caption" sx={{ color: 'var(--color-secondary)', display: 'block', mb: 0.5 }}>Equipment</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600, color: 'var(--color-primary-dark)', textTransform: 'capitalize' }}>
+                        {selectedExerciseForModal.equipment || '-'}
+                      </Typography>
+                    </Paper>
+                  </Box>
+
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" sx={{ color: 'var(--color-secondary)', mb: 1 }}>Primary Muscles</Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {selectedExerciseForModal.primaryMuscles?.map(muscle => (
+                        <Chip key={muscle} label={muscle} size="small" sx={{ bgcolor: 'rgba(96, 108, 56, 0.1)', color: 'var(--color-primary-dark)' }} />
+                      ))}
+                    </Box>
+                  </Box>
+
+                  {selectedExerciseForModal.secondaryMuscles && selectedExerciseForModal.secondaryMuscles.length > 0 && (
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="subtitle2" sx={{ color: 'var(--color-secondary)', mb: 1 }}>Secondary Muscles</Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {selectedExerciseForModal.secondaryMuscles.map(muscle => (
+                          <Chip key={muscle} label={muscle} size="small" variant="outlined" sx={{ borderColor: 'rgba(96, 108, 56, 0.2)', color: 'var(--color-secondary)' }} />
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                </Grid>
+
+                {selectedExerciseForModal.images && selectedExerciseForModal.images.length > 0 && (
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {selectedExerciseForModal.images.slice(0, 2).map((imgSrc, index) => (
+                        <Box
+                          key={index}
+                          sx={{
+                            borderRadius: 4,
+                            overflow: 'hidden',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                            border: '1px solid rgba(0,0,0,0.05)'
+                          }}
+                        >
+                          <img
+                            src={imgSrc.startsWith('http') ? imgSrc : `${process.env.PUBLIC_URL}${imgSrc}`}
+                            alt={`${selectedExerciseForModal.name} - view ${index + 1}`}
+                            style={{
+                              width: '100%',
+                              height: 'auto',
+                              display: 'block'
+                            }}
+                          />
+                        </Box>
+                      ))}
+                    </Box>
+                  </Grid>
+                )}
+              </Grid>
+
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>Instructions</Typography>
+                <List disablePadding>
+                  {selectedExerciseForModal.instructions?.map((instruction, index) => (
+                    <ListItem
+                      key={index}
+                      disableGutters
+                      sx={{
+                        alignItems: 'flex-start',
+                        mb: 2,
+                        p: 2,
+                        bgcolor: 'var(--color-bg)',
+                        borderRadius: 3
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          minWidth: 24,
+                          height: 24,
+                          borderRadius: '50%',
+                          bgcolor: 'var(--color-primary)',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 'bold',
+                          fontSize: '0.75rem',
+                          mr: 2,
+                          mt: 0.25
+                        }}
+                      >
+                        {index + 1}
+                      </Box>
+                      <ListItemText
+                        primary={<Typography variant="body1" sx={{ color: 'text.primary', lineHeight: 1.6 }}>{instruction}</Typography>}
+                      />
+                    </ListItem>
+                  )) || (
+                      <Typography color="text.secondary">No instructions available.</Typography>
+                    )}
+                </List>
+              </Box>
+            </DialogContent>
+            <DialogActions sx={{ p: 3, pt: 2, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+              <Button
+                onClick={handleCloseDetailsModal}
+                variant="outlined"
+                sx={{
+                  borderRadius: 2,
+                  color: 'var(--color-primary)',
+                  borderColor: 'var(--color-primary)',
+                  '&:hover': { borderColor: 'var(--color-primary-dark)', bgcolor: 'rgba(96, 108, 56, 0.05)' }
+                }}
+              >
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )}
+        {/* --- End Added --- */}
+
+        {/* --- Added: "Add to Workout" Modal --- */}
+        {exerciseToLog && (
+          <Dialog
+            open={isAddToWorkoutModalOpen}
+            onClose={handleCloseAddToWorkoutModal}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{
+              sx: {
+                borderRadius: 4,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+              }
+            }}
+          >
+            <DialogTitle sx={{ m: 0, p: 3, borderBottom: '1px solid rgba(0,0,0,0.05)', fontFamily: 'Outfit, sans-serif', fontWeight: 'bold', color: 'var(--color-primary-dark)' }}>
+              Add "{exerciseToLog.name}" to Workout
+              <IconButton
+                aria-label="close"
+                onClick={handleCloseAddToWorkoutModal}
+                sx={{
+                  position: 'absolute',
+                  right: 8,
+                  top: 8,
+                  color: 'var(--color-secondary)',
+                  '&:hover': { color: 'var(--color-primary)' }
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent dividers sx={{ p: 4, borderColor: 'rgba(0,0,0,0.05)' }}>
+              <Stack spacing={3}>
+                {/* Workout Plan Selection */}
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel sx={{ color: 'var(--color-primary)' }}>Select Workout Plan</InputLabel>
+                  <Select
+                    value={selectedPlanId}
+                    onChange={(e) => setSelectedPlanId(e.target.value as number | 'new' | '')}
+                    label="Select Workout Plan"
+                    disabled={isLoadingPlans}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    <MenuItem value="">
+                      <em>Choose a workout plan...</em>
+                    </MenuItem>
+                    {workoutPlans?.map((plan) => (
+                      <MenuItem key={plan.plan_id} value={plan.plan_id}>
+                        {plan.name}
+                      </MenuItem>
                     ))}
-                  </List>
-                </Paper>
-              )}
-              <Divider />
-              <Typography variant="subtitle2">Selected Exercises ({planExercises.length})</Typography>
-              {planExercises.length === 0 ? (
-                <Typography variant="body2">No exercises added yet.</Typography>
-              ) : (
-                <Paper variant="outlined" sx={{ maxHeight: 200, overflowY: 'auto' }}>
-                  <List dense>
-                    {planExercises.map(ex => (
-                      <ListItem key={ex.id} secondaryAction={<IconButton edge="end" onClick={()=>removeExerciseFromPlanList(ex.id)}><CloseIcon fontSize="small" /></IconButton>}>
-                        <ListItemText primary={ex.name} secondary={ex.category} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Paper>
-              )}
-            </Stack>
-          </DialogContent>
-          <DialogActions sx={{ backgroundColor: '#fefae0', borderTop: '1px solid #dda15eff' }}>
-            <Button onClick={handleCloseCreatePlanModal} sx={{ color: '#bc6c25ff' }}>Cancel</Button>
-            <Button variant="contained" onClick={handleSaveNewPlan} sx={{ bgcolor: '#606c38ff', '&:hover': { bgcolor: '#283618ff' } }} disabled={isSavingPlan || !planForm.name.trim() || planExercises.length===0}>
-              {isSavingPlan ? 'Saving...' : 'Save Plan'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
-      {/* --- End Create Plan Modal --- */}
+                    <MenuItem value="new">
+                      <Box sx={{ display: 'flex', alignItems: 'center', color: 'var(--color-primary)' }}>
+                        <AddIcon sx={{ mr: 1, fontSize: 20 }} />
+                        Create New Plan
+                      </Box>
+                    </MenuItem>
+                  </Select>
+                </FormControl>
 
-      {/* Snackbar for success/error messages */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+                {/* New Plan Form (shown when "new" is selected) */}
+                {selectedPlanId === 'new' && (
+                  <Box sx={{ p: 2, bgcolor: 'var(--color-bg)', borderRadius: 2 }}>
+                    <TextField
+                      label="New Plan Name"
+                      name="name"
+                      value={newPlanForm.name}
+                      onChange={handleNewPlanFormChange}
+                      variant="outlined"
+                      fullWidth
+                      required
+                      sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                    <TextField
+                      label="Plan Description (optional)"
+                      name="description"
+                      value={newPlanForm.description}
+                      onChange={handleNewPlanFormChange}
+                      variant="outlined"
+                      fullWidth
+                      multiline
+                      rows={2}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                  </Box>
+                )}
+
+                <Divider />
+
+                {/* Exercise Details */}
+                <Typography variant="subtitle2" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
+                  Exercise Details
+                </Typography>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                  <TextField
+                    label="Sets"
+                    name="sets"
+                    type="number"
+                    value={addToWorkoutForm.sets}
+                    onChange={handleAddToWorkoutFormChange}
+                    variant="outlined"
+                    fullWidth
+                    InputProps={{ inputProps: { min: 0 } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  />
+                  <TextField
+                    label="Reps"
+                    name="reps"
+                    value={addToWorkoutForm.reps}
+                    onChange={handleAddToWorkoutFormChange}
+                    variant="outlined"
+                    fullWidth
+                    placeholder="e.g. 8-12"
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  />
+                  <TextField
+                    label="Weight (kg)"
+                    name="weight"
+                    type="number"
+                    value={addToWorkoutForm.weight}
+                    onChange={handleAddToWorkoutFormChange}
+                    variant="outlined"
+                    fullWidth
+                    InputProps={{ inputProps: { min: 0, step: "0.25" } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  />
+                  <TextField
+                    label="Duration (min)"
+                    name="duration"
+                    type="number"
+                    value={addToWorkoutForm.duration}
+                    onChange={handleAddToWorkoutFormChange}
+                    variant="outlined"
+                    fullWidth
+                    InputProps={{ inputProps: { min: 0 } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  />
+                </Box>
+
+                <TextField
+                  label="Notes"
+                  name="notes"
+                  value={addToWorkoutForm.notes}
+                  onChange={handleAddToWorkoutFormChange}
+                  variant="outlined"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Stack>
+            </DialogContent>
+            <DialogActions sx={{ p: 3, pt: 2, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+              <Button onClick={handleCloseAddToWorkoutModal} sx={{ color: 'var(--color-secondary)' }}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveWorkoutEntry}
+                variant="contained"
+                sx={{
+                  bgcolor: 'var(--color-primary)',
+                  color: 'white',
+                  borderRadius: 2,
+                  fontWeight: 'bold',
+                  '&:hover': { bgcolor: 'var(--color-primary-dark)' }
+                }}
+                disabled={isSaving || !selectedPlanId}
+              >
+                {isSaving ? <CircularProgress size={20} color="inherit" /> : 'Save to Plan'}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )}
+        {/* --- End Added --- */}
+
+        <LogWorkoutModal
+          open={isLogWorkoutModalOpen}
+          exercise={exerciseToLog}
+          token={token}
+          onClose={handleCloseLogWorkoutModal}
+        />
+
+        {/* --- Create Workout Plan Modal --- */}
+        {isCreatePlanModalOpen && (
+          <Dialog
+            open={isCreatePlanModalOpen}
+            onClose={handleCloseCreatePlanModal}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+              sx: {
+                borderRadius: 4,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+              }
+            }}
+          >
+            <DialogTitle sx={{ m: 0, p: 3, borderBottom: '1px solid rgba(0,0,0,0.05)', fontFamily: 'Outfit, sans-serif', fontWeight: 'bold', color: 'var(--color-primary-dark)' }}>
+              Create Workout Plan
+              <IconButton
+                aria-label="close"
+                onClick={handleCloseCreatePlanModal}
+                sx={{ position: 'absolute', right: 8, top: 8, color: 'var(--color-secondary)' }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent dividers sx={{ p: 4, borderColor: 'rgba(0,0,0,0.05)' }}>
+              <Stack spacing={3}>
+                <TextField
+                  label="Plan Name"
+                  name="name"
+                  value={planForm.name}
+                  onChange={handlePlanFormChange}
+                  fullWidth
+                  required
+                  variant="outlined"
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+                <TextField
+                  label="Description"
+                  name="description"
+                  value={planForm.description}
+                  onChange={handlePlanFormChange}
+                  fullWidth
+                  multiline
+                  rows={3}
+                  variant="outlined"
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+                <Divider />
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'var(--color-primary-dark)' }}>Add Exercises</Typography>
+                <TextField
+                  label="Search Exercises"
+                  value={planSearchQuery}
+                  onChange={(e) => setPlanSearchQuery(e.target.value)}
+                  fullWidth
+                  InputProps={{
+                    endAdornment: <SearchIcon sx={{ color: 'var(--color-secondary)' }} />,
+                    sx: { borderRadius: 2 }
+                  }}
+                />
+
+                {planSearchResults.length > 0 && (
+                  <Paper variant="outlined" sx={{ maxHeight: 200, overflowY: 'auto', borderRadius: 2 }}>
+                    <List dense>
+                      {planSearchResults.map(ex => (
+                        <ListItem key={ex.id} button onClick={() => addExerciseToPlanList(ex)}>
+                          <ListItemText primary={ex.name} secondary={ex.category} />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Paper>
+                )}
+
+                {/* Selected Exercises */}
+                <Paper variant="outlined" sx={{ p: 0, borderRadius: 2, overflow: 'hidden' }}>
+                  <Box sx={{ p: 2, bgcolor: 'var(--color-bg)', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Selected Exercises ({planExercises.length})
+                    </Typography>
+                  </Box>
+                  {planExercises.length === 0 ? (
+                    <Box sx={{ p: 3, textAlign: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">No exercises added yet.</Typography>
+                    </Box>
+                  ) : (
+                    <List dense sx={{ maxHeight: 300, overflowY: 'auto' }}>
+                      {planExercises.map((ex, index) => (
+                        <ListItem
+                          key={`${ex.id}-${index}`}
+                          divider={index !== planExercises.length - 1}
+                          secondaryAction={<IconButton edge="end" onClick={() => removeExerciseFromPlanList(ex.id)}><CloseIcon fontSize="small" /></IconButton>}
+                        >
+                          <ListItemText primary={ex.name} secondary={ex.category} />
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </Paper>
+              </Stack>
+            </DialogContent>
+            <DialogActions sx={{ p: 3, pt: 2, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+              <Button onClick={handleCloseCreatePlanModal} sx={{ color: 'var(--color-secondary)' }}>Cancel</Button>
+              <Button
+                variant="contained"
+                onClick={handleSaveNewPlan}
+                sx={{
+                  bgcolor: 'var(--color-primary)',
+                  color: 'white',
+                  borderRadius: 2,
+                  fontWeight: 'bold',
+                  '&:hover': { bgcolor: 'var(--color-primary-dark)' }
+                }}
+                disabled={isSavingPlan || !planForm.name.trim() || planExercises.length === 0}
+              >
+                {isSavingPlan ? 'Saving...' : 'Save Plan'}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )}
+        {/* --- End Create Plan Modal --- */}
+
+        {/* Snackbar for success/error messages */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        >
+          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Box>
     </Box>
   );
 };

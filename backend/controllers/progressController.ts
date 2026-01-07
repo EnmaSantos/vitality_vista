@@ -418,10 +418,10 @@ export async function getProgressDataHandler(ctx: RouterContext) {
     const bodyFatChange = currentBodyFat && previousBodyFat ? currentBodyFat - previousBodyFat : 0;
 
     const avgDailyCalories = calorieResult.rows.length > 0
-      ? Math.round(calorieResult.rows.reduce((sum: number, row: { total_calories: any }) => sum + Number(row.total_calories), 0) / calorieResult.rows.length)
+      ? Math.round(calorieResult.rows.reduce((sum: number, row: any) => sum + Number(row.total_calories), 0) / calorieResult.rows.length)
       : 0;
 
-    const totalWorkouts = workoutResult.rows.reduce((sum: number, row: { workout_count: any }) => sum + Number(row.workout_count), 0);
+    const totalWorkouts = workoutResult.rows.reduce((sum: number, row: any) => sum + Number(row.workout_count), 0);
     const workoutFrequency = timeRange === "week"
       ? totalWorkouts
       : Math.round((totalWorkouts / getDaysInRange(timeRange)) * 7);
@@ -439,29 +439,29 @@ export async function getProgressDataHandler(ctx: RouterContext) {
       },
       charts: {
         weight: {
-          labels: weightResult.rows.map(row => row.log_date),
-          data: weightResult.rows.map(row => Math.round(Number(row.value) * 2.20462 * 10) / 10) // Convert to lbs
+          labels: weightResult.rows.map((row: any) => row.log_date),
+          data: weightResult.rows.map((row: any) => Math.round(Number(row.value) * 2.20462 * 10) / 10) // Convert to lbs
         },
         bodyFat: {
-          labels: bodyFatResult.rows.map(row => row.log_date),
-          data: bodyFatResult.rows.map(row => Math.round(Number(row.value) * 10) / 10)
+          labels: bodyFatResult.rows.map((row: any) => row.log_date),
+          data: bodyFatResult.rows.map((row: any) => Math.round(Number(row.value) * 10) / 10)
         },
         calories: {
-          labels: calorieResult.rows.map(row => row.log_date),
-          data: calorieResult.rows.map(row => Math.round(Number(row.total_calories)))
+          labels: calorieResult.rows.map((row: any) => row.log_date),
+          data: calorieResult.rows.map((row: any) => Math.round(Number(row.total_calories)))
         },
         workoutDuration: {
-          labels: workoutResult.rows.map(row => row.log_date),
-          data: workoutResult.rows.map(row => Math.round(Number(row.total_duration_seconds) / 60)) // Convert to minutes
+          labels: workoutResult.rows.map((row: any) => row.log_date),
+          data: workoutResult.rows.map((row: any) => Math.round(Number(row.total_duration_seconds) / 60)) // Convert to minutes
         },
         workoutTypes: {
-          labels: workoutResult.rows.map(row => row.log_date),
-          strengthData: workoutResult.rows.map(row => Number(row.workout_count)), // Simplified for now
+          labels: workoutResult.rows.map((row: any) => row.log_date),
+          strengthData: workoutResult.rows.map((row: any) => Number(row.workout_count)), // Simplified for now
           cardioData: workoutResult.rows.map(() => 0),
           stretchingData: workoutResult.rows.map(() => 0)
         },
         macros: {
-          labels: calorieResult.rows.map(row => row.log_date),
+          labels: calorieResult.rows.map((row: any) => row.log_date),
           proteinData: calorieResult.rows.map(() => 0), // Would need separate query
           carbsData: calorieResult.rows.map(() => 0),
           fatData: calorieResult.rows.map(() => 0)

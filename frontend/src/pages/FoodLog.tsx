@@ -69,7 +69,10 @@ interface CurrentFoodEntry {
   time: string;
 }
 
+import { usePageTheme, themePalette } from '../hooks/usePageTheme';
+
 const FoodLog: React.FC = () => {
+  usePageTheme(themePalette.darkGreen);
   const auth = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');

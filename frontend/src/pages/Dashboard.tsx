@@ -20,7 +20,10 @@ import { getDailyGoalsAPI, addGoalAPI, updateGoalAPI, deleteGoalAPI, DailyGoal }
 // Helper to get today's date in YYYY-MM-DD format
 const getTodayDateString = () => new Date().toISOString().split('T')[0];
 
+import { usePageTheme, themePalette } from '../hooks/usePageTheme';
+
 const Dashboard: React.FC = () => {
+  usePageTheme(themePalette.green);
   const auth = useAuth(); // Use the full auth context
   const { token, user } = auth;
   const navigate = useNavigate();

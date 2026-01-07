@@ -202,9 +202,7 @@ const Navbar: React.FC = () => {
               <MenuItem component={Link} to="/profile" onClick={handleProfileMenuClose}>
                 My Profile
               </MenuItem>
-              <MenuItem component={Link} to="/settings" onClick={handleProfileMenuClose}>
-                Settings
-              </MenuItem>
+
               <Divider sx={{ borderColor: 'rgba(96, 108, 56, 0.2)' }} />
               <MenuItem onClick={handleLogout}>
                 <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
