@@ -36,23 +36,23 @@ let connectionString = Deno.env.get("DATABASE_URL");
 if (connectionString) {
   // Detect if this is a Neon database (has neon.tech in the hostname)
   const isNeonDB = connectionString.includes("neon.tech");
-  
+
   // Add required SSL mode if not present
   if (!connectionString.includes("sslmode=")) {
-    connectionString += connectionString.includes("?") 
-      ? "&sslmode=require" 
+    connectionString += connectionString.includes("?")
+      ? "&sslmode=require"
       : "?sslmode=require";
   }
-  
+
   // For Neon specifically, we might need additional parameters
   if (isNeonDB) {
     console.log("Detected Neon database, adding specific configuration");
-    
+
     // Add Neon-specific parameters if not already present
     if (!connectionString.includes("pgbouncer=")) {
       connectionString += "&pgbouncer=true";
     }
-    
+
     if (!connectionString.includes("connect_timeout=")) {
       connectionString += "&connect_timeout=10";
     }
@@ -60,8 +60,8 @@ if (connectionString) {
 }
 
 // Determine if we're in production or development
-const isProduction = Deno.env.get("ENVIRONMENT") === "production" || 
-                    !Deno.env.get("ENVIRONMENT"); // Default to production if not specified
+const isProduction = Deno.env.get("ENVIRONMENT") === "production" ||
+  !Deno.env.get("ENVIRONMENT"); // Default to production if not specified
 
 // --- Create PostgreSQL Client Instance ---
 let dbClient: PostgresClient;
@@ -108,7 +108,7 @@ async function testDbConnection() {
     }
     await dbClient.connect();
     console.log("✅ Database connection pool established successfully!");
-    
+
     // Test the connection with a simple query
     try {
       await dbClient.queryArray("SELECT 1");
@@ -126,7 +126,7 @@ async function testDbConnection() {
       console.error("   - Using connection string (details masked)");
     }
     console.error("   - Error:", err);
-    
+
     // Add more detailed error debugging
     if (err instanceof Error) {
       console.error("   - Error message:", err.message);
@@ -135,8 +135,11 @@ async function testDbConnection() {
   }
 }
 
-// Run the connection test
-await testDbConnection();
+// Run the connection test - REMOVED TOP LEVEL AWAIT
+// await testDbConnection();
+
+export const initDB = testDbConnection;
+
 
 // --- Connection Health Check ---
 // Add a function to check and reconnect if needed

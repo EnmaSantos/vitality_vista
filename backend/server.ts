@@ -23,7 +23,17 @@ globalThis.addEventListener("unhandledrejection", (evt) => {
 
 // Remove the temporary import for db.ts - it's no longer needed here
 // import "./services/db.ts"; // <-- REMOVE OR COMMENT OUT THIS LINE
-import "./services/db.ts";
+import { initDB } from "./services/db.ts"; // Import the init function
+
+// Initialize Database
+try {
+  await initDB();
+} catch (e) {
+  console.error("Failed to initialize database:", e);
+  // We might want to exit here, or continue and let individual requests fail
+  // Deno.exit(1); 
+}
+
 // Import controllers directly for this approach
 import { handleSearchFatSecretRecipes, handleGetFatSecretRecipeById, handleGetFatSecretRecipeTypes } from "./controllers/recipeController.ts";
 // Food controller handlers are now imported by the specific routers
