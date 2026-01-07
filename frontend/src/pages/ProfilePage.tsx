@@ -309,6 +309,12 @@ const ProfilePage: React.FC = () => {
     setError(null);
     setSuccessMessage(null);
 
+    if (!token) {
+      setError("You must be logged in to save changes.");
+      setOpenConfirmDialog(false);
+      return;
+    }
+
     try {
       const payloadToSubmit: UserProfileData = {
         date_of_birth: profileData.date_of_birth || null,
