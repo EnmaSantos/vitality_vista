@@ -34,6 +34,7 @@ import { SelectChangeEvent } from '@mui/material/Select';
 import { useAuth } from '../context/AuthContext';
 import {
   NutritionData,
+  NutritionServing,
   FoodLogEntry,
   CreateFoodLogEntryPayload,
   searchFoodsAPI,
@@ -41,6 +42,7 @@ import {
   getFoodLogEntriesAPI,
   deleteFoodLogEntryAPI,
 } from '../services/foodLogApi';
+import { getAvailableConversions, ConvertedOption } from '../utils/unitConversions';
 import { logWaterAPI, getDailyWaterAPI } from '../services/waterApi';
 import { LocalDrink as LocalDrinkIcon } from '@mui/icons-material';
 
@@ -82,6 +84,11 @@ const FoodLog: React.FC = () => {
 
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [selectedFoodForDialog, setSelectedFoodForDialog] = useState<NutritionData | null>(null);
+
+  // Local Conversion State
+  const [conversionOptions, setConversionOptions] = useState<ConvertedOption[]>([]);
+  const [bridgeServingId, setBridgeServingId] = useState<string | null>(null);
+
   const [formDataForDialog, setFormDataForDialog] = useState<Partial<CreateFoodLogEntryPayload>>({
     logged_quantity: 1.0,
     meal_type: 'breakfast',
@@ -221,9 +228,24 @@ const FoodLog: React.FC = () => {
 
   const handleOpenLogDialog = (food: NutritionData) => {
     setSelectedFoodForDialog(food);
+
+    // Check for local conversions
+    let localOptions: ConvertedOption[] = [];
+    let bridgeId: string | null = null;
+
+    if (food.availableServings) {
+      const result = getAvailableConversions(food.name, food.availableServings);
+      localOptions = result.options;
+      bridgeId = result.bridgeServingId;
+    }
+
+    setConversionOptions(localOptions);
+    setBridgeServingId(bridgeId);
+
+    // Initial form setup
     setFormDataForDialog({
       fatsecret_food_id: food.id,
-      fatsecret_serving_id: food.servingId,
+      fatsecret_serving_id: food.servingId, // Default references serving
       reference_serving_description: food.servingSize,
       base_calories: food.calories,
       base_protein: food.protein,
@@ -264,6 +286,48 @@ const FoodLog: React.FC = () => {
       ...prev,
       [name as string]: val,
     }));
+  };
+
+  const handleServingChange = (event: SelectChangeEvent<string>) => {
+    const value = event.target.value;
+
+    if (!selectedFoodForDialog || !selectedFoodForDialog.availableServings) return;
+
+    // Check if it's a virtual option (bridgeId|factor|label)
+    if (value.includes('|')) {
+      const [bId, factorStr, label] = value.split('|');
+      const factor = parseFloat(factorStr);
+      const bridge = selectedFoodForDialog.availableServings.find(s => s.servingId === bId);
+
+      if (bridge) {
+        setFormDataForDialog(prev => ({
+          ...prev,
+          fatsecret_serving_id: bId, // Still linked to the API serving ID for backend reference if needed
+          reference_serving_description: label, // Show "1 cup" etc
+          base_calories: bridge.calories * factor,
+          base_protein: bridge.protein * factor,
+          base_fat: bridge.fat * factor,
+          base_carbs: bridge.carbs * factor,
+        }));
+      }
+      return;
+    }
+
+    // Normal API serving
+    const newServingId = value;
+    const newServing = selectedFoodForDialog.availableServings.find(s => s.servingId === newServingId);
+
+    if (newServing) {
+      setFormDataForDialog(prev => ({
+        ...prev,
+        fatsecret_serving_id: newServing.servingId,
+        reference_serving_description: newServing.servingSize,
+        base_calories: newServing.calories,
+        base_protein: newServing.protein,
+        base_fat: newServing.fat,
+        base_carbs: newServing.carbs,
+      }));
+    }
   };
 
   const handleSaveFoodLog = async () => {
@@ -726,12 +790,69 @@ const FoodLog: React.FC = () => {
           {selectedFoodForDialog && (
             <Box sx={{ mb: 3, p: 2, bgcolor: 'var(--color-bg)', borderRadius: 2, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
               <DialogContentText component="div" sx={{ color: 'var(--color-primary-dark)' }}>
-                <Typography variant="subtitle2" sx={{ color: 'var(--color-secondary)', mb: 0.5 }}>Reference Serving</Typography>
-                <strong>{selectedFoodForDialog.servingSize}</strong> ({selectedFoodForDialog.calories} {selectedFoodForDialog.calorieUnit || 'kcal'})
+                <Typography variant="subtitle2" sx={{ color: 'var(--color-secondary)', mb: 0.5 }}>
+                  Reference Serving
+                </Typography>
+
+                {selectedFoodForDialog.availableServings && selectedFoodForDialog.availableServings.length > 0 ? (
+                  <FormControl fullWidth size="small" sx={{ mb: 1, mt: 0.5 }}>
+                    <Select
+                      value={
+                        // If current description matches a conversion label, reconstruct the virtual value
+                        // This is tricky because we don't store the virtual value in state.
+                        // We check if the current 'reference_serving_description' matches one of our options.
+                        conversionOptions.find(o => o.label === formDataForDialog.reference_serving_description)
+                          ? `${bridgeServingId}|${conversionOptions.find(o => o.label === formDataForDialog.reference_serving_description)?.factor}|${formDataForDialog.reference_serving_description}`
+                          : (formDataForDialog.fatsecret_serving_id || selectedFoodForDialog.servingId)
+                      }
+                      onChange={handleServingChange}
+                      sx={{ bgcolor: 'white' }}
+                    >
+                      {/* Local Conversions (Priority) */}
+                      {conversionOptions.length > 0 && [
+                        <MenuItem disabled key="header-std" sx={{ opacity: 0.7, fontSize: '0.85rem', fontWeight: 'bold' }}>Standard Units</MenuItem>,
+                        ...conversionOptions.map((opt) => (
+                          <MenuItem key={opt.label} value={`${bridgeServingId}|${opt.factor}|${opt.label}`}>
+                            {opt.label}
+                          </MenuItem>
+                        )),
+                        <Divider key="div-std" />
+                      ]}
+
+                      {/* Original API Servings (Fallback/Extra) */}
+                      {/* Only show if we don't have conversions OR if user wants to see them? 
+                          Let's show them for completeness but maybe grouped. */}
+                      {conversionOptions.length > 0 && <MenuItem disabled key="header-api" sx={{ opacity: 0.7, fontSize: '0.85rem', fontWeight: 'bold' }}>FatSecret Units</MenuItem>}
+
+                      {selectedFoodForDialog.availableServings.map((serving) => (
+                        <MenuItem key={serving.servingId} value={serving.servingId}>
+                          {serving.servingSize} ({serving.calories} kcal)
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                ) : (
+                  <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                    {selectedFoodForDialog.servingSize} ({selectedFoodForDialog.calories} {selectedFoodForDialog.calorieUnit || 'kcal'})
+                  </Typography>
+                )}
+
                 <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                  <Typography variant="body2" sx={{ color: '#606c38' }}>P: {selectedFoodForDialog.protein}{selectedFoodForDialog.proteinUnit || 'g'}</Typography>
-                  <Typography variant="body2" sx={{ color: '#dda15e' }}>C: {selectedFoodForDialog.carbs}{selectedFoodForDialog.carbsUnit || 'g'}</Typography>
-                  <Typography variant="body2" sx={{ color: '#bc6c25' }}>F: {selectedFoodForDialog.fat}{selectedFoodForDialog.fatUnit || 'g'}</Typography>
+                  <Typography variant="body2" sx={{ color: '#606c38' }}>
+                    P: {selectedFoodForDialog.availableServings
+                      ? (formDataForDialog.base_protein !== undefined ? formDataForDialog.base_protein : selectedFoodForDialog.protein)
+                      : selectedFoodForDialog.protein}{selectedFoodForDialog.proteinUnit || 'g'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#dda15e' }}>
+                    C: {selectedFoodForDialog.availableServings
+                      ? (formDataForDialog.base_carbs !== undefined ? formDataForDialog.base_carbs : selectedFoodForDialog.carbs)
+                      : selectedFoodForDialog.carbs}{selectedFoodForDialog.carbsUnit || 'g'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#bc6c25' }}>
+                    F: {selectedFoodForDialog.availableServings
+                      ? (formDataForDialog.base_fat !== undefined ? formDataForDialog.base_fat : selectedFoodForDialog.fat)
+                      : selectedFoodForDialog.fat}{selectedFoodForDialog.fatUnit || 'g'}
+                  </Typography>
                 </Box>
               </DialogContentText>
             </Box>

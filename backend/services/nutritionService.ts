@@ -81,6 +81,18 @@ export interface NutritionData {
     // Source tracking
     source: string; // "FatSecret"
     sourceUrl?: string;
+    availableServings?: NutritionServing[];
+}
+
+export interface NutritionServing {
+    servingId: string;
+    servingSize: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    metricServingAmount?: number;
+    metricServingUnit?: string;
 }
 
 /**
@@ -115,14 +127,14 @@ async function getFatSecretToken(): Promise<string> {
         }
 
         const data = await response.json();
-        
+
         // Cache the token with expiration (default is 86400 seconds / 24 hours)
         const expiresIn = data.expires_in || 86400;
         tokenCache = {
             token: data.access_token,
             expiresAt: now + (expiresIn * 1000) - 300000, // 5 minutes safety margin
         };
-        
+
         return tokenCache.token;
     } catch (error) {
         console.error("Failed to obtain FatSecret token:", error);
@@ -133,8 +145,8 @@ async function getFatSecretToken(): Promise<string> {
 /**
  * Parse nutrition values from food description
  */
-function parseNutritionValues(description: string): { 
-    calories: number; 
+function parseNutritionValues(description: string): {
+    calories: number;
     servingSize: string;
     protein: number;
     carbs: number;
@@ -153,7 +165,7 @@ function parseNutritionValues(description: string): {
             protein: parseFloat(match[5])
         };
     }
-    
+
     return null;
 }
 
@@ -165,13 +177,13 @@ function parseNutritionValues(description: string): {
  * @returns Array of standardized nutrition data objects
  */
 export async function searchFoodNutrition(
-    ingredient: string, 
-    maxResults: number = 5, 
+    ingredient: string,
+    maxResults: number = 5,
     genericOnly: boolean = false
 ): Promise<NutritionData[]> {
     try {
         const token = await getFatSecretToken();
-        
+
         // Build search URL
         const searchUrl = new URL("https://platform.fatsecret.com/rest/server.api");
         searchUrl.searchParams.append("method", "foods.search.v3"); // Updated to v3
@@ -179,8 +191,8 @@ export async function searchFoodNutrition(
         searchUrl.searchParams.append("format", "json");
         searchUrl.searchParams.append("max_results", maxResults.toString());
         // Requesting the default serving flag if available (Premier feature, but good to ask)
-        searchUrl.searchParams.append("flag_default_serving", "true"); 
-        
+        searchUrl.searchParams.append("flag_default_serving", "true");
+
         // Make API request
         const response = await fetch(searchUrl.toString(), {
             headers: {
@@ -196,15 +208,15 @@ export async function searchFoodNutrition(
         const responseText = await response.text();
         // console.log("Raw FatSecret Data:", responseText); // For debugging the raw response
         const data: FatSecretFoodsSearchResponse = JSON.parse(responseText);
-        
+
         // Handle no results or incorrect structure
         if (!data.foods_search || !data.foods_search.results || !data.foods_search.results.food) {
             return [];
         }
-        
+
         // Process and filter results
         let foodsFromApi = data.foods_search.results.food;
-        
+
         // Filter to generic-only if requested
         if (genericOnly) {
             foodsFromApi = foodsFromApi.filter(food => food.food_type === "Generic");
@@ -216,10 +228,10 @@ export async function searchFoodNutrition(
                 return 0;
             });
         }
-        
+
         // Limit results after sorting/filtering
         foodsFromApi = foodsFromApi.slice(0, maxResults);
-        
+
         // Convert to standardized format
         const processedFoods: NutritionData[] = [];
 
@@ -230,7 +242,7 @@ export async function searchFoodNutrition(
             }
 
             const servingsArray = Array.isArray(food.servings.serving) ? food.servings.serving : [food.servings.serving];
-            
+
             if (servingsArray.length === 0) {
                 console.warn(`Empty servings array for food: ${food.food_name} (ID: ${food.food_id})`);
                 continue;
@@ -249,7 +261,7 @@ export async function searchFoodNutrition(
                 console.warn(`Could not determine a reference serving for food: ${food.food_name} (ID: ${food.food_id})`);
                 continue;
             }
-            
+
             processedFoods.push({
                 id: food.food_id,
                 name: food.food_name,
@@ -269,7 +281,15 @@ export async function searchFoodNutrition(
                 sugar: referenceServing.sugar ? parseFloat(referenceServing.sugar) : undefined,
                 sodium: referenceServing.sodium ? parseFloat(referenceServing.sodium) : undefined,
                 source: "FatSecret",
-                sourceUrl: food.food_url
+                sourceUrl: food.food_url,
+                availableServings: servingsArray.map(s => ({
+                    servingId: s.serving_id,
+                    servingSize: s.serving_description,
+                    calories: parseFloat(s.calories) || 0,
+                    protein: parseFloat(s.protein) || 0,
+                    carbs: parseFloat(s.carbohydrate) || 0,
+                    fat: parseFloat(s.fat) || 0,
+                }))
             });
         }
         // console.log("Processed Nutrition Data:", JSON.stringify(processedFoods, null, 2)); // For debugging processed data
@@ -287,14 +307,14 @@ export async function searchFoodNutrition(
 export async function getFoodNutritionById(foodId: string): Promise<NutritionData | null> {
     try {
         const token = await getFatSecretToken();
-        
+
         // Build the request URL
         const apiUrl = new URL("https://platform.fatsecret.com/rest/server.api");
         apiUrl.searchParams.append("method", "food.get.v2");
         apiUrl.searchParams.append("food_id", foodId);
         apiUrl.searchParams.append("format", "json");
         apiUrl.searchParams.append("flag_default_serving", "true"); // Request default serving flag
-        
+
         // Make API request
         const response = await fetch(apiUrl.toString(), {
             headers: {
@@ -308,15 +328,15 @@ export async function getFoodNutritionById(foodId: string): Promise<NutritionDat
         }
 
         const data = await response.json();
-        
+
         // Handle no data or incorrect structure
         if (!data.food) {
             console.warn(`No food data returned for food ID ${foodId}`);
             return null;
         }
-        
+
         const foodFromApi = data.food; // food is the root object
-        
+
         let referenceServing: FatSecretServing | undefined;
         let selectedServingData: {
             servingId: string;
@@ -331,8 +351,8 @@ export async function getFoodNutritionById(foodId: string): Promise<NutritionDat
         } | null = null;
 
         if (foodFromApi.servings && foodFromApi.servings.serving) {
-            const servingsArray = Array.isArray(foodFromApi.servings.serving) 
-                ? foodFromApi.servings.serving 
+            const servingsArray = Array.isArray(foodFromApi.servings.serving)
+                ? foodFromApi.servings.serving
                 : [foodFromApi.servings.serving];
 
             if (servingsArray.length > 0) {
@@ -378,7 +398,7 @@ export async function getFoodNutritionById(foodId: string): Promise<NutritionDat
             console.warn(`Could not extract serving nutrition data for food ID ${foodId}`);
             return null;
         }
-        
+
         return {
             id: foodFromApi.food_id,
             name: foodFromApi.food_name,
@@ -398,7 +418,17 @@ export async function getFoodNutritionById(foodId: string): Promise<NutritionDat
             sugar: selectedServingData.sugar,
             sodium: selectedServingData.sodium,
             source: "FatSecret",
-            sourceUrl: foodFromApi.food_url
+            sourceUrl: foodFromApi.food_url,
+            availableServings: foodFromApi.servings && foodFromApi.servings.serving
+                ? (Array.isArray(foodFromApi.servings.serving) ? foodFromApi.servings.serving : [foodFromApi.servings.serving]).map((s: FatSecretServing) => ({
+                    servingId: s.serving_id,
+                    servingSize: s.serving_description,
+                    calories: parseFloat(s.calories) || 0,
+                    protein: parseFloat(s.protein) || 0,
+                    carbs: parseFloat(s.carbohydrate) || 0,
+                    fat: parseFloat(s.fat) || 0,
+                }))
+                : []
         };
     } catch (error) {
         console.error(`Error getting food nutrition by ID ${foodId}:`, error);
@@ -419,29 +449,29 @@ export async function calculateRecipeNutrition(
         let totalProtein = 0;
         let totalCarbs = 0;
         let totalFat = 0;
-        
+
         for (const ingredient of ingredients) {
             // Search for each ingredient
             const results = await searchFoodNutrition(ingredient.name, 1, true);
-            
+
             if (results.length === 0) {
                 console.warn(`No nutrition data found for: ${ingredient.name}`);
                 continue;
             }
-            
+
             // Get first result (most relevant)
             const nutrition = results[0];
-            
+
             // TODO: Proper unit conversion based on serving size
             // This is a simplified version that assumes everything is in grams
             const conversionFactor = ingredient.amount / 100; // Assuming nutrition data is per 100g
-            
+
             totalCalories += nutrition.calories * conversionFactor;
             totalProtein += nutrition.protein * conversionFactor;
             totalCarbs += nutrition.carbs * conversionFactor;
             totalFat += nutrition.fat * conversionFactor;
         }
-        
+
         // Return aggregated nutrition data
         return {
             id: "recipe",
@@ -523,7 +553,7 @@ export async function getFatSecretRecipeByIdPlatform(recipeId: string): Promise<
     try {
         const token = await getFatSecretToken();
         const apiUrl = new URL("https://platform.fatsecret.com/rest/recipe/v2");
-        
+
         apiUrl.searchParams.append("recipe_id", recipeId);
         apiUrl.searchParams.append("format", "json");
 

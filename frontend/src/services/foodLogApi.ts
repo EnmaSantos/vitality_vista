@@ -25,6 +25,18 @@ export interface NutritionData {
   sodium?: number;
   source: string; // e.g., "FatSecret"
   sourceUrl?: string;
+  availableServings?: NutritionServing[];
+}
+
+export interface NutritionServing {
+  servingId: string;
+  servingSize: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  metricServingAmount?: number;
+  metricServingUnit?: string;
 }
 
 // AutocompleteSuggestion: Simplified structure for search suggestions
@@ -73,7 +85,7 @@ export interface FoodLogEntry {
 }
 
 // API Base URL - Updated to be consistent with other API services
-const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem("authToken");
@@ -92,10 +104,10 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
       // Clear user session
       localStorage.removeItem("authToken");
       localStorage.removeItem("authUser");
-      
+
       // Redirect to login page
-      window.location.href = '/login'; 
-      
+      window.location.href = '/login';
+
       throw new Error("Token expired");
     }
   }
