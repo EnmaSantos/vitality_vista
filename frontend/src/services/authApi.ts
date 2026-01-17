@@ -36,9 +36,8 @@ interface User {
   }
   // --- End Added ---
   
-  // Use localhost for development, fallback to production URL
-  const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api/auth";
-  
+  import { API_BASE_URL } from '../config';
+
   console.log("authApi: Using API_BASE_URL:", API_BASE_URL); // Log the base URL being used
   
   /**
@@ -50,7 +49,7 @@ interface User {
   export async function login(credentials: LoginCredentials): Promise<AuthResponseData> {
     console.log("authApi: Sending login request..."); // Add log
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,7 +100,7 @@ interface User {
   export async function register(credentials: RegisterCredentials): Promise<AuthResponseData> {
     console.log("authApi: Sending registration request...");
     try {
-      const response = await fetch(`${API_BASE_URL}/register`, {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -156,7 +155,7 @@ export async function verifyToken(): Promise<AuthResponseData> {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/me`, {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -198,7 +197,7 @@ export async function verifyToken(): Promise<AuthResponseData> {
 export async function logout(): Promise<void> {
   console.log("authApi: Sending logout request...");
   try {
-    const response = await fetch(`${API_BASE_URL}/logout`, {
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
       method: 'POST',
       headers: {
         // Include credentials if your backend expects cookies to be sent
