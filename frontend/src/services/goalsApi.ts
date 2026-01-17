@@ -1,6 +1,6 @@
 // frontend/src/services/goalsApi.ts
 
-const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api";
+import { API_BASE_URL } from "../config";
 
 export interface DailyGoal {
     goal_id: number;

@@ -32,6 +32,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { getUserWorkoutLogs, getWorkoutLogDetails, WorkoutLog, LogExerciseDetail } from '../services/workoutLogApi';
 import { format, formatDistanceToNow } from 'date-fns';
+import { API_BASE_URL } from '../config';
 
 // Helper interface to group exercises by name
 interface ExerciseGroup {
@@ -128,11 +129,6 @@ const WorkoutHistory: React.FC = () => {
 
       // Add new name with PREFIX
       const updatedNotes = `NAME: ${newName}${existingNotes ? '\n' + existingNotes : ''}`;
-
-      // Get API base URL
-      const API_BASE_URL = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
-        ? 'http://localhost:8000/api'
-        : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api');
 
       // Call API to update workout log notes
       const response = await fetch(`${API_BASE_URL}/workout-logs/${logId}`, {

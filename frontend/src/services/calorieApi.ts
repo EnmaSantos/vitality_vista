@@ -1,8 +1,7 @@
 // frontend/src/services/calorieApi.ts
 
 import { useAuth } from '../context/AuthContext';
-
-const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api";
+import { API_BASE_URL } from "../config";
 
 export interface DailyCalorieSummary {
   date: string;

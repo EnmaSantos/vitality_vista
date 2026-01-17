@@ -27,7 +27,7 @@ interface ApiResponse<T> {
   error?: string;
 }
 
-const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api"; // Same as authApi
+import { API_BASE_URL } from "../config";
 
 /**
  * Fetches the user's profile.

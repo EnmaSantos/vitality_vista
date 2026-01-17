@@ -143,7 +143,7 @@ export interface ApiFatSecretRecipeTypesResponse {
 // --- Service Functions ---
 
 // Define the backend API base URL
-const API_BASE_URL = 'https://enmanueldel-vitality-vi-71.deno.dev/api';
+import { API_BASE_URL } from "../config";
 
 // Existing functions (getRecipeCalorieEstimate, getRecipesByCategory, etc.) remain here
 // ...

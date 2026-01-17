@@ -1,7 +1,6 @@
 // frontend/src/api/workoutApi.ts
 
-// API Base URL - Updated to be consistent with other API services
-const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api";
+import { API_BASE_URL } from "../config";
 
 // A wrapper for fetch that includes authentication and error handling
 const fetchWithAuth = async (url: string, options: RequestInit = {}) => {

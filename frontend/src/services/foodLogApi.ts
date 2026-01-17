@@ -85,7 +85,7 @@ export interface FoodLogEntry {
 }
 
 // API Base URL - Updated to be consistent with other API services
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+import { API_BASE_URL } from "../config";
 
 const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem("authToken");
