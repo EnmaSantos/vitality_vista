@@ -58,12 +58,17 @@ const port = parseInt((globalThis as any).Deno?.env.get("PORT") || "8000");
 
 // Basic middleware with improved CORS configuration
 app.use(oakCors({
-  origin: [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "https://vitality-vista.vercel.app",
-    "https://vitality-vista.vercel.app/"
-  ],
+  origin: (origin) => {
+    const allowed = [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "https://vitality-vista.vercel.app",
+      "https://vitality-vista.enmasantos.deno.net",
+    ];
+    if (!origin || allowed.includes(origin)) return origin ?? "*";
+    if (/^https:\/\/vitality-vista.*\.vercel\.app$/.test(origin)) return origin;
+    return false as unknown as string;
+  },
   optionsSuccessStatus: 200,
 }));
 
