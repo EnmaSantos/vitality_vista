@@ -55,8 +55,8 @@ const AppLayout = () => {
           <Route path="/workout/session/:planId" element={<ProtectedRoute><WorkoutSession /></ProtectedRoute>} />
           <Route path="/workout/session/exercise/:exerciseId" element={<ProtectedRoute><WorkoutSession /></ProtectedRoute>} />
           
-          {/* --- Fallback Route (Remains Unchanged) --- */}
-          <Route path="*" element={<Navigate to="/landing" replace />} />
+          {/* --- Fallback Route --- */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
     </div>

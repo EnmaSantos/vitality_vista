@@ -5,38 +5,15 @@ import {
     updateGoalHandler,
     deleteGoalHandler
 } from "../controllers/goalController.ts";
-import { verifyJwt } from "../deps.ts";
-import { key } from "../utils/api_key.ts";
 
 const goalsRouter = new Router();
 
-// Middleware to verify JWT for all goal routes
+// AUTH BYPASS: design-no-auth branch
+const MOCK_USER_ID = Deno.env.get("MOCK_USER_ID") || "00000000-0000-0000-0000-000000000000";
+
 goalsRouter.use(async (ctx: Context, next: () => Promise<unknown>) => {
-    try {
-        const authHeader = ctx.request.headers.get("Authorization");
-        if (!authHeader) {
-            ctx.response.status = 401;
-            ctx.response.body = { success: false, message: "Access token is missing" };
-            return;
-        }
-
-        const token = authHeader.replace("Bearer ", "");
-        const payload = await verifyJwt(token, key);
-
-        if (!payload) {
-            throw new Error("Invalid token");
-        }
-
-        ctx.state.userId = payload.id;
-        await next();
-    } catch (error) {
-        ctx.response.status = 401;
-        ctx.response.body = {
-            success: false,
-            message: "Invalid or expired token",
-            error: error instanceof Error ? error.message : "Unknown error"
-        };
-    }
+    ctx.state.userId = MOCK_USER_ID;
+    await next();
 });
 
 goalsRouter.get("/", getDailyGoalsHandler);
