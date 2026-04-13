@@ -137,5 +137,10 @@ app.use((ctx) => {
 });
 
 // Start the server
-console.log(`🚀 Server running on http://localhost:${port}`);
-await app.listen({ port });
+// Use Deno.serve() directly for compatibility with new Deno Deploy (console.deno.com)
+console.log(`🚀 Server starting on port ${port}`);
+const handler = app.handle.bind(app);
+Deno.serve({ port }, async (request: Request): Promise<Response> => {
+  const response = await handler(request);
+  return response ?? new Response("Not Found", { status: 404 });
+});
