@@ -96,7 +96,7 @@ The frontend will be available at `http://localhost:5173`
 cd backend
 
 # Set up environment variables (create .env file)
-# Required: DATABASE_URL, JWT_SECRET, FATSECRET_API_KEY, FATSECRET_API_SECRET
+# Required: DATABASE_URL, JWT_SECRET, FATSECRET_CLIENT_ID, FATSECRET_CLIENT_SECRET
 
 # Run the Deno server
 deno task start

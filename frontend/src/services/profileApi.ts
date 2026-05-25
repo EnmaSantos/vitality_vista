@@ -1,4 +1,5 @@
 // frontend/src/services/profileApi.ts
+import { API_BASE_URL } from '../config';
 
 // Define the UserProfileData interface (can be shared or defined per file)
 // This should match the UserProfileSchema from the backend and the one in ProfilePage.tsx
@@ -26,8 +27,6 @@ interface ApiResponse<T> {
   message?: string;
   error?: string;
 }
-
-const API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/api"; // Same as authApi
 
 /**
  * Fetches the user's profile.

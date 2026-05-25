@@ -116,8 +116,8 @@ Core tables include:
 Backend requires these environment variables:
 - `DATABASE_URL` - PostgreSQL connection string
 - `JWT_SECRET` - Token signing secret
-- `FATSECRET_API_KEY` - FatSecret API credentials
-- `FATSECRET_API_SECRET` - FatSecret API credentials
+- `FATSECRET_CLIENT_ID` - FatSecret API client ID
+- `FATSECRET_CLIENT_SECRET` - FatSecret API client secret
 - `PORT` - Server port (defaults to 8000)
 
 ## Common Development Tasks

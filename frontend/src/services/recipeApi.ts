@@ -1,4 +1,5 @@
 // --- Types for FatSecret Recipe API ---
+import { API_BASE_URL } from '../config';
 
 // Nutrition Summary (from search results)
 interface FatSecretRecipeNutritionSummary {
@@ -141,9 +142,6 @@ export interface ApiFatSecretRecipeTypesResponse {
 }
 
 // --- Service Functions ---
-
-// Define the backend API base URL
-const API_BASE_URL = 'https://enmanueldel-vitality-vi-71.deno.dev/api';
 
 // Existing functions (getRecipeCalorieEstimate, getRecipesByCategory, etc.) remain here
 // ...
