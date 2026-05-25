@@ -3,6 +3,17 @@ import {
   searchFoodNutrition,
   getFoodNutritionById,
   NutritionData, // Assuming this is exported from nutritionService.ts
+  searchFatSecretFoodsV5,
+  getFatSecretAutocomplete,
+  findFatSecretFoodByBarcode,
+  analyzeFatSecretNaturalLanguage,
+  recognizeFatSecretFoodImage,
+  submitFatSecretFoodFeedback,
+  getFatSecretFoodBrands,
+  getFatSecretFoodCategories,
+  getFatSecretFoodSubCategories,
+  normalizeFatSecretFood,
+  normalizeFatSecretFoodsFromResponse,
 } from "../services/nutritionService.ts"; // Your existing service
 import dbClient from "../services/db.ts"; // Import the database client
 
@@ -20,6 +31,66 @@ interface AppState {
   userId?: string;
   // other state properties
 }
+
+const sendSuccess = (ctx: RouterContext<any, any>, data: any) => {
+  ctx.response.status = 200;
+  ctx.response.body = { success: true, data };
+};
+
+const sendError = (
+  ctx: RouterContext<any, any>,
+  message: string,
+  status: number = 500,
+  error?: unknown,
+) => {
+  ctx.response.status = status;
+  ctx.response.body = {
+    success: false,
+    message,
+    ...(error instanceof Error ? { error: error.message } : {}),
+  };
+};
+
+const assertAuthenticated = (ctx: RouterContext<any, any, AppState>): boolean => {
+  if (ctx.state.userId) return true;
+  sendError(ctx, "User not authenticated.", 401);
+  return false;
+};
+
+const getQueryParams = (ctx: RouterContext<any, any>): Record<string, string> => {
+  const params: Record<string, string> = {};
+  ctx.request.url.searchParams.forEach((value, key) => {
+    params[key] = value;
+  });
+  return params;
+};
+
+const readJsonBody = async <T>(ctx: RouterContext<any, any>): Promise<T> => {
+  if (!ctx.request.hasBody) return {} as T;
+  const body = ctx.request.body({ type: "json" });
+  return await body.value as T;
+};
+
+const normalizeBarcodeToGtin13 = (barcode: string): string => {
+  const digitsOnly = barcode.replace(/\D/g, "");
+  if (![8, 12, 13].includes(digitsOnly.length)) return digitsOnly;
+  return digitsOnly.length === 13 ? digitsOnly : digitsOnly.padStart(13, "0");
+};
+
+const getAutocompleteSuggestions = (result: any): AutocompleteSuggestion[] => {
+  const rawSuggestions = result?.suggestions?.suggestion;
+  const suggestions = Array.isArray(rawSuggestions)
+    ? rawSuggestions
+    : rawSuggestions
+      ? [rawSuggestions]
+      : [];
+
+  return suggestions.map((suggestion: string) => ({
+    id: suggestion,
+    name: suggestion,
+    servingSize: "",
+  }));
+};
 
 // --- New Interfaces for Food Logging ---
 interface CreateFoodLogEntryPayload {
@@ -160,12 +231,7 @@ export async function handleGetFoodDetails(
  */
 export async function handleFoodAutocomplete(ctx: RouterContext<string, any, AppState>) {
    try {
-    const userId = ctx.state.userId; // Access userId from AppState
-    if (!userId) {
-      ctx.response.status = 401;
-      ctx.response.body = { success: false, message: "User not authenticated." };
-      return;
-    }
+    if (!assertAuthenticated(ctx)) return;
 
     const expression = ctx.request.url.searchParams.get("expression");
     if (!expression) {
@@ -174,18 +240,16 @@ export async function handleFoodAutocomplete(ctx: RouterContext<string, any, App
       return;
     }
 
-    const maxResults = 5; // Keep autocomplete results small
-    const foodResults: NutritionData[] = await searchFoodNutrition(expression, maxResults);
+    const result = await getFatSecretAutocomplete(expression, {
+      ...getQueryParams(ctx),
+      expression,
+      max_results: ctx.request.url.searchParams.get("max_results") || 10,
+    });
 
-    const suggestions: AutocompleteSuggestion[] = foodResults.map(food => ({
-        id: food.id,
-        name: food.name,
-        brandName: food.brandName,
-        servingSize: food.servingSize, // The reference serving size
-    }));
+    const suggestions = getAutocompleteSuggestions(result);
 
     ctx.response.status = 200;
-    ctx.response.body = { success: true, data: suggestions };
+    ctx.response.body = { success: true, data: suggestions, raw: result };
 
   } catch (error) {
     console.error("Error in handleFoodAutocomplete:", error);
@@ -195,6 +259,157 @@ export async function handleFoodAutocomplete(ctx: RouterContext<string, any, App
       message: "Server error during food autocomplete search.",
       error: error instanceof Error ? error.message : "Unknown error",
     };
+  }
+}
+
+export async function handleFoodSearchV5(ctx: RouterContext<string, any, AppState>) {
+  try {
+    if (!assertAuthenticated(ctx)) return;
+
+    const result = await searchFatSecretFoodsV5({
+      ...getQueryParams(ctx),
+      search_expression: ctx.request.url.searchParams.get("query")
+        || ctx.request.url.searchParams.get("search_expression")
+        || undefined,
+      max_results: ctx.request.url.searchParams.get("max_results") || 10,
+    });
+
+    sendSuccess(ctx, {
+      raw: result,
+      foods: normalizeFatSecretFoodsFromResponse(result),
+    });
+  } catch (error) {
+    console.error("Error in handleFoodSearchV5:", error);
+    sendError(ctx, "Server error searching FatSecret foods v5.", 500, error);
+  }
+}
+
+export async function handleFindFoodByBarcode(ctx: RouterContext<string, { barcode: string }, AppState>) {
+  try {
+    if (!assertAuthenticated(ctx)) return;
+
+    const barcodeParam = ctx.params.barcode || ctx.request.url.searchParams.get("barcode");
+    if (!barcodeParam) {
+      return sendError(ctx, "Barcode parameter is required.", 400);
+    }
+
+    const barcode = normalizeBarcodeToGtin13(barcodeParam);
+    if (barcode.length !== 13) {
+      return sendError(ctx, "Barcode must be a UPC-A, EAN-13, EAN-8, or GTIN-13 compatible value.", 400);
+    }
+
+    const result = await findFatSecretFoodByBarcode(barcode, getQueryParams(ctx));
+    const normalizedFood = normalizeFatSecretFood(result?.food)
+      ?? normalizeFatSecretFoodsFromResponse(result)[0]
+      ?? null;
+
+    if (!normalizedFood) {
+      return sendError(ctx, "No food found for that barcode.", 404);
+    }
+
+    sendSuccess(ctx, {
+      food: normalizedFood,
+      raw: result,
+    });
+  } catch (error) {
+    console.error("Error in handleFindFoodByBarcode:", error);
+    sendError(ctx, "Server error looking up barcode.", 500, error);
+  }
+}
+
+export async function handleNaturalLanguageFoodAnalysis(ctx: RouterContext<string, any, AppState>) {
+  try {
+    if (!assertAuthenticated(ctx)) return;
+
+    const payload = await readJsonBody<Record<string, unknown>>(ctx);
+    if (!payload.user_input || typeof payload.user_input !== "string") {
+      return sendError(ctx, "user_input is required.", 400);
+    }
+
+    const result = await analyzeFatSecretNaturalLanguage(payload as any);
+    sendSuccess(ctx, {
+      raw: result,
+      foods: normalizeFatSecretFoodsFromResponse(result),
+    });
+  } catch (error) {
+    console.error("Error in handleNaturalLanguageFoodAnalysis:", error);
+    sendError(ctx, "Server error analyzing meal text.", 500, error);
+  }
+}
+
+export async function handleFoodImageRecognition(ctx: RouterContext<string, any, AppState>) {
+  try {
+    if (!assertAuthenticated(ctx)) return;
+
+    const payload = await readJsonBody<Record<string, unknown>>(ctx);
+    if (!payload.image_b64 || typeof payload.image_b64 !== "string") {
+      return sendError(ctx, "image_b64 is required.", 400);
+    }
+
+    const result = await recognizeFatSecretFoodImage(payload as any);
+    sendSuccess(ctx, {
+      raw: result,
+      foods: normalizeFatSecretFoodsFromResponse(result),
+    });
+  } catch (error) {
+    console.error("Error in handleFoodImageRecognition:", error);
+    sendError(ctx, "Server error recognizing food image.", 500, error);
+  }
+}
+
+export async function handleFoodFeedback(ctx: RouterContext<string, any, AppState>) {
+  try {
+    if (!assertAuthenticated(ctx)) return;
+
+    const payload = await readJsonBody<Record<string, unknown>>(ctx);
+    if (!payload.issue_type_id || !payload.external_id) {
+      return sendError(ctx, "issue_type_id and external_id are required.", 400);
+    }
+
+    const result = await submitFatSecretFoodFeedback(payload as any);
+    sendSuccess(ctx, result);
+  } catch (error) {
+    console.error("Error in handleFoodFeedback:", error);
+    sendError(ctx, "Server error submitting food feedback.", 500, error);
+  }
+}
+
+export async function handleFoodBrands(ctx: RouterContext<string, any, AppState>) {
+  try {
+    if (!assertAuthenticated(ctx)) return;
+    const result = await getFatSecretFoodBrands(getQueryParams(ctx));
+    sendSuccess(ctx, result);
+  } catch (error) {
+    console.error("Error in handleFoodBrands:", error);
+    sendError(ctx, "Server error retrieving food brands.", 500, error);
+  }
+}
+
+export async function handleFoodCategories(ctx: RouterContext<string, any, AppState>) {
+  try {
+    if (!assertAuthenticated(ctx)) return;
+    const result = await getFatSecretFoodCategories(getQueryParams(ctx));
+    sendSuccess(ctx, result);
+  } catch (error) {
+    console.error("Error in handleFoodCategories:", error);
+    sendError(ctx, "Server error retrieving food categories.", 500, error);
+  }
+}
+
+export async function handleFoodSubCategories(ctx: RouterContext<string, any, AppState>) {
+  try {
+    if (!assertAuthenticated(ctx)) return;
+
+    const foodCategoryId = ctx.request.url.searchParams.get("food_category_id");
+    if (!foodCategoryId) {
+      return sendError(ctx, "food_category_id query parameter is required.", 400);
+    }
+
+    const result = await getFatSecretFoodSubCategories(getQueryParams(ctx));
+    sendSuccess(ctx, result);
+  } catch (error) {
+    console.error("Error in handleFoodSubCategories:", error);
+    sendError(ctx, "Server error retrieving food sub categories.", 500, error);
   }
 }
 

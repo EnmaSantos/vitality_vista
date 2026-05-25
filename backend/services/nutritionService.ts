@@ -27,6 +27,10 @@ export interface FatSecretFood {
     food_type: string; // "Generic" or "Brand"
     brand_name?: string;
     food_url: string;
+    food_description?: string;
+    food_sub_categories?: { food_sub_category: string[] | string };
+    food_images?: { food_image: FatSecretFoodImage[] | FatSecretFoodImage };
+    food_attributes?: unknown;
     servings?: { // Add servings to the FatSecretFood interface
         serving: FatSecretServing[] | FatSecretServing; // Can be an array or single object
     };
@@ -41,6 +45,11 @@ interface FatSecretFoodsSearchResponse {
     } | null;
 }
 
+interface FatSecretFoodImage {
+    image_url: string;
+    image_type?: string;
+}
+
 // Define a type for individual serving from FatSecret API
 interface FatSecretServing {
     serving_id: string;
@@ -53,6 +62,8 @@ interface FatSecretServing {
     sugar?: string;
     sodium?: string;
     is_default?: string; // Can be "1" or undefined
+    metric_serving_amount?: string;
+    metric_serving_unit?: string;
     // Potentially other fields like metric_serving_amount, metric_serving_unit
 }
 
@@ -81,6 +92,10 @@ export interface NutritionData {
     // Source tracking
     source: string; // "FatSecret"
     sourceUrl?: string;
+    imageUrl?: string;
+    foodImages?: FatSecretFoodImage[];
+    foodAttributes?: unknown;
+    foodSubCategories?: string[];
     availableServings?: NutritionServing[];
 }
 
@@ -93,6 +108,62 @@ export interface NutritionServing {
     fat: number;
     metricServingAmount?: number;
     metricServingUnit?: string;
+}
+
+type FatSecretQueryParams = Record<string, string | number | boolean | undefined | null>;
+type FatSecretPayload = Record<string, unknown>;
+
+export interface FatSecretFoodSearchV5Params extends FatSecretQueryParams {
+    search_expression?: string;
+    page_number?: string | number;
+    max_results?: string | number;
+    include_sub_categories?: string | boolean;
+    include_food_images?: string | boolean;
+    include_food_attributes?: string | boolean;
+    flag_default_serving?: string | boolean;
+    food_type?: "none" | "generic" | "brand" | string;
+    region?: string;
+    language?: string;
+}
+
+export interface FatSecretFoodLookupParams extends FatSecretQueryParams {
+    include_sub_categories?: string | boolean;
+    include_food_images?: string | boolean;
+    include_food_attributes?: string | boolean;
+    flag_default_serving?: string | boolean;
+    region?: string;
+    language?: string;
+}
+
+export interface FatSecretTextAnalysisPayload extends FatSecretPayload {
+    user_input: string;
+    include_food_data?: boolean;
+    eaten_foods?: unknown[];
+    region?: string;
+    language?: string;
+}
+
+export interface FatSecretImageRecognitionPayload extends FatSecretPayload {
+    image_b64: string;
+    include_food_data?: boolean;
+    eaten_foods?: unknown[];
+    region?: string;
+    language?: string;
+}
+
+export interface FatSecretFeedbackPayload extends FatSecretPayload {
+    barcode?: string;
+    issue_type_id: number;
+    issue_type?: string;
+    notes?: string;
+    external_id: string;
+    returned_food?: {
+        food_id?: number | string;
+        serving_id?: number | string;
+    };
+    image_file_extension?: string;
+    region?: string;
+    language?: string;
 }
 
 /**
@@ -142,6 +213,247 @@ async function getFatSecretToken(): Promise<string> {
     }
 }
 
+function appendDefinedParams(url: URL, params: FatSecretQueryParams = {}) {
+    for (const [key, value] of Object.entries(params)) {
+        if (value === undefined || value === null || value === "") continue;
+        url.searchParams.set(key, String(value));
+    }
+}
+
+async function fatSecretApiRequest(
+    path: string,
+    options: {
+        method?: "GET" | "POST";
+        query?: FatSecretQueryParams;
+        body?: FatSecretPayload;
+    } = {},
+): Promise<any> {
+    const token = await getFatSecretToken();
+    const method = options.method ?? "GET";
+    const normalizedPath = path.replace(/^\/+/, "");
+    const apiUrl = new URL(`https://platform.fatsecret.com/rest/${normalizedPath}`);
+
+    if (method === "GET") {
+        appendDefinedParams(apiUrl, { format: "json", ...options.query });
+    } else {
+        appendDefinedParams(apiUrl, options.query);
+    }
+
+    const response = await fetch(apiUrl.toString(), {
+        method,
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Accept": "application/json",
+            ...(method === "POST" ? { "Content-Type": "application/json" } : {}),
+        },
+        body: method === "POST" ? JSON.stringify(options.body ?? {}) : undefined,
+    });
+
+    const responseText = await response.text();
+    let data: any = null;
+    try {
+        data = responseText ? JSON.parse(responseText) : {};
+    } catch (_error) {
+        data = { raw: responseText };
+    }
+
+    if (!response.ok) {
+        const message = data?.error?.message || data?.message || responseText || response.statusText;
+        throw new Error(`FatSecret API error: ${response.status} ${message}`);
+    }
+
+    return data;
+}
+
+function asArray<T>(value: T | T[] | undefined | null): T[] {
+    if (value === undefined || value === null) return [];
+    return Array.isArray(value) ? value : [value];
+}
+
+function getFoodServings(food: any): FatSecretServing[] {
+    return asArray<FatSecretServing>(food?.servings?.serving ?? food?.serving);
+}
+
+function pickReferenceServing(servingsArray: FatSecretServing[]): FatSecretServing | undefined {
+    return servingsArray.find((s) => String(s.is_default) === "1")
+        ?? servingsArray.find((s) => s.serving_description?.toLowerCase().includes("100g") || s.serving_description?.toLowerCase().includes("100 g"))
+        ?? servingsArray[0];
+}
+
+function getFoodImages(food: any): FatSecretFoodImage[] {
+    return asArray<FatSecretFoodImage>(food?.food_images?.food_image);
+}
+
+function getFoodSubCategories(food: any): string[] {
+    return asArray<string>(food?.food_sub_categories?.food_sub_category);
+}
+
+function servingToNutritionServing(serving: FatSecretServing): NutritionServing {
+    return {
+        servingId: String(serving.serving_id ?? "0"),
+        servingSize: serving.serving_description ?? "serving",
+        calories: parseFloat(serving.calories) || 0,
+        protein: parseFloat(serving.protein) || 0,
+        carbs: parseFloat(serving.carbohydrate) || 0,
+        fat: parseFloat(serving.fat) || 0,
+        metricServingAmount: serving.metric_serving_amount ? parseFloat(serving.metric_serving_amount) : undefined,
+        metricServingUnit: serving.metric_serving_unit,
+    };
+}
+
+export function normalizeFatSecretFood(foodFromApi: any): NutritionData | null {
+    if (!foodFromApi?.food_id || !foodFromApi?.food_name) return null;
+
+    const servingsArray = getFoodServings(foodFromApi);
+    let referenceServing = pickReferenceServing(servingsArray);
+    let selectedServingData: NutritionServing | null = referenceServing
+        ? servingToNutritionServing(referenceServing)
+        : null;
+
+    if (!selectedServingData && foodFromApi.food_description && typeof foodFromApi.food_description === "string") {
+        const parsedFromDescription = parseNutritionValues(foodFromApi.food_description);
+        if (parsedFromDescription) {
+            selectedServingData = {
+                servingId: "unknown_from_description",
+                servingSize: parsedFromDescription.servingSize,
+                calories: parsedFromDescription.calories,
+                protein: parsedFromDescription.protein,
+                carbs: parsedFromDescription.carbs,
+                fat: parsedFromDescription.fat,
+            };
+        }
+    }
+
+    if (!selectedServingData) return null;
+
+    const foodImages = getFoodImages(foodFromApi);
+    const foodSubCategories = getFoodSubCategories(foodFromApi);
+
+    return {
+        id: String(foodFromApi.food_id),
+        name: foodFromApi.food_name,
+        isGeneric: foodFromApi.food_type === "Generic",
+        brandName: foodFromApi.brand_name,
+        servingId: selectedServingData.servingId,
+        servingSize: selectedServingData.servingSize,
+        calories: selectedServingData.calories,
+        calorieUnit: "kcal",
+        protein: selectedServingData.protein,
+        proteinUnit: "g",
+        carbs: selectedServingData.carbs,
+        carbsUnit: "g",
+        fat: selectedServingData.fat,
+        fatUnit: "g",
+        fiber: referenceServing?.fiber ? parseFloat(referenceServing.fiber) : undefined,
+        sugar: referenceServing?.sugar ? parseFloat(referenceServing.sugar) : undefined,
+        sodium: referenceServing?.sodium ? parseFloat(referenceServing.sodium) : undefined,
+        source: "FatSecret",
+        sourceUrl: foodFromApi.food_url,
+        imageUrl: foodImages[0]?.image_url,
+        foodImages,
+        foodAttributes: foodFromApi.food_attributes,
+        foodSubCategories,
+        availableServings: servingsArray.map(servingToNutritionServing),
+    };
+}
+
+function normalizeFatSecretFoodResponseItem(item: any): NutritionData | null {
+    const eatenNutrition = item?.eaten?.total_nutritional_content;
+    if (!item?.food_id || !item?.food_entry_name || !eatenNutrition) return null;
+
+    const food = item.food ?? {};
+    const suggestedServing = item.suggested_serving ?? {};
+    const servingId = String(suggestedServing.serving_id ?? `recognized_${item.food_id}`);
+    const servingSize = suggestedServing.serving_description
+        ?? (item.eaten?.total_metric_amount && item.eaten?.metric_description
+            ? `${item.eaten.total_metric_amount} ${item.eaten.metric_description}`
+            : "recognized serving");
+
+    const serving: NutritionServing = {
+        servingId,
+        servingSize,
+        calories: parseFloat(eatenNutrition.calories) || 0,
+        protein: parseFloat(eatenNutrition.protein) || 0,
+        carbs: parseFloat(eatenNutrition.carbohydrate) || 0,
+        fat: parseFloat(eatenNutrition.fat) || 0,
+        metricServingAmount: suggestedServing.metric_measure_amount
+            ? parseFloat(String(suggestedServing.metric_measure_amount))
+            : item.eaten?.total_metric_amount
+                ? parseFloat(String(item.eaten.total_metric_amount))
+                : undefined,
+        metricServingUnit: suggestedServing.metric_serving_description ?? item.eaten?.metric_description,
+    };
+
+    const foodImages = getFoodImages(food);
+    return {
+        id: String(item.food_id),
+        name: item.food_entry_name,
+        isGeneric: food.food_type ? food.food_type === "Generic" : true,
+        brandName: food.brand_name,
+        servingId,
+        servingSize,
+        calories: serving.calories,
+        calorieUnit: "kcal",
+        protein: serving.protein,
+        proteinUnit: "g",
+        carbs: serving.carbs,
+        carbsUnit: "g",
+        fat: serving.fat,
+        fatUnit: "g",
+        fiber: eatenNutrition.fiber ? parseFloat(eatenNutrition.fiber) : undefined,
+        sugar: eatenNutrition.sugar ? parseFloat(eatenNutrition.sugar) : undefined,
+        sodium: eatenNutrition.sodium ? parseFloat(eatenNutrition.sodium) : undefined,
+        source: "FatSecret",
+        sourceUrl: food.food_url,
+        imageUrl: foodImages[0]?.image_url,
+        foodImages,
+        foodAttributes: food.food_attributes,
+        foodSubCategories: getFoodSubCategories(food),
+        availableServings: [serving],
+    };
+}
+
+export function normalizeFatSecretFoodsFromResponse(responseData: any): NutritionData[] {
+    const normalizedFoods: NutritionData[] = [];
+    const seen = new Set<string>();
+
+    const visit = (value: unknown) => {
+        if (!value) return;
+        if (Array.isArray(value)) {
+            value.forEach(visit);
+            return;
+        }
+        if (typeof value !== "object") return;
+
+        const candidate = value as Record<string, unknown>;
+        const recognizedFood = normalizeFatSecretFoodResponseItem(candidate);
+        if (recognizedFood) {
+            const key = `${recognizedFood.id}:${recognizedFood.servingId}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                normalizedFoods.push(recognizedFood);
+            }
+            return;
+        }
+
+        if (candidate.food_id && candidate.food_name) {
+            const normalized = normalizeFatSecretFood(candidate);
+            if (normalized) {
+                const key = `${normalized.id}:${normalized.servingId}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    normalizedFoods.push(normalized);
+                }
+            }
+        }
+
+        Object.values(candidate).forEach(visit);
+    };
+
+    visit(responseData);
+    return normalizedFoods;
+}
+
 /**
  * Parse nutrition values from food description
  */
@@ -182,32 +494,11 @@ export async function searchFoodNutrition(
     genericOnly: boolean = false
 ): Promise<NutritionData[]> {
     try {
-        const token = await getFatSecretToken();
-
-        // Build search URL
-        const searchUrl = new URL("https://platform.fatsecret.com/rest/server.api");
-        searchUrl.searchParams.append("method", "foods.search.v3"); // Updated to v3
-        searchUrl.searchParams.append("search_expression", ingredient);
-        searchUrl.searchParams.append("format", "json");
-        searchUrl.searchParams.append("max_results", maxResults.toString());
-        // Requesting the default serving flag if available (Premier feature, but good to ask)
-        searchUrl.searchParams.append("flag_default_serving", "true");
-
-        // Make API request
-        const response = await fetch(searchUrl.toString(), {
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
+        const data: FatSecretFoodsSearchResponse = await searchFatSecretFoodsV5({
+            search_expression: ingredient,
+            max_results: maxResults,
+            flag_default_serving: true,
         });
-
-        if (!response.ok) {
-            throw new Error(`FatSecret API error: ${response.status} ${await response.text()}`);
-        }
-
-        const responseText = await response.text();
-        // console.log("Raw FatSecret Data:", responseText); // For debugging the raw response
-        const data: FatSecretFoodsSearchResponse = JSON.parse(responseText);
 
         // Handle no results or incorrect structure
         if (!data.foods_search || !data.foods_search.results || !data.foods_search.results.food) {
@@ -233,65 +524,9 @@ export async function searchFoodNutrition(
         foodsFromApi = foodsFromApi.slice(0, maxResults);
 
         // Convert to standardized format
-        const processedFoods: NutritionData[] = [];
-
-        for (const food of foodsFromApi) {
-            if (!food.servings || !food.servings.serving) {
-                console.warn(`No servings data for food: ${food.food_name} (ID: ${food.food_id})`);
-                continue;
-            }
-
-            const servingsArray = Array.isArray(food.servings.serving) ? food.servings.serving : [food.servings.serving];
-
-            if (servingsArray.length === 0) {
-                console.warn(`Empty servings array for food: ${food.food_name} (ID: ${food.food_id})`);
-                continue;
-            }
-
-            // Strategy to pick a reference serving:
-            let referenceServing: FatSecretServing | undefined = servingsArray.find(s => s.is_default === "1");
-            if (!referenceServing) {
-                referenceServing = servingsArray.find(s => s.serving_description?.toLowerCase().includes("100g") || s.serving_description?.toLowerCase().includes("100 g"));
-            }
-            if (!referenceServing) {
-                referenceServing = servingsArray[0]; // Fallback to the first serving
-            }
-
-            if (!referenceServing) {
-                console.warn(`Could not determine a reference serving for food: ${food.food_name} (ID: ${food.food_id})`);
-                continue;
-            }
-
-            processedFoods.push({
-                id: food.food_id,
-                name: food.food_name,
-                isGeneric: food.food_type === "Generic",
-                brandName: food.brand_name,
-                servingId: referenceServing.serving_id,
-                servingSize: referenceServing.serving_description,
-                calories: parseFloat(referenceServing.calories) || 0,
-                calorieUnit: "kcal",
-                protein: parseFloat(referenceServing.protein) || 0,
-                proteinUnit: "g",
-                carbs: parseFloat(referenceServing.carbohydrate) || 0,
-                carbsUnit: "g",
-                fat: parseFloat(referenceServing.fat) || 0,
-                fatUnit: "g",
-                fiber: referenceServing.fiber ? parseFloat(referenceServing.fiber) : undefined,
-                sugar: referenceServing.sugar ? parseFloat(referenceServing.sugar) : undefined,
-                sodium: referenceServing.sodium ? parseFloat(referenceServing.sodium) : undefined,
-                source: "FatSecret",
-                sourceUrl: food.food_url,
-                availableServings: servingsArray.map(s => ({
-                    servingId: s.serving_id,
-                    servingSize: s.serving_description,
-                    calories: parseFloat(s.calories) || 0,
-                    protein: parseFloat(s.protein) || 0,
-                    carbs: parseFloat(s.carbohydrate) || 0,
-                    fat: parseFloat(s.fat) || 0,
-                }))
-            });
-        }
+        const processedFoods = foodsFromApi
+            .map(normalizeFatSecretFood)
+            .filter((food): food is NutritionData => Boolean(food));
         // console.log("Processed Nutrition Data:", JSON.stringify(processedFoods, null, 2)); // For debugging processed data
         return processedFoods;
 
@@ -306,28 +541,12 @@ export async function searchFoodNutrition(
  */
 export async function getFoodNutritionById(foodId: string): Promise<NutritionData | null> {
     try {
-        const token = await getFatSecretToken();
-
-        // Build the request URL
-        const apiUrl = new URL("https://platform.fatsecret.com/rest/server.api");
-        apiUrl.searchParams.append("method", "food.get.v2");
-        apiUrl.searchParams.append("food_id", foodId);
-        apiUrl.searchParams.append("format", "json");
-        apiUrl.searchParams.append("flag_default_serving", "true"); // Request default serving flag
-
-        // Make API request
-        const response = await fetch(apiUrl.toString(), {
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
+        const data = await getFatSecretFoodByIdV5(foodId, {
+            flag_default_serving: true,
+            include_sub_categories: true,
+            include_food_images: true,
+            include_food_attributes: true,
         });
-
-        if (!response.ok) {
-            throw new Error(`FatSecret API error: ${response.status} ${await response.text()}`);
-        }
-
-        const data = await response.json();
 
         // Handle no data or incorrect structure
         if (!data.food) {
@@ -335,105 +554,138 @@ export async function getFoodNutritionById(foodId: string): Promise<NutritionDat
             return null;
         }
 
-        const foodFromApi = data.food; // food is the root object
-
-        let referenceServing: FatSecretServing | undefined;
-        let selectedServingData: {
-            servingId: string;
-            servingSize: string;
-            calories: number;
-            protein: number;
-            carbs: number;
-            fat: number;
-            fiber?: number;
-            sugar?: number;
-            sodium?: number;
-        } | null = null;
-
-        if (foodFromApi.servings && foodFromApi.servings.serving) {
-            const servingsArray = Array.isArray(foodFromApi.servings.serving)
-                ? foodFromApi.servings.serving
-                : [foodFromApi.servings.serving];
-
-            if (servingsArray.length > 0) {
-                // Strategy to pick a reference serving:
-                referenceServing = servingsArray.find((s: FatSecretServing) => s.is_default === "1");
-                if (!referenceServing) {
-                    referenceServing = servingsArray.find((s: FatSecretServing) => s.serving_description?.toLowerCase().includes("100g") || s.serving_description?.toLowerCase().includes("100 g"));
-                }
-                if (!referenceServing) {
-                    referenceServing = servingsArray[0]; // Fallback to the first serving
-                }
-
-                if (referenceServing) {
-                    selectedServingData = {
-                        servingId: referenceServing.serving_id,
-                        servingSize: referenceServing.serving_description,
-                        calories: parseFloat(referenceServing.calories) || 0,
-                        protein: parseFloat(referenceServing.protein) || 0,
-                        carbs: parseFloat(referenceServing.carbohydrate) || 0,
-                        fat: parseFloat(referenceServing.fat) || 0,
-                        fiber: referenceServing.fiber ? parseFloat(referenceServing.fiber) : undefined,
-                        sugar: referenceServing.sugar ? parseFloat(referenceServing.sugar) : undefined,
-                        sodium: referenceServing.sodium ? parseFloat(referenceServing.sodium) : undefined,
-                    };
-                }
-            }
-        }
-
-        // Fallback to parsing from food_description if no serving data was successfully processed
-        if (!selectedServingData && foodFromApi.food_description && typeof foodFromApi.food_description === 'string') {
-            const parsedFromDescription = parseNutritionValues(foodFromApi.food_description);
-            if (parsedFromDescription) {
-                console.warn(`Using parsed food_description for food ID ${foodId} as serving data was incomplete or missing.`);
-                selectedServingData = {
-                    ...parsedFromDescription, // calories, servingSize, protein, carbs, fat
-                    servingId: "unknown_from_description", // No servingId from description
-                    // Optional fields will be undefined if not in parsedFromDescription
-                };
-            }
-        }
-
-        if (!selectedServingData) {
+        const normalizedFood = normalizeFatSecretFood(data.food);
+        if (!normalizedFood) {
             console.warn(`Could not extract serving nutrition data for food ID ${foodId}`);
-            return null;
         }
-
-        return {
-            id: foodFromApi.food_id,
-            name: foodFromApi.food_name,
-            isGeneric: foodFromApi.food_type === "Generic",
-            brandName: foodFromApi.brand_name,
-            servingId: selectedServingData.servingId,
-            servingSize: selectedServingData.servingSize,
-            calories: selectedServingData.calories,
-            calorieUnit: "kcal",
-            protein: selectedServingData.protein,
-            proteinUnit: "g",
-            carbs: selectedServingData.carbs,
-            carbsUnit: "g",
-            fat: selectedServingData.fat,
-            fatUnit: "g",
-            fiber: selectedServingData.fiber,
-            sugar: selectedServingData.sugar,
-            sodium: selectedServingData.sodium,
-            source: "FatSecret",
-            sourceUrl: foodFromApi.food_url,
-            availableServings: foodFromApi.servings && foodFromApi.servings.serving
-                ? (Array.isArray(foodFromApi.servings.serving) ? foodFromApi.servings.serving : [foodFromApi.servings.serving]).map((s: FatSecretServing) => ({
-                    servingId: s.serving_id,
-                    servingSize: s.serving_description,
-                    calories: parseFloat(s.calories) || 0,
-                    protein: parseFloat(s.protein) || 0,
-                    carbs: parseFloat(s.carbohydrate) || 0,
-                    fat: parseFloat(s.fat) || 0,
-                }))
-                : []
-        };
+        return normalizedFood;
     } catch (error) {
         console.error(`Error getting food nutrition by ID ${foodId}:`, error);
         return null;
     }
+}
+
+export async function searchFatSecretFoodsV5(params: FatSecretFoodSearchV5Params): Promise<any> {
+    return await fatSecretApiRequest("foods/search/v5", {
+        query: {
+            flag_default_serving: true,
+            ...params,
+            format: "json",
+        },
+    });
+}
+
+export async function getFatSecretFoodByIdV5(
+    foodId: string,
+    params: FatSecretFoodLookupParams = {},
+): Promise<any> {
+    return await fatSecretApiRequest("food/v5", {
+        query: {
+            food_id: foodId,
+            flag_default_serving: true,
+            ...params,
+            format: "json",
+        },
+    });
+}
+
+export async function getFatSecretAutocomplete(
+    expression: string,
+    params: FatSecretQueryParams = {},
+): Promise<any> {
+    return await fatSecretApiRequest("food/autocomplete/v2", {
+        query: {
+            expression,
+            max_results: 10,
+            ...params,
+            format: "json",
+        },
+    });
+}
+
+export async function findFatSecretFoodByBarcode(
+    barcode: string,
+    params: FatSecretFoodLookupParams = {},
+): Promise<any> {
+    return await fatSecretApiRequest("food/barcode/find-by-id/v2", {
+        query: {
+            barcode,
+            flag_default_serving: true,
+            include_sub_categories: true,
+            include_food_images: true,
+            include_food_attributes: true,
+            ...params,
+            format: "json",
+        },
+    });
+}
+
+export async function analyzeFatSecretNaturalLanguage(
+    payload: FatSecretTextAnalysisPayload,
+): Promise<any> {
+    return await fatSecretApiRequest("natural-language-processing/v1", {
+        method: "POST",
+        body: {
+            include_food_data: true,
+            region: "US",
+            language: "en",
+            ...payload,
+        },
+    });
+}
+
+export async function recognizeFatSecretFoodImage(
+    payload: FatSecretImageRecognitionPayload,
+): Promise<any> {
+    return await fatSecretApiRequest("image-recognition/v2", {
+        method: "POST",
+        body: {
+            include_food_data: true,
+            region: "US",
+            language: "en",
+            ...payload,
+        },
+    });
+}
+
+export async function submitFatSecretFoodFeedback(
+    payload: FatSecretFeedbackPayload,
+): Promise<any> {
+    return await fatSecretApiRequest("feedback/v1", {
+        method: "POST",
+        body: {
+            region: "US",
+            language: "en",
+            ...payload,
+        },
+    });
+}
+
+export async function getFatSecretFoodBrands(params: FatSecretQueryParams = {}): Promise<any> {
+    return await fatSecretApiRequest("brands/v2", {
+        query: {
+            ...params,
+            format: "json",
+        },
+    });
+}
+
+export async function getFatSecretFoodCategories(params: FatSecretQueryParams = {}): Promise<any> {
+    return await fatSecretApiRequest("food-categories/v2", {
+        query: {
+            ...params,
+            format: "json",
+        },
+    });
+}
+
+export async function getFatSecretFoodSubCategories(params: FatSecretQueryParams = {}): Promise<any> {
+    return await fatSecretApiRequest("food-sub-categories/v2", {
+        query: {
+            ...params,
+            format: "json",
+        },
+    });
 }
 
 /**
@@ -500,6 +752,7 @@ export async function calculateRecipeNutrition(
 // Interface for search parameters, similar to frontend but for backend use
 // We might not need all frontend params directly, or might transform them.
 export interface FatSecretRecipeAPISearchParams {
+    [key: string]: string | undefined;
     search_expression?: string;
     recipe_types?: string; // Comma-separated string of recipe type names
     // Add other relevant parameters from FatSecret docs: must_have_images, calories, etc.
@@ -515,31 +768,12 @@ export async function searchFatSecretRecipesPlatform(
     params: FatSecretRecipeAPISearchParams
 ): Promise<any> { // Return type will be the direct JSON from FatSecret
     try {
-        const token = await getFatSecretToken();
-        const apiUrl = new URL("https://platform.fatsecret.com/rest/recipes/search/v3");
-
-        // Append common parameters
-        apiUrl.searchParams.append("format", "json");
-
-        // Append search-specific parameters from the input
-        if (params.search_expression) apiUrl.searchParams.append("search_expression", params.search_expression);
-        if (params.recipe_types) apiUrl.searchParams.append("recipe_types", params.recipe_types);
-        if (params.page_number !== undefined) apiUrl.searchParams.append("page_number", params.page_number);
-        if (params.max_results !== undefined) apiUrl.searchParams.append("max_results", params.max_results);
-        // Add other supported params like must_have_images, calories filters, etc. here
-
-        const response = await fetch(apiUrl.toString(), {
-            headers: {
-                "Authorization": `Bearer ${token}`,
+        return await fatSecretApiRequest("recipes/search/v3", {
+            query: {
+                ...params,
+                format: "json",
             },
         });
-
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`FatSecret Recipe Search API error: ${response.status}`, errorBody);
-            throw new Error(`FatSecret Recipe Search API error: ${response.status} ${errorBody}`);
-        }
-        return await response.json();
     } catch (error) {
         console.error("Error in searchFatSecretRecipesPlatform:", error);
         throw error; // Re-throw to be handled by controller
@@ -551,24 +785,12 @@ export async function searchFatSecretRecipesPlatform(
  */
 export async function getFatSecretRecipeByIdPlatform(recipeId: string): Promise<any> {
     try {
-        const token = await getFatSecretToken();
-        const apiUrl = new URL("https://platform.fatsecret.com/rest/recipe/v2");
-
-        apiUrl.searchParams.append("recipe_id", recipeId);
-        apiUrl.searchParams.append("format", "json");
-
-        const response = await fetch(apiUrl.toString(), {
-            headers: {
-                "Authorization": `Bearer ${token}`,
+        return await fatSecretApiRequest("recipe/v2", {
+            query: {
+                recipe_id: recipeId,
+                format: "json",
             },
         });
-
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`FatSecret Get Recipe API error: ${response.status}`, errorBody);
-            throw new Error(`FatSecret Get Recipe API error: ${response.status} ${errorBody}`);
-        }
-        return await response.json();
     } catch (error) {
         console.error(`Error in getFatSecretRecipeByIdPlatform for ID ${recipeId}:`, error);
         throw error;
@@ -580,24 +802,9 @@ export async function getFatSecretRecipeByIdPlatform(recipeId: string): Promise<
  */
 export async function getFatSecretRecipeTypesPlatform(): Promise<any> {
     try {
-        const token = await getFatSecretToken();
-        // The documentation URL is https://platform.fatsecret.com/rest/recipe-types/v2
-        // It also mentions method: recipe_types.get.v2. Let's use the direct URL.
-        const apiUrl = new URL("https://platform.fatsecret.com/rest/recipe-types/v2");
-        apiUrl.searchParams.append("format", "json");
-
-        const response = await fetch(apiUrl.toString(), {
-            headers: {
-                "Authorization": `Bearer ${token}`,
-            },
+        return await fatSecretApiRequest("recipe-types/v2", {
+            query: { format: "json" },
         });
-
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`FatSecret Recipe Types API error: ${response.status}`, errorBody);
-            throw new Error(`FatSecret Recipe Types API error: ${response.status} ${errorBody}`);
-        }
-        return await response.json();
     } catch (error) {
         console.error("Error in getFatSecretRecipeTypesPlatform:", error);
         throw error;

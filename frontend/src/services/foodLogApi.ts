@@ -25,6 +25,10 @@ export interface NutritionData {
   sodium?: number;
   source: string; // e.g., "FatSecret"
   sourceUrl?: string;
+  imageUrl?: string;
+  foodImages?: { image_url: string; image_type?: string }[];
+  foodAttributes?: unknown;
+  foodSubCategories?: string[];
   availableServings?: NutritionServing[];
 }
 
@@ -45,6 +49,30 @@ export interface AutocompleteSuggestion {
   name: string;
   brandName?: string;
   servingSize: string;
+}
+
+export interface FatSecretAnalysisResponse {
+  raw: unknown;
+  foods: NutritionData[];
+}
+
+export interface FatSecretFoodCategory {
+  food_category_id: string;
+  food_category_name: string;
+  food_category_description?: string;
+}
+
+export interface FatSecretFeedbackPayload {
+  barcode?: string;
+  issue_type_id: number;
+  issue_type?: string;
+  notes?: string;
+  external_id: string;
+  returned_food?: {
+    food_id?: string | number;
+    serving_id?: string | number;
+  };
+  image_file_extension?: string;
 }
 
 // CreateFoodLogEntryPayload: Structure for POSTing a new food log entry
@@ -153,6 +181,135 @@ export const searchFoodsAutocompleteAPI = async (
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || 'Failed to get autocomplete suggestions.');
   return data.data;
+};
+
+export const searchFoodsV5API = async (
+  query: string,
+  auth: AuthContextType,
+  maxResults = 10,
+  options: Record<string, string | number | boolean | undefined> = {}
+): Promise<FatSecretAnalysisResponse> => {
+  if (!auth.token) throw new Error("Authentication token not found.");
+  const url = new URL(`${API_BASE_URL}/fatsecret/foods/search-v5`);
+  url.searchParams.set("search_expression", query);
+  url.searchParams.set("max_results", String(maxResults));
+  Object.entries(options).forEach(([key, value]) => {
+    if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
+  });
+
+  const response = await fetchWithAuth(url.toString(), { method: 'GET' });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to search foods.');
+  return data.data;
+};
+
+export const findFoodByBarcodeAPI = async (
+  barcode: string,
+  auth: AuthContextType
+): Promise<NutritionData> => {
+  if (!auth.token) throw new Error("Authentication token not found.");
+  const url = `${API_BASE_URL}/fatsecret/foods/barcode/${encodeURIComponent(barcode)}`;
+  const response = await fetchWithAuth(url, { method: 'GET' });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to find food by barcode.');
+  return data.data.food;
+};
+
+export const analyzeMealTextAPI = async (
+  userInput: string,
+  auth: AuthContextType
+): Promise<FatSecretAnalysisResponse> => {
+  if (!auth.token) throw new Error("Authentication token not found.");
+  const url = `${API_BASE_URL}/fatsecret/foods/nlp`;
+  const response = await fetchWithAuth(url, {
+    method: 'POST',
+    body: JSON.stringify({
+      user_input: userInput,
+      include_food_data: true,
+      region: "US",
+      language: "en",
+    }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to analyze meal text.');
+  return data.data;
+};
+
+export const recognizeFoodImageAPI = async (
+  imageB64: string,
+  auth: AuthContextType
+): Promise<FatSecretAnalysisResponse> => {
+  if (!auth.token) throw new Error("Authentication token not found.");
+  const url = `${API_BASE_URL}/fatsecret/foods/image-recognition`;
+  const response = await fetchWithAuth(url, {
+    method: 'POST',
+    body: JSON.stringify({
+      image_b64: imageB64,
+      include_food_data: true,
+      region: "US",
+      language: "en",
+    }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to recognize food image.');
+  return data.data;
+};
+
+export const submitFoodFeedbackAPI = async (
+  payload: FatSecretFeedbackPayload,
+  auth: AuthContextType
+): Promise<unknown> => {
+  if (!auth.token) throw new Error("Authentication token not found.");
+  const url = `${API_BASE_URL}/fatsecret/foods/feedback`;
+  const response = await fetchWithAuth(url, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to submit food feedback.');
+  return data.data;
+};
+
+export const getFoodBrandsAPI = async (
+  auth: AuthContextType,
+  startsWith = "",
+  brandType = "manufacturer"
+): Promise<string[]> => {
+  if (!auth.token) throw new Error("Authentication token not found.");
+  const url = new URL(`${API_BASE_URL}/fatsecret/foods/brands`);
+  if (startsWith) url.searchParams.set("starts_with", startsWith);
+  if (brandType) url.searchParams.set("brand_type", brandType);
+  const response = await fetchWithAuth(url.toString(), { method: 'GET' });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch food brands.');
+  const brands = data.data?.food_brands?.food_brand;
+  return Array.isArray(brands) ? brands : brands ? [brands] : [];
+};
+
+export const getFoodCategoriesAPI = async (
+  auth: AuthContextType
+): Promise<FatSecretFoodCategory[]> => {
+  if (!auth.token) throw new Error("Authentication token not found.");
+  const url = `${API_BASE_URL}/fatsecret/foods/categories`;
+  const response = await fetchWithAuth(url, { method: 'GET' });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch food categories.');
+  const categories = data.data?.food_categories?.food_category;
+  return Array.isArray(categories) ? categories : categories ? [categories] : [];
+};
+
+export const getFoodSubCategoriesAPI = async (
+  foodCategoryId: string,
+  auth: AuthContextType
+): Promise<string[]> => {
+  if (!auth.token) throw new Error("Authentication token not found.");
+  const url = new URL(`${API_BASE_URL}/fatsecret/foods/sub-categories`);
+  url.searchParams.set("food_category_id", foodCategoryId);
+  const response = await fetchWithAuth(url.toString(), { method: 'GET' });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch food subcategories.');
+  const subCategories = data.data?.food_sub_categories?.food_sub_category;
+  return Array.isArray(subCategories) ? subCategories : subCategories ? [subCategories] : [];
 };
 
 

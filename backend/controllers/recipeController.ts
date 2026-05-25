@@ -26,13 +26,10 @@ const sendError = (ctx: RouterContext<any, any>, message: string, status: number
 export const handleSearchFatSecretRecipes = async (ctx: RouterContext<any, any>) => {
     try {
         // Extract query parameters from the request URL
-        const params: FatSecretRecipeAPISearchParams = {
-            search_expression: ctx.request.url.searchParams.get("search_expression") || undefined,
-            recipe_types: ctx.request.url.searchParams.get("recipe_types") || undefined,
-            page_number: ctx.request.url.searchParams.get("page_number") || undefined,
-            max_results: ctx.request.url.searchParams.get("max_results") || undefined,
-            // Add extraction for other parameters if needed
-        };
+        const params: FatSecretRecipeAPISearchParams = {};
+        ctx.request.url.searchParams.forEach((value, key) => {
+            params[key] = value;
+        });
 
         // Remove undefined keys to avoid sending empty params
         Object.keys(params).forEach(key => params[key as keyof FatSecretRecipeAPISearchParams] === undefined && delete params[key as keyof FatSecretRecipeAPISearchParams]);

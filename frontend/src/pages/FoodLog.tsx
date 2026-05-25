@@ -13,8 +13,10 @@ import {
   IconButton,
   List,
   ListItem,
+  ListItemAvatar,
   ListItemText,
   ListItemSecondaryAction,
+  Avatar,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -28,8 +30,18 @@ import {
   InputAdornment,
   DialogContentText,
   Snackbar,
+  Tabs,
+  Tab,
 } from '@mui/material';
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, Search as SearchIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Search as SearchIcon,
+  Notes as NotesIcon,
+  PhotoCamera as PhotoCameraIcon,
+  QrCodeScanner as QrCodeScannerIcon,
+} from '@mui/icons-material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -38,6 +50,9 @@ import {
   FoodLogEntry,
   CreateFoodLogEntryPayload,
   searchFoodsAPI,
+  analyzeMealTextAPI,
+  findFoodByBarcodeAPI,
+  recognizeFoodImageAPI,
   createFoodLogEntryAPI,
   getFoodLogEntriesAPI,
   deleteFoodLogEntryAPI,
@@ -77,7 +92,11 @@ const FoodLog: React.FC = () => {
   usePageTheme(themePalette.darkGreen);
   const auth = useAuth();
 
+  const [lookupMode, setLookupMode] = useState<'search' | 'text' | 'barcode' | 'image'>('search');
   const [searchQuery, setSearchQuery] = useState('');
+  const [mealTextInput, setMealTextInput] = useState('');
+  const [barcodeInput, setBarcodeInput] = useState('');
+  const [selectedImageName, setSelectedImageName] = useState('');
   const [searchResults, setSearchResults] = useState<NutritionData[]>([]);
   const [isLoadingSearch, setIsLoadingSearch] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -141,6 +160,144 @@ const FoodLog: React.FC = () => {
     }
   };
 
+  const handleLookupModeChange = (_event: React.SyntheticEvent, value: 'search' | 'text' | 'barcode' | 'image') => {
+    setLookupMode(value);
+    setSearchResults([]);
+    setSearchError(null);
+    setIsLoadingSearch(false);
+  };
+
+  const normalizeBarcodeInput = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    if (![8, 12, 13].includes(digitsOnly.length)) return digitsOnly;
+    return digitsOnly.length === 13 ? digitsOnly : digitsOnly.padStart(13, '0');
+  };
+
+  const applyDetectedFoods = (foods: NutritionData[], emptyMessage: string) => {
+    setSearchResults(foods);
+    setSearchError(foods.length === 0 ? emptyMessage : null);
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = String(reader.result || '');
+        resolve(result.includes(',') ? result.split(',')[1] : result);
+      };
+      reader.onerror = () => reject(reader.error || new Error('Failed to read image.'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAnalyzeMealText = async () => {
+    if (!auth.token) {
+      setSearchError("Authentication token not found. Please log in.");
+      return;
+    }
+    if (!mealTextInput.trim()) {
+      setSearchError("Meal text is required.");
+      return;
+    }
+
+    setIsLoadingSearch(true);
+    setSearchError(null);
+    try {
+      const result = await analyzeMealTextAPI(mealTextInput.trim(), auth);
+      applyDetectedFoods(result.foods, "No foods were detected from that meal text.");
+    } catch (err) {
+      setSearchError(err instanceof Error ? err.message : "Failed to analyze meal text.");
+      setSearchResults([]);
+    } finally {
+      setIsLoadingSearch(false);
+    }
+  };
+
+  const lookupBarcode = async (barcodeValue: string) => {
+    if (!auth.token) {
+      setSearchError("Authentication token not found. Please log in.");
+      return;
+    }
+
+    const normalizedBarcode = normalizeBarcodeInput(barcodeValue);
+    if (normalizedBarcode.length !== 13) {
+      setSearchError("Enter or scan a UPC-A, EAN-13, EAN-8, or GTIN-13 barcode.");
+      return;
+    }
+
+    setBarcodeInput(normalizedBarcode);
+    setIsLoadingSearch(true);
+    setSearchError(null);
+    try {
+      const food = await findFoodByBarcodeAPI(normalizedBarcode, auth);
+      setSearchResults([food]);
+    } catch (err) {
+      setSearchError(err instanceof Error ? err.message : "Failed to find food by barcode.");
+      setSearchResults([]);
+    } finally {
+      setIsLoadingSearch(false);
+    }
+  };
+
+  const handleBarcodeLookup = () => lookupBarcode(barcodeInput);
+
+  const handleBarcodeImageScan = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    const BarcodeDetectorClass = (window as any).BarcodeDetector;
+    if (!BarcodeDetectorClass || !('createImageBitmap' in window)) {
+      setSearchError("Barcode image scanning is not supported in this browser. Enter the barcode number instead.");
+      return;
+    }
+
+    setIsLoadingSearch(true);
+    setSearchError(null);
+    try {
+      const detector = new BarcodeDetectorClass({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+      const imageBitmap = await createImageBitmap(file);
+      const detectedCodes = await detector.detect(imageBitmap);
+      const rawBarcode = detectedCodes?.[0]?.rawValue;
+      if (!rawBarcode) {
+        setSearchResults([]);
+        setSearchError("No barcode was detected in that image.");
+        return;
+      }
+      await lookupBarcode(rawBarcode);
+    } catch (err) {
+      setSearchError(err instanceof Error ? err.message : "Failed to scan barcode image.");
+      setSearchResults([]);
+    } finally {
+      setIsLoadingSearch(false);
+    }
+  };
+
+  const handleImageRecognition = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    if (file.size > 1_090_000) {
+      setSearchError("Food image must be under 1.09MB.");
+      return;
+    }
+
+    setSelectedImageName(file.name);
+    setIsLoadingSearch(true);
+    setSearchError(null);
+    try {
+      const imageB64 = await fileToBase64(file);
+      const result = await recognizeFoodImageAPI(imageB64, auth);
+      applyDetectedFoods(result.foods, "No foods were recognized in that image.");
+    } catch (err) {
+      setSearchError(err instanceof Error ? err.message : "Failed to recognize food image.");
+      setSearchResults([]);
+    } finally {
+      setIsLoadingSearch(false);
+    }
+  };
+
 
 
   const fetchLoggedEntries = useCallback(async (date: string) => {
@@ -192,6 +349,8 @@ const FoodLog: React.FC = () => {
   );
 
   useEffect(() => {
+    if (lookupMode !== 'search') return;
+
     if (searchQuery.trim() !== '') {
       debouncedSearch(searchQuery);
     } else {
@@ -199,7 +358,7 @@ const FoodLog: React.FC = () => {
       setIsLoadingSearch(false);
       setSearchError(null);
     }
-  }, [searchQuery, debouncedSearch]);
+  }, [lookupMode, searchQuery, debouncedSearch]);
 
   const [foodEntries_mock, setFoodEntries_mock] = useState<CurrentFoodEntry[]>([
     { id: 1, name: 'Oatmeal with Berries', calories: 320, protein: 12, carbs: 54, fat: 6, mealType: 'breakfast', time: '08:00' },
@@ -362,12 +521,12 @@ const FoodLog: React.FC = () => {
 
     const payload: CreateFoodLogEntryPayload = {
       fatsecret_food_id: selectedFoodForDialog ? selectedFoodForDialog.id : "",
-      fatsecret_serving_id: selectedFoodForDialog ? selectedFoodForDialog.servingId : "",
-      reference_serving_description: selectedFoodForDialog ? selectedFoodForDialog.servingSize : formDataForDialog.reference_serving_description || '',
-      base_calories: selectedFoodForDialog ? selectedFoodForDialog.calories : formDataForDialog.base_calories || 0,
-      base_protein: selectedFoodForDialog ? selectedFoodForDialog.protein : formDataForDialog.base_protein || 0,
-      base_fat: selectedFoodForDialog ? selectedFoodForDialog.fat : formDataForDialog.base_fat || 0,
-      base_carbs: selectedFoodForDialog ? selectedFoodForDialog.carbs : formDataForDialog.base_carbs || 0,
+      fatsecret_serving_id: selectedFoodForDialog ? (formDataForDialog.fatsecret_serving_id || selectedFoodForDialog.servingId) : "",
+      reference_serving_description: selectedFoodForDialog ? (formDataForDialog.reference_serving_description || selectedFoodForDialog.servingSize) : formDataForDialog.reference_serving_description || '',
+      base_calories: selectedFoodForDialog ? (formDataForDialog.base_calories ?? selectedFoodForDialog.calories) : formDataForDialog.base_calories || 0,
+      base_protein: selectedFoodForDialog ? (formDataForDialog.base_protein ?? selectedFoodForDialog.protein) : formDataForDialog.base_protein || 0,
+      base_fat: selectedFoodForDialog ? (formDataForDialog.base_fat ?? selectedFoodForDialog.fat) : formDataForDialog.base_fat || 0,
+      base_carbs: selectedFoodForDialog ? (formDataForDialog.base_carbs ?? selectedFoodForDialog.carbs) : formDataForDialog.base_carbs || 0,
       food_name: selectedFoodForDialog ? selectedFoodForDialog.name : formDataForDialog.food_name || 'Manually Added Item',
       logged_quantity: Number(formDataForDialog.logged_quantity),
       meal_type: formDataForDialog.meal_type,
@@ -520,31 +679,162 @@ const FoodLog: React.FC = () => {
           boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
         }}
       >
-        <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>Search Food (FatSecret)</Typography>
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Search for a food item (e.g., 'avocado toast')..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ color: 'var(--color-primary)' }} />
-              </InputAdornment>
-            ),
-          }}
+        <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>Food Lookup (FatSecret)</Typography>
+        <Tabs
+          value={lookupMode}
+          onChange={handleLookupModeChange}
+          variant="scrollable"
+          allowScrollButtonsMobile
           sx={{
-            mb: 3,
-            '& .MuiOutlinedInput-root': {
-              bgcolor: 'var(--color-bg)',
-              borderRadius: 3,
-              '& fieldset': { border: 'none' }, // Cleaner look
-              '&:hover': { bgcolor: '#fbfbf0' },
-              '&.Mui-focused': { bgcolor: '#fbfbf0', boxShadow: '0 0 0 2px var(--color-primary)' },
-            }
+            mb: 2,
+            minHeight: 44,
+            '& .MuiTab-root': { minHeight: 44, textTransform: 'none', color: 'var(--color-secondary)', fontWeight: 600 },
+            '& .Mui-selected': { color: 'var(--color-primary-dark)' },
+            '& .MuiTabs-indicator': { backgroundColor: 'var(--color-primary)' },
           }}
-        />
+        >
+          <Tab icon={<SearchIcon />} iconPosition="start" label="Search" value="search" />
+          <Tab icon={<NotesIcon />} iconPosition="start" label="Meal Text" value="text" />
+          <Tab icon={<QrCodeScannerIcon />} iconPosition="start" label="Barcode" value="barcode" />
+          <Tab icon={<PhotoCameraIcon />} iconPosition="start" label="Photo" value="image" />
+        </Tabs>
+
+        {lookupMode === 'search' && (
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Search for a food item (e.g., 'avocado toast')..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: 'var(--color-primary)' }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              mb: 3,
+              '& .MuiOutlinedInput-root': {
+                bgcolor: 'var(--color-bg)',
+                borderRadius: 3,
+                '& fieldset': { border: 'none' }, // Cleaner look
+                '&:hover': { bgcolor: '#fbfbf0' },
+                '&.Mui-focused': { bgcolor: '#fbfbf0', boxShadow: '0 0 0 2px var(--color-primary)' },
+              }
+            }}
+          />
+        )}
+
+        {lookupMode === 'text' && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
+            <TextField
+              fullWidth
+              multiline
+              minRows={3}
+              variant="outlined"
+              placeholder="For breakfast I ate a slice of toast with butter and a cappuccino"
+              value={mealTextInput}
+              onChange={(e) => setMealTextInput(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: 'var(--color-bg)',
+                  borderRadius: 3,
+                  '& fieldset': { border: 'none' },
+                  '&:hover': { bgcolor: '#fbfbf0' },
+                  '&.Mui-focused': { bgcolor: '#fbfbf0', boxShadow: '0 0 0 2px var(--color-primary)' },
+                }
+              }}
+            />
+            <Box>
+              <Button
+                variant="contained"
+                startIcon={<NotesIcon />}
+                onClick={handleAnalyzeMealText}
+                disabled={isLoadingSearch}
+                disableElevation
+                sx={{ bgcolor: 'var(--color-primary)', color: 'white', fontWeight: 'bold', borderRadius: 2, '&:hover': { bgcolor: 'var(--color-primary-dark)' } }}
+              >
+                Analyze Meal
+              </Button>
+            </Box>
+          </Box>
+        )}
+
+        {lookupMode === 'barcode' && (
+          <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
+            <Grid item xs={12} md={7}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Enter barcode"
+                value={barcodeInput}
+                onChange={(e) => setBarcodeInput(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <QrCodeScannerIcon sx={{ color: 'var(--color-primary)' }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'var(--color-bg)',
+                    borderRadius: 3,
+                    '& fieldset': { border: 'none' },
+                    '&:hover': { bgcolor: '#fbfbf0' },
+                    '&.Mui-focused': { bgcolor: '#fbfbf0', boxShadow: '0 0 0 2px var(--color-primary)' },
+                  }
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md="auto">
+              <Button
+                variant="contained"
+                startIcon={<QrCodeScannerIcon />}
+                onClick={handleBarcodeLookup}
+                disabled={isLoadingSearch}
+                disableElevation
+                sx={{ bgcolor: 'var(--color-primary)', color: 'white', fontWeight: 'bold', borderRadius: 2, '&:hover': { bgcolor: 'var(--color-primary-dark)' } }}
+              >
+                Find
+              </Button>
+            </Grid>
+            <Grid item xs={12} md="auto">
+              <Button
+                component="label"
+                variant="outlined"
+                startIcon={<PhotoCameraIcon />}
+                disabled={isLoadingSearch}
+                sx={{ borderColor: 'var(--color-primary)', color: 'var(--color-primary)', fontWeight: 'bold', borderRadius: 2 }}
+              >
+                Scan Image
+                <input hidden accept="image/*" type="file" onChange={handleBarcodeImageScan} />
+              </Button>
+            </Grid>
+          </Grid>
+        )}
+
+        {lookupMode === 'image' && (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Button
+              component="label"
+              variant="contained"
+              startIcon={<PhotoCameraIcon />}
+              disabled={isLoadingSearch}
+              disableElevation
+              sx={{ bgcolor: 'var(--color-primary)', color: 'white', fontWeight: 'bold', borderRadius: 2, '&:hover': { bgcolor: 'var(--color-primary-dark)' } }}
+            >
+              Choose Photo
+              <input hidden accept="image/jpeg,image/png,image/webp" type="file" onChange={handleImageRecognition} />
+            </Button>
+            {selectedImageName && (
+              <Typography variant="body2" sx={{ color: 'var(--color-secondary)' }}>
+                {selectedImageName}
+              </Typography>
+            )}
+          </Box>
+        )}
         {isLoadingSearch && <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}><CircularProgress sx={{ color: 'var(--color-primary)' }} /></Box>}
         {searchError && <Alert severity="error" sx={{ mb: 2 }}>{searchError}</Alert>}
         {!isLoadingSearch && searchResults.length > 0 && (
@@ -575,6 +865,16 @@ const FoodLog: React.FC = () => {
                     </Button>
                   }
                 >
+                  {food.imageUrl && (
+                    <ListItemAvatar>
+                      <Avatar
+                        variant="rounded"
+                        src={food.imageUrl}
+                        alt={food.name}
+                        sx={{ width: 48, height: 48, mr: 1, bgcolor: 'var(--color-bg)' }}
+                      />
+                    </ListItemAvatar>
+                  )}
                   <ListItemText
                     primary={<Typography sx={{ fontWeight: '500', color: 'var(--color-primary-dark)' }}>{food.name}</Typography>}
                     secondary={`${food.brandName ? `${food.brandName} - ` : ''}${food.calories} ${food.calorieUnit || 'kcal'} per ${food.servingSize}`}
@@ -584,7 +884,7 @@ const FoodLog: React.FC = () => {
             </List>
           </Paper>
         )}
-        {!isLoadingSearch && searchQuery.trim() !== '' && searchResults.length === 0 && !searchError && (
+        {!isLoadingSearch && lookupMode === 'search' && searchQuery.trim() !== '' && searchResults.length === 0 && !searchError && (
           <Typography sx={{ my: 2, color: 'var(--color-secondary)', textAlign: 'center', fontStyle: 'italic' }}>No results found for "{searchQuery}".</Typography>
         )}
       </Paper>
