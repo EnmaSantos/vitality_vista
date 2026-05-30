@@ -110,7 +110,7 @@ const Landing: React.FC = () => {
                 <MonitorHeartIcon fontSize="small" />
               </Box>
               <Typography component="p" sx={{ fontWeight: 800, fontSize: '1.05rem' }}>
-                Vitality Vista
+                vitalitivista
               </Typography>
             </Stack>
 
@@ -214,7 +214,7 @@ const Landing: React.FC = () => {
                 mb: 2
               }}
             >
-              Vitality Vista
+              vitalitivista
             </Typography>
             <Typography
               sx={{
@@ -506,7 +506,7 @@ const Landing: React.FC = () => {
             spacing={2}
           >
             <Typography sx={{ color: '#53635a', fontSize: '0.95rem' }}>
-              (c) 2026 Vitality Vista
+              (c) 2026 vitalitivista
             </Typography>
             <Stack
               direction="row"
