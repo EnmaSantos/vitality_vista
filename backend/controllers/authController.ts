@@ -3,6 +3,8 @@ import { Context, createJwt, getNumericDate } from "../deps.ts"; // Import neede
 import dbClient, { ensureConnection } from "../services/db.ts"; // Import the database client and ensureConnection
 import { UserSchema, USER_TABLE_NAME } from "../models/user.model.ts"; // Import the schema and table name [cite: backend/models/user.model.ts]
 import { hash, compare } from "../services/password.ts"; // Import hash and compare from our custom password service
+import { verifyGoogleIdToken } from "../services/googleAuth.ts";
+import type { VerifiedGoogleProfile } from "../services/googleAuth.ts";
 
 // --- Interfaces (DTOs and API Response) ---
 // UserSchema from user.model.ts now represents the DB/internal user structure
@@ -30,6 +32,12 @@ interface LoginDTO {
   password: string;
 }
 
+interface GoogleLoginDTO {
+  credential: string;
+}
+
+const AUTH_IDENTITIES_TABLE_NAME = "user_auth_identities";
+
 // --- Helper Functions ---
 
 // Takes UserSchema (snake_case from DB) and returns UserResponse (camelCase for API)
@@ -47,13 +55,32 @@ function sanitizeUser(user: UserSchema): UserResponse {
 async function findUserByEmail(email: string): Promise<UserSchema | undefined> {
   try {
     const result = await dbClient.queryObject<UserSchema>(
-      `SELECT * FROM ${USER_TABLE_NAME} WHERE email = $1 LIMIT 1`,
+      `SELECT * FROM ${USER_TABLE_NAME} WHERE LOWER(email) = LOWER($1) LIMIT 1`,
       [email],
     );
     return result.rows[0]; // Returns the user object or undefined if not found
   } catch (dbError) {
     console.error("Error in findUserByEmail:", dbError);
     throw dbError; // Re-throw the error to be caught by the calling function
+  }
+}
+
+async function findUserByGoogleSubject(providerUserId: string): Promise<UserSchema | undefined> {
+  try {
+    const result = await dbClient.queryObject<UserSchema>(
+      `SELECT u.*
+       FROM ${USER_TABLE_NAME} u
+       INNER JOIN ${AUTH_IDENTITIES_TABLE_NAME} auth_identity
+         ON auth_identity.user_id = u.id
+       WHERE auth_identity.provider = 'google'
+         AND auth_identity.provider_user_id = $1
+       LIMIT 1`,
+      [providerUserId],
+    );
+    return result.rows[0];
+  } catch (dbError) {
+    console.error("Error in findUserByGoogleSubject:", dbError);
+    throw dbError;
   }
 }
 
@@ -79,7 +106,7 @@ async function createUser(data: RegisterDTO, passwordHash: string): Promise<User
       `INSERT INTO ${USER_TABLE_NAME} (email, password_hash, first_name, last_name, weight_kg)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [data.email, passwordHash, data.firstName, data.lastName, data.weight],
+      [data.email.toLowerCase(), passwordHash, data.firstName, data.lastName, data.weight],
     );
     // Assuming the insert was successful, return the first row (the new user)
     if (!result.rows[0]) {
@@ -92,6 +119,68 @@ async function createUser(data: RegisterDTO, passwordHash: string): Promise<User
      // For now, just re-throw
      throw dbError;
   }
+}
+
+function getGoogleUserNames(profile: VerifiedGoogleProfile): { firstName: string; lastName: string } {
+  const fallbackName = profile.name?.trim() || profile.email.split("@")[0];
+  const [fallbackFirstName, ...fallbackLastNameParts] = fallbackName.split(/\s+/);
+
+  return {
+    firstName: profile.givenName?.trim() || fallbackFirstName || "Google",
+    lastName: profile.familyName?.trim() || fallbackLastNameParts.join(" "),
+  };
+}
+
+async function createGoogleUser(profile: VerifiedGoogleProfile): Promise<UserSchema> {
+  try {
+    const names = getGoogleUserNames(profile);
+    const result = await dbClient.queryObject<UserSchema>(
+      `INSERT INTO ${USER_TABLE_NAME} (email, password_hash, first_name, last_name)
+       VALUES ($1, NULL, $2, $3)
+       RETURNING *`,
+      [profile.email, names.firstName, names.lastName],
+    );
+
+    if (!result.rows[0]) {
+      throw new Error("Google user creation failed, no data returned.");
+    }
+
+    return result.rows[0];
+  } catch (dbError) {
+    console.error("Error in createGoogleUser:", dbError);
+    throw dbError;
+  }
+}
+
+async function linkGoogleIdentity(userId: string, profile: VerifiedGoogleProfile): Promise<void> {
+  try {
+    await dbClient.queryObject(
+      `INSERT INTO ${AUTH_IDENTITIES_TABLE_NAME}
+         (provider, provider_user_id, user_id, email)
+       VALUES ('google', $1, $2, $3)
+       ON CONFLICT (provider, provider_user_id)
+       DO UPDATE SET
+         user_id = EXCLUDED.user_id,
+         email = EXCLUDED.email,
+         updated_at = CURRENT_TIMESTAMP`,
+      [profile.sub, userId, profile.email],
+    );
+  } catch (dbError) {
+    console.error("Error in linkGoogleIdentity:", dbError);
+    throw dbError;
+  }
+}
+
+function sendAuthSuccess(ctx: Context, user: UserSchema, token: string, message: string, status = 200) {
+  ctx.response.status = status;
+  ctx.response.body = {
+    success: true,
+    message,
+    data: {
+      token,
+      user: sanitizeUser(user),
+    },
+  };
 }
 
 // --- JWT Helper Functions (remain the same) ---
@@ -157,16 +246,7 @@ export async function register(ctx: Context) {
     // Generate JWT token
     const token = await generateToken(newUser.id); // Use ID from the created user
 
-    // Return success response (sanitizeUser now expects UserSchema)
-    ctx.response.status = 201;
-    ctx.response.body = {
-      success: true,
-      message: "User registered successfully",
-      data: {
-        token,
-        user: sanitizeUser(newUser), // Pass UserSchema to sanitizeUser
-      },
-    };
+    sendAuthSuccess(ctx, newUser, token, "User registered successfully", 201);
   } catch (error: unknown) {
     console.error("Registration error:", error); // Log the actual error
     // Handle specific DB errors like unique constraint violation if needed
@@ -203,6 +283,12 @@ export async function login(ctx: Context) {
       return;
     }
 
+    if (!user.password_hash) {
+      ctx.response.status = 401;
+      ctx.response.body = { success: false, message: "Invalid credentials" };
+      return;
+    }
+
     // Check password using scrypt compare instead of bcrypt
     const isPasswordValid = await compare(body.password, user.password_hash);
     if (!isPasswordValid) {
@@ -214,16 +300,7 @@ export async function login(ctx: Context) {
     // Generate JWT token
     const token = await generateToken(user.id);
 
-    // Return success response (sanitizeUser now expects UserSchema)
-    ctx.response.status = 200;
-    ctx.response.body = {
-      success: true,
-      message: "Login successful",
-      data: {
-        token,
-        user: sanitizeUser(user), // Pass UserSchema to sanitizeUser
-      },
-    };
+    sendAuthSuccess(ctx, user, token, "Login successful");
   } catch (error) {
     console.error("Login error:", error);
     ctx.response.status = 500;
@@ -231,6 +308,49 @@ export async function login(ctx: Context) {
       success: false,
       message: "Server error during login",
       error: (error instanceof Error) ? error.message : "Unknown error",
+    };
+  }
+}
+
+export async function googleLogin(ctx: Context) {
+  try {
+    await ensureConnection();
+
+    const result = ctx.request.body({ type: "json" });
+    const body: GoogleLoginDTO = await result.value;
+
+    if (!body.credential) {
+      ctx.response.status = 400;
+      ctx.response.body = { success: false, message: "Google credential is required" };
+      return;
+    }
+
+    const googleProfile = await verifyGoogleIdToken(body.credential);
+    let user = await findUserByGoogleSubject(googleProfile.sub);
+
+    if (!user) {
+      user = await findUserByEmail(googleProfile.email);
+
+      if (user) {
+        await linkGoogleIdentity(user.id, googleProfile);
+      } else {
+        user = await createGoogleUser(googleProfile);
+        await linkGoogleIdentity(user.id, googleProfile);
+      }
+    }
+
+    const token = await generateToken(user.id);
+    sendAuthSuccess(ctx, user, token, "Google login successful");
+  } catch (error) {
+    console.error("Google login error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const isConfigError = message === "Google auth is not configured";
+
+    ctx.response.status = isConfigError ? 500 : 401;
+    ctx.response.body = {
+      success: false,
+      message: isConfigError ? "Google login is not configured" : "Google login failed",
+      error: message,
     };
   }
 }

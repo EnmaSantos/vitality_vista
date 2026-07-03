@@ -1,256 +1,217 @@
-# Vitality Vista 🏋️‍♂️
+# Vitality Vista
 
-A comprehensive fitness and nutrition tracking application that helps users manage their health journey through exercise planning, food logging, recipe discovery, and progress monitoring. Built with modern web technologies including React, TypeScript, Material UI, and Deno.
+Vitality Vista is a full-stack fitness and nutrition tracker for everyday health routines. It gives users one place to plan workouts, log food and water, discover recipes, manage goals, and review progress over time.
 
-## 🎯 Project Overview
+The landing page and this README now focus on actual app capabilities instead of a generic feature pitch. Screenshots are stored in `frontend/public/screenshots` and use representative demo data to show the workflows already implemented in the app.
 
-Vitality Vista is a full-stack fitness application that provides users with a complete ecosystem for managing their health and wellness. The app integrates exercise data, nutrition tracking, recipe discovery, and progress visualization to create a holistic fitness experience.
+## Product Screenshots
 
-## ✨ Core Features
+| Daily dashboard | Food and water log |
+| --- | --- |
+| ![Dashboard showing calories, hydration, goals, and TDEE balance](frontend/public/screenshots/dashboard.png) | ![Food log showing lookup modes, search results, macros, meals, and water tracking](frontend/public/screenshots/food.png) |
 
-### 🏃‍♀️ **Exercise Management**
-- **Exercise Library**: Browse and search through a comprehensive database of exercises
-- **Workout Planning**: Create custom workout plans with exercises, sets, reps, and rest periods
-- **Plan Management**: View, edit, and delete workout plans with full CRUD operations
-- **Workout Logging**: Log completed workouts with detailed exercise tracking
-- **Exercise Details**: View comprehensive exercise information including instructions and muscle groups
+| Workout planning | Recipe discovery |
+| --- | --- |
+| ![Workout plans showing exercises, logging controls, history, and session preview](frontend/public/screenshots/workouts.png) | ![Recipe discovery showing recipe details, ingredients, nutrition, and categories](frontend/public/screenshots/recipes.png) |
 
-### 🍎 **Nutrition Tracking**
-- **Food Logging**: Search and log foods using the FatSecret API integration
-- **Daily Nutrition Summary**: Track calories, protein, carbs, and fat intake
-- **Meal Organization**: Organize food entries by meal type (breakfast, lunch, dinner, snacks)
-- **Nutritional Data**: Access detailed nutritional information for logged foods
+| Progress analytics |
+| --- |
+| ![Progress analytics showing body metrics, calories, workout frequency, and trend charts](frontend/public/screenshots/progress.png) |
 
-### 🍳 **Recipe Discovery**
-- **Recipe Search**: Search thousands of recipes using the FatSecret API
-- **Recipe Categories**: Filter recipes by type and category
-- **Detailed Recipe View**: View complete recipe information including ingredients, instructions, and nutritional breakdown
-- **Recipe Integration**: Seamlessly add recipe ingredients to your food log
+## What The App Can Do
 
-### 📊 **Progress Tracking**
-- **Dashboard Overview**: Daily summary of nutrition and fitness metrics
-- **Progress Visualization**: Charts and graphs for tracking weight, body composition, and fitness metrics
-- **Goal Setting**: Set and track fitness and nutrition goals
-- **Historical Data**: View trends and patterns over time
+### Daily Dashboard
 
-### 👤 **User Management**
-- **User Authentication**: Secure login and registration system
-- **Profile Management**: Store and manage personal information, fitness goals, and preferences
-- **TDEE Calculation**: Automatic calculation of Total Daily Energy Expenditure based on profile data
-- **Personalized Experience**: Customized dashboard and recommendations
+- Summarizes calories consumed, calories burned, net calories, and hydration.
+- Shows TDEE context from the user profile.
+- Tracks daily goals with completion states.
+- Pulls together food, workout, water, and goal data into one check-in view.
 
-## 🛠️ Technology Stack
+### Food And Water Logging
+
+- Searches foods through the FatSecret-backed food lookup flow.
+- Supports meal text analysis, barcode lookup, image recognition, and manual entries.
+- Logs calories, protein, carbs, fat, servings, meal type, notes, and date.
+- Tracks water intake with quick-add amounts and daily totals.
+
+### Workout Planning
+
+- Lets users browse exercises and create reusable workout plans.
+- Stores plan exercises with sets, reps, weight, duration, rest periods, and notes.
+- Starts planned workout sessions or logs individual exercises.
+- Keeps workout history for later review.
+
+### Recipe Discovery
+
+- Searches recipes and recipe categories through FatSecret recipe endpoints.
+- Displays recipe details, ingredients, instructions, and nutrition information.
+- Helps users find meal ideas that fit their routine before logging food choices.
+
+### Progress Tracking
+
+- Charts weight, body fat, calories, macros, workout frequency, goals, and exercise performance.
+- Supports time range filters such as week, month, quarter, and year.
+- Connects profile, nutrition, and workout data into longer-term progress views.
+
+### Account And Profile
+
+- Provides registration, login, logout, and protected routes.
+- Stores profile information used for personalization and TDEE calculations.
+- Uses JWT-backed authentication for API access.
+
+## Tech Stack
 
 ### Frontend
-- **React 18** with **TypeScript**: Modern, type-safe user interface
-- **Material UI (MUI)**: Professional UI components and design system
-- **React Router**: Client-side routing and navigation
-- **Chart.js**: Data visualization and progress charts
-- **Vite**: Fast development and optimized builds
+
+- React 18
+- TypeScript
+- Vite
+- Material UI
+- React Router
+- Chart.js and react-chartjs-2
+- Tailwind base utilities
 
 ### Backend
-- **Deno**: Secure runtime for TypeScript/JavaScript
-- **Oak**: Middleware framework for Deno
-- **PostgreSQL**: Relational database for data persistence
-- **JWT**: Secure authentication and authorization
 
-### External APIs
-- **FatSecret API**: Comprehensive recipe and nutrition database
-- **Exercise Database API**: Extensive exercise library with detailed information
+- Deno
+- Oak
+- PostgreSQL
+- JWT authentication
+- FatSecret API integration
 
-### Database Schema
-The application uses a comprehensive PostgreSQL schema with the following main tables:
-- `users`: User accounts and authentication
-- `workout_plans`: Custom workout plans
-- `plan_exercises`: Exercises within workout plans
-- `workout_logs`: Completed workout sessions
-- `log_exercise_details`: Detailed exercise performance data
-- `food_log_entries`: Daily food logging records
+## Project Structure
 
-## 🚀 Getting Started
+```text
+.
+|-- backend
+|   |-- controllers
+|   |-- middleware
+|   |-- models
+|   |-- routes
+|   |-- scripts
+|   |-- services
+|   `-- server.ts
+|-- frontend
+|   |-- public
+|   |   `-- screenshots
+|   |-- src
+|   |   |-- api
+|   |   |-- components
+|   |   |-- context
+|   |   |-- hooks
+|   |   |-- pages
+|   |   `-- services
+|   `-- vite.config.ts
+`-- README.md
+```
+
+## Getting Started
 
 ### Prerequisites
-- Node.js (v16+ recommended)
-- npm or yarn
-- Deno (v1.30+ recommended)
+
+- Node.js 16 or newer
+- npm
+- Deno 1.30 or newer
 - PostgreSQL database
-- Git
+- Google OAuth Web client ID for Sign in with Google
+- FatSecret API credentials
 
-### Frontend Setup
+### Frontend
+
 ```bash
-# Navigate to the frontend directory
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start the development server
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:5173`
+The frontend runs at `http://localhost:5173`.
 
-### Backend Setup
+To point the frontend at a different API server, set:
+
 ```bash
-# Navigate to the backend directory
+VITE_API_BASE_URL=http://localhost:8000/api
+VITE_GOOGLE_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
+```
+
+### Backend
+
+```bash
 cd backend
-
-# Set up environment variables (create .env file)
-# Required: DATABASE_URL, JWT_SECRET, FATSECRET_CLIENT_ID, FATSECRET_CLIENT_SECRET
-
-# Run the Deno server
 deno task start
 ```
 
-The backend API will be available at `http://localhost:8000/api`
+The backend defaults to `http://localhost:8000/api`.
 
-### Database Setup
+Create a backend `.env` file with the values your local environment needs:
+
 ```bash
-# Import the database schema
-psql -d your_database_name -f vitality_vista_schema.sql
+DATABASE_URL=postgres://user:password@localhost:5432/vitality_vista
+JWT_SECRET=replace-with-a-secret
+GOOGLE_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
+FATSECRET_CLIENT_ID=replace-with-fatsecret-client-id
+FATSECRET_CLIENT_SECRET=replace-with-fatsecret-client-secret
 ```
 
-## 📱 Application Structure
+The repo includes `backend/scripts/run_setup.ts` for the Google auth identity table, nullable Google-only user fields, water logs, and daily goals tables. Run it after the base user/profile/workout/food schema exists:
 
-### Main Pages
-- **Dashboard**: Daily overview and quick access to key metrics
-- **Exercises**: Browse and search exercise library, create workout plans
-- **My Plans**: Manage existing workout plans and log workouts
-- **Food Log**: Track daily nutrition and food intake
-- **Recipes**: Discover and explore new recipes
-- **Progress**: View charts and track fitness progress over time
-- **Profile**: Manage personal information and settings
+```bash
+cd backend
+deno run --allow-net --allow-env --allow-read scripts/run_setup.ts
+```
 
-### Key Features by Page
+## Main Routes
 
-#### Dashboard
-- Daily calorie and macro tracking
-- TDEE calculation and comparison
-- Quick access to recent activities
-- Personalized fitness summary
+### Frontend Pages
 
-#### Exercises
-- Search and filter exercises by category
-- View detailed exercise information
-- Add exercises to workout plans
-- Log individual exercises or complete workouts
+- `/landing` - public product landing page with screenshots
+- `/login` - sign in
+- `/signup` - create account
+- `/dashboard` - daily health overview
+- `/exercises` - exercise browsing and plan creation
+- `/my-plans` - saved workout plans
+- `/workout-history` - completed workouts
+- `/food-log` - food and water logging
+- `/recipes` - recipe discovery
+- `/progress` - charts and analytics
+- `/profile` - profile and preference management
 
-#### My Plans
-- Create and manage workout plans
-- Add/remove exercises from plans
-- Edit exercise parameters (sets, reps, weight, etc.)
-- Log completed workouts from plans
+### Backend API Areas
 
-#### Food Log
-- Search foods using FatSecret API
-- Log foods with custom quantities
-- Organize by meal type
-- View daily nutritional totals
+- `/api/auth` - registration, login, logout, token verification, password reset
+- `/api/workout-plans` - workout plan and exercise management
+- `/api/food-logs` - food log CRUD
+- `/api/water-logs` - hydration logging
+- `/api/goals` - daily goals
+- `/api/fatsecret/foods` - FatSecret food proxy
+- `/api/fatsecret/recipes` - recipe search and details
+- `/api/users/me/profile` - profile management
+- `/api/progress` - progress analytics
 
-#### Recipes
-- Search recipes by name or category
-- View detailed recipe information
-- Access nutritional data per serving
-- Save favorite recipes (planned feature)
+## Current Status
 
-#### Progress
-- Weight tracking over time
-- Body composition monitoring
-- Workout frequency and duration
-- Customizable time ranges and metrics
+Implemented:
 
-## 🔌 API Endpoints
+- Authentication and protected routes
+- Dashboard summaries
+- Food lookup and food logging
+- Water logging
+- Daily goals
+- Exercise browsing and workout plan management
+- Workout sessions and history
+- Recipe discovery
+- Progress charts
+- Profile management and TDEE-related data
+- Responsive landing page with screenshot-led capability sections
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/forgot-password` - Password reset
+Planned or still evolving:
 
-### Workout Management
-- `GET /api/workout-plans` - Get user's workout plans
-- `POST /api/workout-plans` - Create new workout plan
-- `PUT /api/workout-plans/:id` - Update workout plan
-- `DELETE /api/workout-plans/:id` - Delete workout plan
-- `GET /api/workout-plans/:id/exercises` - Get exercises in plan
-- `POST /api/workout-plans/:id/exercises` - Add exercise to plan
-
-### Food Logging
-- `GET /api/food-logs` - Get food log entries
-- `POST /api/food-logs` - Create food log entry
-- `PUT /api/food-logs/:id` - Update food log entry
-- `DELETE /api/food-logs/:id` - Delete food log entry
-
-### Recipe Integration
-- `GET /api/fatsecret/recipes/search` - Search recipes
-- `GET /api/fatsecret/recipes/:id` - Get recipe details
-- `GET /api/fatsecret/recipes/types` - Get recipe categories
-
-### User Profile
-- `GET /api/users/me/profile` - Get user profile
-- `PUT /api/users/me/profile` - Update user profile
-
-## 🎨 Design System
-
-The application uses a consistent color palette and design language:
-- **Primary Colors**: Earth tones and natural greens
-- **Typography**: Clean, readable fonts with proper hierarchy
-- **Components**: Reusable Material UI components with custom theming
-- **Responsive Design**: Mobile-first approach with responsive layouts
-
-## 🔒 Security Features
-
-- JWT-based authentication
-- Protected API endpoints
-- Input validation and sanitization
-- Secure password handling
-- CORS configuration for cross-origin requests
-
-## 📈 Current Status
-
-### ✅ Completed Features
-- User authentication and registration
-- Exercise library with search and filtering
-- Workout plan creation and management
-- Food logging with FatSecret API integration
-- Recipe discovery and detailed viewing
-- Progress tracking with charts
-- User profile management
-- Responsive design and mobile support
-
-### 🚧 In Development
-- Enhanced workout logging functionality
-- Advanced progress analytics
+- More advanced workout analytics
 - Recipe saving and meal planning
-- Social features and community aspects
-- Mobile app development
+- Broader device or wearable integrations
+- More complete database setup documentation
 
-### 📋 Planned Features
-- Barcode scanning for food items
-- Wearable device integration
-- Advanced analytics and insights
-- Community features and challenges
-- Meal planning and grocery lists
+## Developer
 
-## 🤝 Contributing
+Enmanuel De Los Santos Cruz - [@EnmanueldelosS3](https://x.com/EnmanueldelosS3)
 
-This is a personal learning project, but contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
-## 👨‍💻 Developer
-
-**Enmanuel De Los Santos Cruz** - [@EnmanueldelosS3](https://x.com/EnmanueldelosS3)
-
-Project Link: [https://github.com/EnmaSantos/vitality_vista](https://github.com/EnmaSantos/vitality_vista)
-
----
-
-*Vitality Vista is a comprehensive fitness tracking application designed to help users achieve their health and wellness goals through integrated exercise planning, nutrition tracking, and progress monitoring.*
+Project link: [https://github.com/EnmaSantos/vitality_vista](https://github.com/EnmaSantos/vitality_vista)

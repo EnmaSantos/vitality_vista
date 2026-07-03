@@ -98,7 +98,7 @@ interface UpdateWorkoutPlanRequest {
 /**
  * Creates a new workout plan for the authenticated user
  */
-export async function createWorkoutPlanHandler(ctx: RouterContext) {
+export async function createWorkoutPlanHandler(ctx: RouterContext<any, any>) {
   const response: ApiResponse<WorkoutPlanSchema> = { success: false };
   
   try {
@@ -180,7 +180,7 @@ export async function createWorkoutPlanHandler(ctx: RouterContext) {
 /**
  * Updates an existing workout plan for the authenticated user
  */
-export async function updateWorkoutPlanHandler(ctx: RouterContext) {
+export async function updateWorkoutPlanHandler(ctx: RouterContext<any, any>) {
   const response: ApiResponse<WorkoutPlanSchema> = { success: false };
 
   try {
@@ -281,7 +281,7 @@ export async function updateWorkoutPlanHandler(ctx: RouterContext) {
 /**
  * Gets all workout plans for the authenticated user
  */
-export async function getUserWorkoutPlansHandler(ctx: RouterContext) {
+export async function getUserWorkoutPlansHandler(ctx: RouterContext<any, any>) {
   const response: ApiResponse<WorkoutPlanSchema[]> = { success: false };
   
   try {
@@ -329,7 +329,7 @@ export async function getUserWorkoutPlansHandler(ctx: RouterContext) {
 /**
  * Adds an exercise to a specific workout plan
  */
-export async function addExerciseToPlanHandler(ctx: RouterContext) {
+export async function addExerciseToPlanHandler(ctx: RouterContext<any, any>) {
   const response: ApiResponse<PlanExerciseSchema> = { success: false };
   
   try {
@@ -454,7 +454,7 @@ export async function addExerciseToPlanHandler(ctx: RouterContext) {
 /**
  * Creates a new workout log (actual workout session)
  */
-export async function createWorkoutLogHandler(ctx: RouterContext) {
+export async function createWorkoutLogHandler(ctx: RouterContext<any, any>) {
   const response: ApiResponse<WorkoutLogSchema> = { success: false };
   
   try {
@@ -522,7 +522,7 @@ export async function createWorkoutLogHandler(ctx: RouterContext) {
 /**
  * Logs exercise details for a workout session
  */
-export async function logExerciseDetailsHandler(ctx: RouterContext) {
+export async function logExerciseDetailsHandler(ctx: RouterContext<any, any>) {
   const response: ApiResponse<LogExerciseDetailSchema> = { success: false };
   
   try {
@@ -689,7 +689,7 @@ export async function logExerciseDetailsHandler(ctx: RouterContext) {
 /**
  * Gets all workout logs for the authenticated user
  */
-export async function getUserWorkoutLogsHandler(ctx: RouterContext) {
+export async function getUserWorkoutLogsHandler(ctx: RouterContext<any, any>) {
   const response: ApiResponse<WorkoutLogSchema[]> = { success: false };
   
   try {
@@ -769,7 +769,7 @@ export async function getUserWorkoutLogsHandler(ctx: RouterContext) {
 /**
  * Gets exercise details for a specific workout log
  */
-export async function getWorkoutLogDetailsHandler(ctx: RouterContext) {
+export async function getWorkoutLogDetailsHandler(ctx: RouterContext<any, any>) {
   const response: ApiResponse<LogExerciseDetailSchema[]> = { success: false };
   
   try {
@@ -848,7 +848,7 @@ export async function getWorkoutLogDetailsHandler(ctx: RouterContext) {
 }
 
 // --- New: Get exercises for a specific plan ---
-export async function getPlanExercisesHandler(ctx: RouterContext) {
+export async function getPlanExercisesHandler(ctx: RouterContext<any, any>) {
   const response: ApiResponse<PlanExerciseSchema[]> = { success: false };
   try {
     await ensureConnection();
@@ -897,7 +897,7 @@ export async function getPlanExercisesHandler(ctx: RouterContext) {
   }
 }
 
-export async function deleteWorkoutPlanHandler(ctx: RouterContext) {
+export async function deleteWorkoutPlanHandler(ctx: RouterContext<any, any>) {
   console.log("[deleteWorkoutPlanHandler] Handler called");
   console.log("[deleteWorkoutPlanHandler] Plan ID from params:", ctx.params.planId);
   console.log("[deleteWorkoutPlanHandler] User ID from state:", ctx.state.userId);
@@ -946,7 +946,7 @@ export async function deleteWorkoutPlanHandler(ctx: RouterContext) {
   }
 }
 
-export async function removeExerciseFromPlanHandler(ctx: RouterContext) {
+export async function removeExerciseFromPlanHandler(ctx: RouterContext<any, any>) {
   const response: ApiResponse = { success: false };
   try {
     await ensureConnection();
@@ -979,7 +979,7 @@ export async function removeExerciseFromPlanHandler(ctx: RouterContext) {
 }
 
 // --- New: Update a specific exercise within a workout plan ---
-export async function updatePlanExerciseHandler(ctx: RouterContext) {
+export async function updatePlanExerciseHandler(ctx: RouterContext<any, any>) {
   console.log("[updatePlanExerciseHandler] Handler called");
   const response: ApiResponse<PlanExerciseSchema> = { success: false };
 
@@ -1099,7 +1099,7 @@ export async function updatePlanExerciseHandler(ctx: RouterContext) {
 /**
  * Updates a workout log (for editing workout names stored in notes)
  */
-export async function updateWorkoutLogHandler(ctx: RouterContext) {
+export async function updateWorkoutLogHandler(ctx: RouterContext<any, any>) {
   const response: ApiResponse<WorkoutLogSchema> = { success: false };
   
   try {

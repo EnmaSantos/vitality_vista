@@ -8,9 +8,9 @@
 export interface UserSchema {
     id: string; // In PostgreSQL, likely type: UUID (primary key) or SERIAL/BIGSERIAL
     email: string; // In PostgreSQL, likely type: VARCHAR(255) or TEXT, UNIQUE, NOT NULL
-    password_hash: string; // In PostgreSQL, likely type: TEXT or VARCHAR, NOT NULL (renamed from passwordHash for SQL convention)
-    first_name: string; // In PostgreSQL, likely type: VARCHAR(100) or TEXT (renamed from firstName)
-    last_name: string; // In PostgreSQL, likely type: VARCHAR(100) or TEXT (renamed from lastName)
+    password_hash: string | null; // Google-only users do not have a local password hash.
+    first_name: string | null; // In PostgreSQL, likely type: VARCHAR(100) or TEXT (renamed from firstName)
+    last_name: string | null; // In PostgreSQL, likely type: VARCHAR(100) or TEXT (renamed from lastName)
     created_at: Date; // In PostgreSQL, likely type: TIMESTAMPTZ DEFAULT NOW() NOT NULL
     updated_at: Date; // In PostgreSQL, likely type: TIMESTAMPTZ DEFAULT NOW() NOT NULL
     // We can add fitness-specific fields later as mentioned in next-steps.md [cite: vitality_vista.zip/next-steps.md]

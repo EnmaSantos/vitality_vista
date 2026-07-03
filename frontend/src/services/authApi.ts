@@ -27,6 +27,10 @@ interface User {
       email: string;
       password: string;
   }
+
+  interface GoogleLoginCredentials {
+      credential: string;
+  }
   
   // --- Added: Type for the register credentials payload ---
   export interface RegisterCredentials extends LoginCredentials {
@@ -92,6 +96,48 @@ interface User {
           throw error;
       } else {
           throw new Error("An unknown error occurred during login.");
+      }
+    }
+  }
+
+  export async function loginWithGoogle(credential: string): Promise<AuthResponseData> {
+    console.log("authApi: Sending Google login request...");
+    const credentials: GoogleLoginCredentials = { credential };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      let responseData: AuthApiResponse;
+      try {
+          responseData = await response.json();
+      } catch (jsonError) {
+          if (!response.ok) {
+               throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          console.error("JSON parsing failed despite OK status:", jsonError);
+          throw new Error("Failed to parse server response.");
+      }
+
+      if (!response.ok || !responseData.success || !responseData.data) {
+        console.log("authApi: Google login failed response:", responseData);
+        throw new Error(responseData.message || `Google login failed. Status: ${response.status}`);
+      }
+
+      console.log("authApi: Google login successful.");
+      return responseData.data;
+    } catch (error) {
+      console.error("authApi: Google login API call failed:", error);
+      if (error instanceof Error) {
+          throw error;
+      } else {
+          throw new Error("An unknown error occurred during Google login.");
       }
     }
   }

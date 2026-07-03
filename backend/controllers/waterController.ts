@@ -1,4 +1,3 @@
-import { Context } from "../deps.ts";
 import { RouterContext } from "../deps.ts";
 import dbClient, { ensureConnection } from "../services/db.ts";
 
@@ -10,7 +9,7 @@ interface ApiResponse<T = any> {
 }
 
 // POST /api/water-logs
-export async function logWaterHandler(ctx: RouterContext) {
+export async function logWaterHandler(ctx: RouterContext<any, any>) {
     const response: ApiResponse = { success: false };
     try {
         const userId = ctx.state.userId as string;
@@ -64,7 +63,7 @@ export async function logWaterHandler(ctx: RouterContext) {
 }
 
 // GET /api/water-logs/daily?date=YYYY-MM-DD
-export async function getDailyWaterHandler(ctx: RouterContext) {
+export async function getDailyWaterHandler(ctx: RouterContext<any, any>) {
     try {
         const userId = ctx.state.userId as string;
         if (!userId) {

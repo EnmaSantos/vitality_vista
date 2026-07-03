@@ -1,4 +1,3 @@
-import { Context } from "../deps.ts";
 import { RouterContext } from "../deps.ts";
 import dbClient, { ensureConnection } from "../services/db.ts";
 import { UserBodyMetricLogSchema } from "../models/userBodyMetricLog.model.ts";
@@ -14,7 +13,7 @@ interface ApiResponse<T = any> {
 /**
  * Gets all metric logs for a specific metric type for the authenticated user.
  */
-export async function getUserMetricLogsHandler(ctx: Context) {
+export async function getUserMetricLogsHandler(ctx: RouterContext<any, any>) {
   const response: ApiResponse<UserBodyMetricLogSchema[]> = { success: false };
   try {
     await ensureConnection();
@@ -148,7 +147,7 @@ function calculateCaloriesBurned(
  * Get daily calorie summary including food intake and exercise burn
  * GET /api/progress/daily-calories?date=YYYY-MM-DD
  */
-export async function getDailyCalorieSummaryHandler(ctx: RouterContext) {
+export async function getDailyCalorieSummaryHandler(ctx: RouterContext<any, any>) {
   try {
     const userId = ctx.state.userId as string;
     if (!userId) {
@@ -304,7 +303,7 @@ export async function getDailyCalorieSummaryHandler(ctx: RouterContext) {
  * Get comprehensive progress data for charts and analysis
  * GET /api/progress?timeRange=week|month|quarter|year
  */
-export async function getProgressDataHandler(ctx: RouterContext) {
+export async function getProgressDataHandler(ctx: RouterContext<any, any>) {
   try {
     const userId = ctx.state.userId as string;
     if (!userId) {
@@ -510,7 +509,7 @@ function getDaysInRange(timeRange: string): number {
  * Get exercise progress and PRs
  * GET /api/progress/exercises
  */
-export async function getExerciseProgressHandler(ctx: RouterContext) {
+export async function getExerciseProgressHandler(ctx: RouterContext<any, any>) {
   try {
     const userId = ctx.state.userId as string;
     if (!userId) {
@@ -610,4 +609,4 @@ export async function getExerciseProgressHandler(ctx: RouterContext) {
       error: error instanceof Error ? error.message : "Unknown error occurred"
     };
   }
-} 
+}

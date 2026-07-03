@@ -19,6 +19,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean; // To handle initial check for stored token
   login: (email: string, password: string) => Promise<void>; // Placeholder for now
+  loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void; // Placeholder for now
   register: (credentials: RegisterCredentials) => Promise<void>; // Added register
 }
@@ -31,6 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true, // Start as true until initial check is done
   login: async () => { throw new Error('Login function not implemented'); },
+  loginWithGoogle: async () => { throw new Error('Google login function not implemented'); },
   logout: () => { throw new Error('Logout function not implemented'); },
   register: async () => { throw new Error('Register function not implemented'); }, // Added default
 });
@@ -46,6 +48,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true); // Loading state for initial check
 
+  const applyAuthData = (responseData: { token: string; user: User }) => {
+    setToken(responseData.token);
+    setUser(responseData.user);
+    setIsAuthenticated(true);
+    localStorage.setItem('authToken', responseData.token);
+    localStorage.setItem('authUser', JSON.stringify(responseData.user));
+  };
+
+  const clearAuthData = () => {
+    setToken(null);
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
+  };
+
   // Check localStorage for token on initial mount
   useEffect(() => {
     console.log("AuthProvider: Checking for stored token...");
@@ -57,20 +75,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         authApi.verifyToken()
           .then(data => {
             console.log("AuthProvider: Token is valid.");
-            setToken(data.token);
-            setUser(data.user);
-            setIsAuthenticated(true);
-            localStorage.setItem('authToken', data.token); // Refresh the token
-            localStorage.setItem('authUser', JSON.stringify(data.user));
+            applyAuthData(data);
           })
           .catch(error => {
             console.error("AuthProvider: Token verification failed.", error);
             // Clear invalid token from storage and state
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('authUser');
-            setToken(null);
-            setUser(null);
-            setIsAuthenticated(false);
+            clearAuthData();
           })
           .finally(() => {
             setIsLoading(false);
@@ -83,8 +93,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
         console.error("AuthProvider: Error during initial auth check", error);
         // Ensure state is cleared if something goes wrong
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('authUser');
+        clearAuthData();
         setIsLoading(false); // Finished check, even if with an error
     }
   }, []); // Empty dependency array ensures this runs only once on mount
@@ -98,24 +107,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // If API call was successful (no error thrown), process the data
       console.log("AuthProvider: Login successful.", responseData);
-      setToken(responseData.token);
-      setUser(responseData.user);
-      setIsAuthenticated(true);
-
-      // Store in localStorage for persistence
-      localStorage.setItem('authToken', responseData.token);
-      localStorage.setItem('authUser', JSON.stringify(responseData.user));
+      applyAuthData(responseData);
 
     } catch (error) {
       console.error("AuthProvider: Login failed.", error);
       // Clear any potentially stale auth state/storage on failure
-      setToken(null);
-      setUser(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('authUser');
+      clearAuthData();
       // Re-throw the error so the calling component (e.g., Login page)
       // knows it failed and can display a message to the user.
+      throw error;
+    }
+  };
+
+  const loginWithGoogle = async (credential: string): Promise<void> => {
+    console.log("AuthProvider: Attempting Google login...");
+    try {
+      const responseData = await authApi.loginWithGoogle(credential);
+      console.log("AuthProvider: Google login successful.", responseData);
+      applyAuthData(responseData);
+    } catch (error) {
+      console.error("AuthProvider: Google login failed.", error);
+      clearAuthData();
       throw error;
     }
   };
@@ -130,11 +142,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error("AuthProvider: API logout call failed, but proceeding with local logout.", error);
     } finally {
       // Clear state and localStorage regardless of API call outcome
-      setToken(null);
-      setUser(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('authUser');
+      clearAuthData();
       console.log("AuthProvider: Local state and storage cleared.");
     }
   };
@@ -146,19 +154,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const responseData = await authApi.register(credentials);
       console.log("AuthProvider: Registration successful, user auto-logged in.", responseData);
       // Backend returns token and user upon successful registration
-      setToken(responseData.token);
-      setUser(responseData.user);
-      setIsAuthenticated(true);
-      localStorage.setItem('authToken', responseData.token);
-      localStorage.setItem('authUser', JSON.stringify(responseData.user));
+      applyAuthData(responseData);
     } catch (error) {
       console.error("AuthProvider: Registration failed.", error);
       // Clear any potentially stale auth state/storage on failure
-      setToken(null);
-      setUser(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('authUser');
+      clearAuthData();
       throw error; // Re-throw to be handled by the Signup component
     }
   };
@@ -171,6 +171,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAuthenticated,
     isLoading,
     login,
+    loginWithGoogle,
     logout,
     register
   }), [token, user, isAuthenticated, isLoading]);

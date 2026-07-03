@@ -2,8 +2,6 @@ import React from 'react';
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   Container,
   Grid,
@@ -12,57 +10,75 @@ import {
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import InsightsIcon from '@mui/icons-material/Insights';
 import LocalDiningIcon from '@mui/icons-material/LocalDining';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
-import WaterDropIcon from '@mui/icons-material/WaterDrop';
 
 const navItems = [
-  { label: 'Features', href: '#features' },
-  { label: 'Services', href: '#services' },
+  { label: 'Capabilities', href: '#capabilities' },
+  { label: 'Screenshots', href: '#screenshots' },
   { label: 'Support', href: '#support' }
 ];
 
-const featureCards = [
+const capabilityStats = [
+  { value: '5', label: 'connected workspaces' },
+  { value: '4', label: 'food lookup modes' },
+  { value: '1', label: 'daily health dashboard' }
+];
+
+const capabilities = [
   {
-    icon: <FitnessCenterIcon />,
-    title: 'Plan workouts',
-    description: 'Build routines, track sessions, and keep your exercise history in one place.'
+    icon: <MonitorHeartIcon />,
+    eyebrow: 'Daily dashboard',
+    title: 'Start with the day in front of you',
+    description:
+      'The dashboard brings calorie balance, burned calories, hydration, TDEE, and daily goals into one place so the next action is obvious.',
+    image: '/screenshots/dashboard.png',
+    alt: 'Vitality Vista dashboard screenshot showing calories, water, goals, and TDEE balance.',
+    bullets: ['Net calorie summary', 'Water intake progress', 'Daily goal checklist']
   },
   {
     icon: <LocalDiningIcon />,
-    title: 'Log meals',
-    description: 'Record food, calories, and nutrition details without jumping between tools.'
-  },
-  {
-    icon: <MenuBookIcon />,
-    title: 'Find recipes',
-    description: 'Search recipe ideas that make meal planning easier to keep up with.'
-  },
-  {
-    icon: <InsightsIcon />,
-    title: 'Watch progress',
-    description: 'Review goals, trends, and body metrics so your next step is clear.'
-  }
-];
-
-const serviceCards = [
-  {
-    icon: <MonitorHeartIcon />,
-    title: 'Dashboard',
-    description: 'A daily overview for goals, meals, hydration, and training activity.'
+    eyebrow: 'Food and hydration',
+    title: 'Log nutrition without bouncing between tools',
+    description:
+      'Food Log supports normal search, meal text analysis, barcode lookup, image recognition, manual entries, macro totals, and quick water logging.',
+    image: '/screenshots/food.png',
+    alt: 'Vitality Vista food log screenshot showing food search results, macros, logged meals, and water tracking.',
+    bullets: ['Food search and serving details', 'Text, barcode, and image lookup modes', 'Macro totals and water quick-adds']
   },
   {
     icon: <FitnessCenterIcon />,
-    title: 'Workout tools',
-    description: 'Exercise browsing, saved plans, workout sessions, and workout history.'
+    eyebrow: 'Workout planning',
+    title: 'Build plans and turn them into sessions',
+    description:
+      'Create workout plans from the exercise library, edit sets and reps, start a planned session, or log individual movements into workout history.',
+    image: '/screenshots/workouts.png',
+    alt: 'Vitality Vista workout plan screenshot showing a strength plan, exercise rows, session preview, and history controls.',
+    bullets: ['Reusable workout plans', 'Sets, reps, weight, rest, and notes', 'Session logging and workout history']
   },
   {
-    icon: <WaterDropIcon />,
-    title: 'Wellness tracking',
-    description: 'Progress logs and hydration habits designed around ordinary days.'
+    icon: <MenuBookIcon />,
+    eyebrow: 'Recipe discovery',
+    title: 'Find meals that fit the routine',
+    description:
+      'Recipe search helps users browse meal ideas, inspect ingredients, compare categories, and review nutrition details before adding food choices.',
+    image: '/screenshots/recipes.png',
+    alt: 'Vitality Vista recipes screenshot showing recipe discovery, ingredients, nutrition details, and category filters.',
+    bullets: ['Recipe search and categories', 'Ingredient and instruction review', 'Nutrition per serving']
+  },
+  {
+    icon: <InsightsIcon />,
+    eyebrow: 'Progress analytics',
+    title: 'See whether the habits are working',
+    description:
+      'Progress tracking rolls body metrics, calorie trends, workout frequency, goals, and exercise performance into charts with flexible time ranges.',
+    image: '/screenshots/progress.png',
+    alt: 'Vitality Vista progress screenshot showing weight, body fat, calories, workout frequency, and trend charts.',
+    bullets: ['Weight and body composition charts', 'Nutrition and macro trends', 'Workout consistency summaries']
   }
 ];
 
@@ -73,7 +89,8 @@ const Landing: React.FC = () => {
         minHeight: '100vh',
         bgcolor: '#f7faf7',
         color: '#1f2a24',
-        fontFamily: 'Inter, system-ui, sans-serif'
+        fontFamily: 'Inter, system-ui, sans-serif',
+        overflowX: 'hidden'
       }}
     >
       <Box
@@ -98,6 +115,7 @@ const Landing: React.FC = () => {
               <Box
                 sx={{
                   width: 34,
+                  flex: '0 0 auto',
                   height: 34,
                   display: 'grid',
                   placeItems: 'center',
@@ -109,8 +127,15 @@ const Landing: React.FC = () => {
               >
                 <MonitorHeartIcon fontSize="small" />
               </Box>
-              <Typography component="p" sx={{ fontWeight: 800, fontSize: '1.05rem' }}>
-                vitalitivista
+              <Typography
+                component="p"
+                sx={{
+                  fontWeight: 800,
+                  fontSize: { xs: '1rem', sm: '1.05rem' },
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Vitality Vista
               </Typography>
             </Stack>
 
@@ -164,7 +189,8 @@ const Landing: React.FC = () => {
                   boxShadow: 'none',
                   color: '#ffffff',
                   fontWeight: 800,
-                  px: 2,
+                  minWidth: { xs: 96, sm: 128 },
+                  px: { xs: 1.5, sm: 2 },
                   py: 1,
                   textTransform: 'none',
                   '&:hover': {
@@ -173,7 +199,12 @@ const Landing: React.FC = () => {
                   }
                 }}
               >
-                Get started
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                  Get started
+                </Box>
+                <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+                  Start
+                </Box>
               </Button>
             </Stack>
           </Stack>
@@ -183,19 +214,19 @@ const Landing: React.FC = () => {
       <Box
         component="section"
         sx={{
-          minHeight: { xs: 500, md: 520 },
+          minHeight: { xs: 530, md: 560 },
           display: 'flex',
           alignItems: 'center',
           backgroundImage:
-            'linear-gradient(90deg, rgba(21, 35, 27, 0.86) 0%, rgba(21, 35, 27, 0.62) 45%, rgba(21, 35, 27, 0.2) 100%), url("https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1800&q=80")',
-          backgroundPosition: 'center',
+            'linear-gradient(90deg, rgba(18, 30, 22, 0.94) 0%, rgba(18, 30, 22, 0.82) 42%, rgba(18, 30, 22, 0.18) 100%), url("/screenshots/dashboard.png")',
+          backgroundPosition: { xs: '62% center', md: 'center right' },
           backgroundSize: 'cover'
         }}
       >
         <Container maxWidth="lg">
-          <Box sx={{ maxWidth: 680, py: { xs: 8, md: 10 } }}>
+          <Box sx={{ maxWidth: 670, py: { xs: 8, md: 10 } }}>
             <Chip
-              label="Fitness, food, hydration, and progress"
+              label="Real app workflows, from meals to metrics"
               sx={{
                 bgcolor: '#d9f2e4',
                 color: '#1c4a31',
@@ -207,26 +238,26 @@ const Landing: React.FC = () => {
               variant="h1"
               sx={{
                 color: '#ffffff',
-                fontSize: { xs: '3rem', sm: '4rem', md: '5rem' },
+                fontSize: { xs: '2.85rem', sm: '4rem', md: '5rem' },
                 fontWeight: 900,
                 lineHeight: 1,
                 letterSpacing: 0,
                 mb: 2
               }}
             >
-              vitalitivista
+              Vitality Vista
             </Typography>
             <Typography
               sx={{
                 color: '#eef7f0',
                 fontSize: { xs: '1.05rem', md: '1.25rem' },
                 lineHeight: 1.7,
-                maxWidth: 600,
+                maxWidth: 610,
                 mb: 4
               }}
             >
-              A practical health companion for planning workouts, logging meals,
-              tracking water, saving recipes, and seeing progress without the clutter.
+              A practical health companion for planning workouts, logging food and water,
+              finding recipes, and tracking progress from a single dashboard.
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <Button
@@ -254,7 +285,7 @@ const Landing: React.FC = () => {
               </Button>
               <Button
                 component="a"
-                href="#features"
+                href="#screenshots"
                 variant="outlined"
                 sx={{
                   alignSelf: { xs: 'stretch', sm: 'flex-start' },
@@ -271,23 +302,17 @@ const Landing: React.FC = () => {
                   }
                 }}
               >
-                View features
+                View screenshots
               </Button>
             </Stack>
           </Box>
         </Container>
       </Box>
 
-      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
-        <Box component="section" id="features" sx={{ scrollMarginTop: 96 }}>
-          <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            justifyContent="space-between"
-            alignItems={{ xs: 'flex-start', md: 'flex-end' }}
-            spacing={2}
-            sx={{ mb: 3 }}
-          >
-            <Box sx={{ maxWidth: 680 }}>
+      <Box component="section" id="capabilities" sx={{ scrollMarginTop: 96, py: { xs: 5, md: 7 } }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={3} alignItems="stretch">
+            <Grid item xs={12} md={6}>
               <Typography
                 variant="h2"
                 sx={{
@@ -299,145 +324,178 @@ const Landing: React.FC = () => {
                   mb: 1.5
                 }}
               >
-                Everything you need for the next healthy choice
+                Built around the health work users actually repeat
               </Typography>
               <Typography sx={{ color: '#53635a', fontSize: '1rem', lineHeight: 1.7 }}>
-                Stay focused on daily basics: choose a workout, log meals,
-                track hydration, save recipe ideas, and review your progress.
+                The app is organized around everyday loops: check the dashboard,
+                pick a workout, log food and water, browse recipes, then review progress.
               </Typography>
-            </Box>
-            <Button
-              component={RouterLink}
-              to="/signup"
-              endIcon={<ArrowForwardIcon />}
-              sx={{
-                color: '#31533d',
-                fontWeight: 900,
-                textTransform: 'none'
-              }}
-            >
-              Start tracking
-            </Button>
-          </Stack>
-
-          <Grid container spacing={2}>
-            {featureCards.map((feature) => (
-              <Grid item xs={12} sm={6} md={3} key={feature.title}>
-                <Card
-                  elevation={0}
-                  sx={{
-                    height: '100%',
-                    border: '1px solid #d9e5dc',
-                    borderRadius: 2,
-                    bgcolor: '#ffffff'
-                  }}
-                >
-                  <CardContent sx={{ p: 2.5 }}>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Grid container spacing={1.5}>
+                {capabilityStats.map((stat) => (
+                  <Grid item xs={12} sm={4} key={stat.label}>
                     <Box
                       sx={{
-                        width: 42,
-                        height: 42,
-                        display: 'grid',
-                        placeItems: 'center',
-                        borderRadius: 2,
-                        bgcolor: '#e7f4ec',
-                        color: '#31533d',
-                        mb: 2
-                      }}
-                    >
-                      {feature.icon}
-                    </Box>
-                    <Typography sx={{ fontWeight: 900, mb: 1 }}>{feature.title}</Typography>
-                    <Typography sx={{ color: '#5c6b62', fontSize: '0.92rem', lineHeight: 1.6 }}>
-                      {feature.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-
-        <Box component="section" id="services" sx={{ scrollMarginTop: 96, py: { xs: 6, md: 8 } }}>
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={5}>
-              <Typography
-                variant="h2"
-                sx={{
-                  color: '#19271f',
-                  fontSize: { xs: '2rem', md: '2.5rem' },
-                  fontWeight: 900,
-                  lineHeight: 1.15,
-                  letterSpacing: 0,
-                  mb: 2
-                }}
-              >
-                Core tools for steady routines
-              </Typography>
-              <Typography sx={{ color: '#53635a', lineHeight: 1.7, mb: 3 }}>
-                Each area supports a real part of the app, from daily check-ins
-                to longer-term workout and nutrition habits.
-              </Typography>
-              <Button
-                component={RouterLink}
-                to="/signup"
-                variant="contained"
-                sx={{
-                  bgcolor: '#31533d',
-                  borderRadius: 2,
-                  boxShadow: 'none',
-                  fontWeight: 900,
-                  px: 2.5,
-                  py: 1.15,
-                  textTransform: 'none',
-                  '&:hover': {
-                    bgcolor: '#243f2e',
-                    boxShadow: 'none'
-                  }
-                }}
-              >
-                Create your account
-              </Button>
-            </Grid>
-            <Grid item xs={12} md={7}>
-              <Grid container spacing={2}>
-                {serviceCards.map((service) => (
-                  <Grid item xs={12} sm={4} key={service.title}>
-                    <Card
-                      elevation={0}
-                      sx={{
                         height: '100%',
+                        border: '1px solid #d9e5dc',
                         borderRadius: 2,
-                        border: '1px solid #dbe6df',
-                        bgcolor: '#ffffff'
+                        bgcolor: '#ffffff',
+                        p: 2.5
                       }}
                     >
-                      <CardContent sx={{ p: 2.5 }}>
-                        <Box sx={{ color: '#b45f2a', mb: 1.5 }}>{service.icon}</Box>
-                        <Typography sx={{ fontWeight: 900, mb: 1 }}>{service.title}</Typography>
-                        <Typography sx={{ color: '#5c6b62', fontSize: '0.92rem', lineHeight: 1.6 }}>
-                          {service.description}
-                        </Typography>
-                      </CardContent>
-                    </Card>
+                      <Typography sx={{ color: '#31533d', fontSize: '2rem', fontWeight: 900 }}>
+                        {stat.value}
+                      </Typography>
+                      <Typography sx={{ color: '#5c6b62', fontWeight: 800, lineHeight: 1.4 }}>
+                        {stat.label}
+                      </Typography>
+                    </Box>
                   </Grid>
                 ))}
               </Grid>
             </Grid>
           </Grid>
-        </Box>
+        </Container>
+      </Box>
 
-        <Box
-          component="section"
-          id="support"
-          sx={{
-            scrollMarginTop: 96,
-            bgcolor: '#e9f5ef',
-            border: '1px solid #d2e4d9',
-            borderRadius: 2,
-            p: { xs: 3, md: 4 }
-          }}
-        >
+      <Box
+        component="section"
+        id="screenshots"
+        sx={{
+          scrollMarginTop: 96,
+          bgcolor: '#ffffff',
+          borderTop: '1px solid #dce7df',
+          borderBottom: '1px solid #dce7df'
+        }}
+      >
+        <Container maxWidth="lg" sx={{ py: { xs: 4, md: 7 } }}>
+          <Stack spacing={{ xs: 5, md: 7 }}>
+            {capabilities.map((capability, index) => (
+              <Box
+                component="article"
+                key={capability.title}
+                sx={{
+                  borderTop: index === 0 ? 'none' : '1px solid #e3ece6',
+                  pt: index === 0 ? 0 : { xs: 5, md: 7 }
+                }}
+              >
+                <Grid container spacing={{ xs: 3, md: 5 }} alignItems="center">
+                  <Grid
+                    item
+                    xs={12}
+                    md={5}
+                    sx={{ order: { xs: 1, md: index % 2 === 0 ? 1 : 2 } }}
+                  >
+                    <Stack spacing={2.25}>
+                      <Stack direction="row" alignItems="center" spacing={1.25}>
+                        <Box
+                          sx={{
+                            width: 42,
+                            height: 42,
+                            display: 'grid',
+                            placeItems: 'center',
+                            borderRadius: 2,
+                            bgcolor: '#e7f4ec',
+                            color: '#31533d'
+                          }}
+                          aria-hidden="true"
+                        >
+                          {capability.icon}
+                        </Box>
+                        <Typography
+                          sx={{
+                            color: '#b45f2a',
+                            fontSize: '0.82rem',
+                            fontWeight: 900,
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {capability.eyebrow}
+                        </Typography>
+                      </Stack>
+                      <Typography
+                        variant="h2"
+                        sx={{
+                          color: '#19271f',
+                          fontSize: { xs: '1.75rem', md: '2.35rem' },
+                          fontWeight: 900,
+                          lineHeight: 1.12,
+                          letterSpacing: 0
+                        }}
+                      >
+                        {capability.title}
+                      </Typography>
+                      <Typography sx={{ color: '#53635a', fontSize: '1rem', lineHeight: 1.7 }}>
+                        {capability.description}
+                      </Typography>
+                      <Box
+                        component="ul"
+                        sx={{
+                          display: 'grid',
+                          gap: 1,
+                          listStyle: 'none',
+                          m: 0,
+                          p: 0
+                        }}
+                      >
+                        {capability.bullets.map((bullet) => (
+                          <Box
+                            component="li"
+                            key={bullet}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              color: '#2d4033',
+                              fontWeight: 800
+                            }}
+                          >
+                            <CheckCircleOutlineIcon sx={{ color: '#8fb08f', fontSize: 18 }} />
+                            {bullet}
+                          </Box>
+                        ))}
+                      </Box>
+                    </Stack>
+                  </Grid>
+                  <Grid
+                    item
+                    xs={12}
+                    md={7}
+                    sx={{ order: { xs: 2, md: index % 2 === 0 ? 2 : 1 } }}
+                  >
+                    <Box
+                      component="img"
+                      src={capability.image}
+                      alt={capability.alt}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      sx={{
+                        display: 'block',
+                        width: '100%',
+                        border: '1px solid #d8e3d7',
+                        borderRadius: 2,
+                        boxShadow: '0 22px 58px rgba(31, 42, 36, 0.14)'
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            ))}
+          </Stack>
+        </Container>
+      </Box>
+
+      <Box
+        component="section"
+        id="support"
+        sx={{
+          scrollMarginTop: 96,
+          bgcolor: '#e9f5ef',
+          borderBottom: '1px solid #d2e4d9'
+        }}
+      >
+        <Container maxWidth="lg" sx={{ py: { xs: 5, md: 6 } }}>
           <Grid container spacing={3} alignItems="center">
             <Grid item xs={12} md={8}>
               <Typography
@@ -494,8 +552,8 @@ const Landing: React.FC = () => {
               </Stack>
             </Grid>
           </Grid>
-        </Box>
-      </Container>
+        </Container>
+      </Box>
 
       <Box component="footer" sx={{ borderTop: '1px solid #dce7df', py: 4 }}>
         <Container maxWidth="lg">
@@ -506,7 +564,7 @@ const Landing: React.FC = () => {
             spacing={2}
           >
             <Typography sx={{ color: '#53635a', fontSize: '0.95rem' }}>
-              (c) 2026 vitalitivista
+              (c) 2026 Vitality Vista
             </Typography>
             <Stack
               direction="row"

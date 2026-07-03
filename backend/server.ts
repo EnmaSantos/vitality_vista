@@ -4,7 +4,7 @@ import { Application, oakCors, loadEnv, Router, Context } from "./deps.ts";
 // Load environment variables for the server itself (e.g., PORT)
 // Load environment variables for the server itself (e.g., PORT)
 try {
-  await loadEnv({ export: true });
+  await loadEnv({ export: true, examplePath: null });
 } catch (_e) {
   // On Deno Deploy, .env might not exist, which is fine.
 }
@@ -63,6 +63,7 @@ app.use(oakCors({
       "http://localhost:3000",
       "http://localhost:5173",
       "https://vitality-vista.vercel.app",
+      "https://vitality-vista.enmasantos.dev",
       "https://vitality-vista.enmasantos.deno.net",
     ];
     if (!origin || allowed.includes(origin)) return origin ?? "*";

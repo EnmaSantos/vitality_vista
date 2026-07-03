@@ -4,7 +4,7 @@ import { PostgresClient } from "../deps.ts"; // Keep existing import [cite: vita
 
 // Only try to load .env file in development environment, not in Deno Deploy
 try {
-  await loadEnv({ export: true });
+  await loadEnv({ export: true, examplePath: null });
 } catch (error) {
   console.log("No .env file found, using environment variables from the system");
 }

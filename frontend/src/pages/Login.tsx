@@ -13,10 +13,13 @@ import {
   IconButton,
   CircularProgress, // <-- Added for loading indicator
   Alert,            // <-- Added for error display
+  Divider,
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext'; // <-- Import useAuth
+import GoogleSignInButton from '../components/GoogleSignInButton';
+import { GOOGLE_CLIENT_ID } from '../config';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -29,7 +32,7 @@ const Login: React.FC = () => {
   // --- End Added ---
 
   // --- Added: Get login function and auth state from context ---
-  const { login, isAuthenticated, isLoading: isAuthLoading } = useAuth(); // Use isLoading from context for initial check
+  const { login, loginWithGoogle, isAuthenticated, isLoading: isAuthLoading } = useAuth(); // Use isLoading from context for initial check
   // --- End Added ---
 
   const navigate = useNavigate();
@@ -71,6 +74,22 @@ const Login: React.FC = () => {
     }
   };
   // --- End Modified ---
+
+  const handleGoogleCredential = async (credential: string) => {
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      console.log('Login Page: Attempting Google login via context...');
+      await loginWithGoogle(credential);
+      console.log('Login Page: Context Google login reported success.');
+    } catch (err) {
+      console.error('Login Page: Context Google login failed:', err);
+      setError(err instanceof Error ? err.message : 'Google login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Don't render the form if the context is still loading its initial state
   // or if the user is already authenticated (and will be redirected shortly)
@@ -119,6 +138,18 @@ const Login: React.FC = () => {
           <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
             {error}
           </Alert>
+        )}
+
+        {GOOGLE_CLIENT_ID && (
+          <>
+            <GoogleSignInButton
+              disabled={isLoading}
+              text="signin_with"
+              onCredential={handleGoogleCredential}
+              onError={setError}
+            />
+            <Divider sx={{ my: 3 }}>or</Divider>
+          </>
         )}
 
         <form onSubmit={handleSubmit}>

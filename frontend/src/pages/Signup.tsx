@@ -12,11 +12,14 @@ import {
   Checkbox,
   FormControlLabel,
   CircularProgress,
-  Alert
+  Alert,
+  Divider
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import GoogleSignInButton from '../components/GoogleSignInButton';
+import { GOOGLE_CLIENT_ID } from '../config';
 
 const Signup: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -33,7 +36,7 @@ const Signup: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const { register, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { register, loginWithGoogle, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -84,6 +87,22 @@ const Signup: React.FC = () => {
     }
   };
 
+  const handleGoogleCredential = async (credential: string) => {
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    try {
+      console.log('Signup Page: Attempting Google signup via context...');
+      await loginWithGoogle(credential);
+      console.log('Signup Page: Context Google signup reported success.');
+    } catch (err) {
+      console.error('Signup Page: Context Google signup failed:', err);
+      setSubmitError(err instanceof Error ? err.message : 'Google signup failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (isAuthLoading || (!isAuthLoading && isAuthenticated)) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -127,6 +146,18 @@ const Signup: React.FC = () => {
           <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
             {submitError}
           </Alert>
+        )}
+
+        {GOOGLE_CLIENT_ID && (
+          <>
+            <GoogleSignInButton
+              disabled={isSubmitting}
+              text="signup_with"
+              onCredential={handleGoogleCredential}
+              onError={setSubmitError}
+            />
+            <Divider sx={{ my: 3 }}>or</Divider>
+          </>
         )}
 
         <form onSubmit={handleSubmit}>

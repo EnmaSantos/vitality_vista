@@ -7,6 +7,8 @@ const LEGACY_DENO_API_BASE_URL = "https://enmanueldel-vitality-vi-71.deno.dev/ap
 const PRODUCTION_API_BASE_URL = "https://vitality-vista.enmasantos.deno.net/api";
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+
 export const API_BASE_URL =
   configuredApiBaseUrl && configuredApiBaseUrl !== LEGACY_DENO_API_BASE_URL
     ? configuredApiBaseUrl
