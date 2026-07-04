@@ -16,7 +16,21 @@ interface TokenCache {
     expiresAt: number; // Unix timestamp
 }
 
-let tokenCache: TokenCache | null = null;
+const tokenCacheByScope = new Map<string, TokenCache>();
+
+export class FatSecretApiError extends Error {
+    status: number;
+    code?: string;
+    isMissingScope: boolean;
+
+    constructor(message: string, status: number, code?: string) {
+        super(message);
+        this.name = "FatSecretApiError";
+        this.status = status;
+        this.code = code;
+        this.isMissingScope = /missing scope|invalid_scope|not enabled|not available|premier/i.test(message);
+    }
+}
 
 /**
  * FatSecret API Interfaces
@@ -170,11 +184,13 @@ export interface FatSecretFeedbackPayload extends FatSecretPayload {
  * Get a valid authentication token for FatSecret API
  * Handles caching and automatic renewal
  */
-async function getFatSecretToken(): Promise<string> {
+async function getFatSecretToken(scope = ""): Promise<string> {
     // Check if we have a valid cached token
     const now = Date.now();
-    if (tokenCache && tokenCache.expiresAt > now + 60000) { // 1 minute buffer
-        return tokenCache.token;
+    const cacheKey = scope.trim();
+    const cachedToken = tokenCacheByScope.get(cacheKey);
+    if (cachedToken && cachedToken.expiresAt > now + 60000) { // 1 minute buffer
+        return cachedToken.token;
     }
 
     // Need to get a new token
@@ -183,6 +199,9 @@ async function getFatSecretToken(): Promise<string> {
     params.append("grant_type", "client_credentials");
     params.append("client_id", FATSECRET_CLIENT_ID!);
     params.append("client_secret", FATSECRET_CLIENT_SECRET!);
+    if (cacheKey) {
+        params.append("scope", cacheKey);
+    }
 
     try {
         const response = await fetch(tokenUrl, {
@@ -194,21 +213,32 @@ async function getFatSecretToken(): Promise<string> {
         });
 
         if (!response.ok) {
-            throw new Error(`FatSecret token API error: ${response.status} ${await response.text()}`);
+            const errorText = await response.text();
+            let errorMessage = errorText || response.statusText;
+            try {
+                const errorData = JSON.parse(errorText);
+                errorMessage = errorData?.error_description || errorData?.error?.message || errorData?.message || errorMessage;
+            } catch (_error) {
+                // Keep raw text when the response is not JSON.
+            }
+            throw new FatSecretApiError(`FatSecret token API error: ${errorMessage}`, response.status);
         }
 
         const data = await response.json();
 
         // Cache the token with expiration (default is 86400 seconds / 24 hours)
         const expiresIn = data.expires_in || 86400;
-        tokenCache = {
+        tokenCacheByScope.set(cacheKey, {
             token: data.access_token,
             expiresAt: now + (expiresIn * 1000) - 300000, // 5 minutes safety margin
-        };
+        });
 
-        return tokenCache.token;
+        return tokenCacheByScope.get(cacheKey)!.token;
     } catch (error) {
         console.error("Failed to obtain FatSecret token:", error);
+        if (error instanceof FatSecretApiError) {
+            throw error;
+        }
         throw new Error("Failed to authenticate with nutrition API");
     }
 }
@@ -226,9 +256,10 @@ async function fatSecretApiRequest(
         method?: "GET" | "POST";
         query?: FatSecretQueryParams;
         body?: FatSecretPayload;
+        scope?: string;
     } = {},
 ): Promise<any> {
-    const token = await getFatSecretToken();
+    const token = await getFatSecretToken(options.scope);
     const method = options.method ?? "GET";
     const normalizedPath = path.replace(/^\/+/, "");
     const apiUrl = new URL(`https://platform.fatsecret.com/rest/${normalizedPath}`);
@@ -259,7 +290,8 @@ async function fatSecretApiRequest(
 
     if (!response.ok) {
         const message = data?.error?.message || data?.message || responseText || response.statusText;
-        throw new Error(`FatSecret API error: ${response.status} ${message}`);
+        const code = data?.error?.code ? String(data.error.code) : undefined;
+        throw new FatSecretApiError(`FatSecret API error: ${response.status} ${message}`, response.status, code);
     }
 
     return data;
@@ -625,6 +657,7 @@ export async function analyzeFatSecretNaturalLanguage(
 ): Promise<any> {
     return await fatSecretApiRequest("natural-language-processing/v1", {
         method: "POST",
+        scope: "nlp",
         body: {
             include_food_data: true,
             region: "US",
@@ -639,6 +672,7 @@ export async function recognizeFatSecretFoodImage(
 ): Promise<any> {
     return await fatSecretApiRequest("image-recognition/v2", {
         method: "POST",
+        scope: "image-recognition",
         body: {
             include_food_data: true,
             region: "US",

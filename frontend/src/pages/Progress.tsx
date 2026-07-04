@@ -71,14 +71,9 @@ const TabPanel = (props: TabPanelProps) => {
   );
 };
 
-import { usePageTheme, themePalette } from '../hooks/usePageTheme';
-
 const ProgressPage: React.FC = () => {
-  usePageTheme(themePalette.gold);
-
   const [tabValue, setTabValue] = useState(0);
   const [timeRange, setTimeRange] = useState('week');
-  // const { setCurrentThemeColor } = useThemeContext(); // Removed
   const [progressData, setProgressData] = useState<any>(null);
   const [exerciseData, setExerciseData] = useState<any>(null);
   const [selectedExercise, setSelectedExercise] = useState<string>('');
@@ -86,7 +81,6 @@ const ProgressPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // setCurrentThemeColor(themeColors.pakistanGreen);
     let isMounted = true;
 
     const fetchData = async () => {

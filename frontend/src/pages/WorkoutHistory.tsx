@@ -41,10 +41,7 @@ interface ExerciseGroup {
   sets: LogExerciseDetail[];
 }
 
-import { usePageTheme, themePalette } from '../hooks/usePageTheme';
-
 const WorkoutHistory: React.FC = () => {
-  usePageTheme(themePalette.orange);
   const { token } = useAuth();
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);

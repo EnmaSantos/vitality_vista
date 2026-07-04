@@ -32,7 +32,6 @@ import {
   Chip
 } from '@mui/material';
 import { Search as SearchIcon, Close as CloseIcon, FitnessCenter as FitnessCenterIcon, Add as AddIcon, PlayCircleOutline as PlayCircleOutlineIcon } from '@mui/icons-material';
-import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { getAllExercises, searchExercisesByName, Exercise } from '../services/exerciseApi';
 import {
   getUserWorkoutPlans,
@@ -64,16 +63,12 @@ interface NewWorkoutPlanForm {
   description: string;
 }
 
-import { usePageTheme, themePalette } from '../hooks/usePageTheme';
-
 const ExercisesPage: React.FC = () => {
-  usePageTheme(themePalette.orange);
   console.log('--- ExercisesPage Component Rendered ---'); // <-- ADD THIS LINE
 
   // --- State Variables ---
   const [searchQuery, setSearchQuery] = useState('');
   const [category, setCategory] = useState('all');
-  const { setCurrentThemeColor } = useThemeContext();
   const { token } = useAuth();
   const [allExercises, setAllExercises] = useState<Exercise[]>([]); // Holds all exercises from API
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -135,11 +130,6 @@ const ExercisesPage: React.FC = () => {
   const location = useLocation(); // Get location object
 
   // --- Effects ---
-  // Theme context is managed globally now
-  useEffect(() => {
-    // setCurrentThemeColor(themeColors.darkMossGreen);
-  }, []);
-
   // Effect to fetch all exercises once on component mount
   useEffect(() => {
     const fetchAllData = async () => {

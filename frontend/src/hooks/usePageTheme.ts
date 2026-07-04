@@ -34,22 +34,6 @@ export const themePalette = {
  */
 export const usePageTheme = (theme: typeof themePalette.green) => {
     useEffect(() => {
-        const root = document.documentElement;
-
-        root.style.setProperty('--color-primary', theme.primary);
-        root.style.setProperty('--color-primary-dark', theme.primaryDark);
-
-        // Optional: Update secondary and accent if needed for specific pages
-        if (theme.secondary) root.style.setProperty('--color-secondary', theme.secondary);
-        if (theme.accent) root.style.setProperty('--color-accent', theme.accent);
-
-        // Cleanup: Reset to default green on unmount
-        return () => {
-            // Revert to default green theme
-            root.style.setProperty('--color-primary', themePalette.green.primary);
-            root.style.setProperty('--color-primary-dark', themePalette.green.primaryDark);
-            root.style.setProperty('--color-secondary', themePalette.green.secondary);
-            root.style.setProperty('--color-accent', themePalette.green.accent);
-        };
+        void theme;
     }, [theme]);
 };

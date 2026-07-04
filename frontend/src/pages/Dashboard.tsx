@@ -16,14 +16,12 @@ import { getUserProfile, UserProfileData } from '../services/profileApi';
 import { getDailyCalorieSummaryWithAuth, DailyCalorieSummary } from '../services/calorieApi';
 import { getDailyWaterAPI } from '../services/waterApi';
 import { getDailyGoalsAPI, addGoalAPI, updateGoalAPI, deleteGoalAPI, DailyGoal } from '../services/goalsApi';
+import { PageHeader } from '../components/VitalityUI';
 
 // Helper to get today's date in YYYY-MM-DD format
 const getTodayDateString = () => new Date().toISOString().split('T')[0];
 
-import { usePageTheme, themePalette } from '../hooks/usePageTheme';
-
 const Dashboard: React.FC = () => {
-  usePageTheme(themePalette.green);
   const auth = useAuth(); // Use the full auth context
   const { token, user } = auth;
   const navigate = useNavigate();
@@ -286,15 +284,11 @@ const Dashboard: React.FC = () => {
     (parseFloat(String(dailyCalorieSummary.exercise_breakdown.stretching)) || 0) : 0;
 
   return (
-    <Box sx={{ padding: { xs: 2, md: 4 }, backgroundColor: 'var(--color-bg)', minHeight: '100vh' }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h3" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>
-          Dashboard
-        </Typography>
-        <Typography variant="subtitle1" sx={{ color: 'var(--color-secondary)', mt: 1 }}>
-          Welcome to your fitness journey! Here's your daily summary.
-        </Typography>
-      </Box>
+    <Box className="vv-page">
+      <PageHeader
+        title="Today's dashboard"
+        subtitle="Calories, hydration, workouts, and goals in one daily view."
+      />
 
       {/* Display loading or error for profile fetching */}
       {(isLoadingProfile || isLoadingCalories) && (

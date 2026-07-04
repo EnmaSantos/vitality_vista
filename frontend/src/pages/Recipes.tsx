@@ -8,7 +8,6 @@ import {
   List, ListItem, ListItemText, Divider
 } from '@mui/material';
 import { Search as SearchIcon, Close as CloseIcon } from '@mui/icons-material';
-import { useThemeContext, themeColors } from '../context/ThemeContext';
 
 // Import FatSecret types and functions
 import {
@@ -27,18 +26,7 @@ import {
 const ITEMS_PER_PAGE = 9; // Adjust as needed, max 50 per FatSecret API
 const ALL_CATEGORIES_VALUE = "ALL";
 
-import { usePageTheme, themePalette } from '../hooks/usePageTheme';
-
 const Recipes: React.FC = () => {
-  usePageTheme(themePalette.orange);
-  // Theme context is no longer needed with CSS variables
-  // const { setCurrentThemeColor } = useThemeContext();
-
-  // Set theme color on component mount
-  useEffect(() => {
-    // setCurrentThemeColor(themeColors.tigersEye);
-  }, []);
-
   // Search and Filter State
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');

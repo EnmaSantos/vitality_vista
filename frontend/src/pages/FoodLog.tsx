@@ -5,8 +5,6 @@ import {
   Box,
   Paper,
   Grid,
-  Card,
-  CardContent,
   TextField,
   Button,
   Divider,
@@ -32,6 +30,7 @@ import {
   Snackbar,
   Tabs,
   Tab,
+  Stack,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -58,8 +57,10 @@ import {
   deleteFoodLogEntryAPI,
 } from '../services/foodLogApi';
 import { getAvailableConversions, ConvertedOption } from '../utils/unitConversions';
+import { buildMealTextFallbackQuery } from '../utils/foodFallback';
+import { compressFoodImageForFatSecret, formatBytes, CompressedFoodImage } from '../utils/imageCompression';
 import { logWaterAPI, getDailyWaterAPI } from '../services/waterApi';
-import { LocalDrink as LocalDrinkIcon } from '@mui/icons-material';
+import { AppPanel, EmptyState, MacroBar, MetricCard, PageHeader } from '../components/VitalityUI';
 
 function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
   let timeout: ReturnType<typeof setTimeout> | null = null;
@@ -86,10 +87,7 @@ interface CurrentFoodEntry {
   time: string;
 }
 
-import { usePageTheme, themePalette } from '../hooks/usePageTheme';
-
 const FoodLog: React.FC = () => {
-  usePageTheme(themePalette.darkGreen);
   const auth = useAuth();
 
   const [lookupMode, setLookupMode] = useState<'search' | 'text' | 'barcode' | 'image'>('search');
@@ -100,6 +98,8 @@ const FoodLog: React.FC = () => {
   const [searchResults, setSearchResults] = useState<NutritionData[]>([]);
   const [isLoadingSearch, setIsLoadingSearch] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchWarning, setSearchWarning] = useState<string | null>(null);
+  const [compressedImageInfo, setCompressedImageInfo] = useState<CompressedFoodImage | null>(null);
 
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [selectedFoodForDialog, setSelectedFoodForDialog] = useState<NutritionData | null>(null);
@@ -164,6 +164,7 @@ const FoodLog: React.FC = () => {
     setLookupMode(value);
     setSearchResults([]);
     setSearchError(null);
+    setSearchWarning(null);
     setIsLoadingSearch(false);
   };
 
@@ -178,18 +179,6 @@ const FoodLog: React.FC = () => {
     setSearchError(foods.length === 0 ? emptyMessage : null);
   };
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = String(reader.result || '');
-        resolve(result.includes(',') ? result.split(',')[1] : result);
-      };
-      reader.onerror = () => reject(reader.error || new Error('Failed to read image.'));
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleAnalyzeMealText = async () => {
     if (!auth.token) {
       setSearchError("Authentication token not found. Please log in.");
@@ -199,15 +188,31 @@ const FoodLog: React.FC = () => {
       setSearchError("Meal text is required.");
       return;
     }
+    if (mealTextInput.trim().length > 1000) {
+      setSearchError("Meal text must be 1000 characters or fewer.");
+      return;
+    }
 
     setIsLoadingSearch(true);
     setSearchError(null);
+    setSearchWarning(null);
     try {
       const result = await analyzeMealTextAPI(mealTextInput.trim(), auth);
       applyDetectedFoods(result.foods, "No foods were detected from that meal text.");
     } catch (err) {
-      setSearchError(err instanceof Error ? err.message : "Failed to analyze meal text.");
-      setSearchResults([]);
+      const fallbackQuery = buildMealTextFallbackQuery(mealTextInput);
+      try {
+        const fallbackResults = await searchFoodsAPI(fallbackQuery, auth);
+        setSearchResults(fallbackResults);
+        setSearchQuery(fallbackQuery);
+        setSearchWarning(
+          `${err instanceof Error ? err.message : "Meal text analysis is unavailable."} Showing normal search results for "${fallbackQuery}" instead.`,
+        );
+        setSearchError(fallbackResults.length ? null : "No fallback search results were found.");
+      } catch (fallbackError) {
+        setSearchError(fallbackError instanceof Error ? fallbackError.message : "Failed to analyze meal text.");
+        setSearchResults([]);
+      }
     } finally {
       setIsLoadingSearch(false);
     }
@@ -278,20 +283,20 @@ const FoodLog: React.FC = () => {
     event.target.value = '';
     if (!file) return;
 
-    if (file.size > 1_090_000) {
-      setSearchError("Food image must be under 1.09MB.");
-      return;
-    }
-
     setSelectedImageName(file.name);
+    setCompressedImageInfo(null);
     setIsLoadingSearch(true);
     setSearchError(null);
+    setSearchWarning(null);
     try {
-      const imageB64 = await fileToBase64(file);
-      const result = await recognizeFoodImageAPI(imageB64, auth);
+      const compressedImage = await compressFoodImageForFatSecret(file);
+      setCompressedImageInfo(compressedImage);
+      const result = await recognizeFoodImageAPI(compressedImage.base64, auth);
       applyDetectedFoods(result.foods, "No foods were recognized in that image.");
     } catch (err) {
-      setSearchError(err instanceof Error ? err.message : "Failed to recognize food image.");
+      const message = err instanceof Error ? err.message : "Failed to recognize food image.";
+      setSearchWarning(`${message} Use search or manual entry to log this food.`);
+      setSearchError(null);
       setSearchResults([]);
     } finally {
       setIsLoadingSearch(false);
@@ -617,86 +622,74 @@ const FoodLog: React.FC = () => {
   }, [loggedEntries]);
 
   return (
-    <Box sx={{ padding: { xs: 2, md: 4 }, backgroundColor: 'var(--color-bg)', minHeight: '100vh' }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h3" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>
-          Food Log
-        </Typography>
-        <Typography variant="subtitle1" sx={{ color: 'var(--color-secondary)', mt: 1 }}>
-          Track your daily food intake and nutrition.
-        </Typography>
-      </Box>
-
-      <Grid container spacing={3} sx={{ mb: 4 }} alignItems="center">
-        <Grid item xs={12} sm={6} md={4}>
+    <Box className="vv-page">
+      <PageHeader
+        title="Food and water log"
+        subtitle="Search foods, parse meal text, scan barcodes, recognize images, and track water."
+        action={(
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, gap: 1.5 }}>
           <TextField
-            fullWidth
             label="Date"
             type="date"
             value={currentDate}
             onChange={handleDateChange}
             InputLabelProps={{ shrink: true }}
+            size="small"
             sx={{
+              width: { xs: '100%', sm: 170 },
               '& .MuiOutlinedInput-root': {
-                bgcolor: 'white',
-                borderRadius: 2,
-                '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.2)' },
-                '&:hover fieldset': { borderColor: 'var(--color-primary)' },
-                '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
+                bgcolor: 'var(--vv-surface)',
               },
-              '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
             }}
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={8} sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleClickOpenManualAddDialog}
             disableElevation
             sx={{
-              bgcolor: 'var(--color-primary)',
-              color: 'white',
-              fontWeight: 'bold',
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              '&:hover': { bgcolor: 'var(--color-primary-dark)' }
+              minHeight: 40,
+              px: 2.5,
             }}
           >
-            Add Manually
+            Manual entry
           </Button>
-        </Grid>
-      </Grid>
+          </Box>
+        )}
+      />
 
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 4,
-          bgcolor: 'white',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
-        }}
-      >
-        <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>Food Lookup (FatSecret)</Typography>
+      <Grid container spacing={2.4} sx={{ mb: 3 }} alignItems="stretch">
+        <Grid item xs={12} lg={7}>
+          <AppPanel sx={{ height: '100%' }}>
         <Tabs
           value={lookupMode}
           onChange={handleLookupModeChange}
           variant="scrollable"
           allowScrollButtonsMobile
           sx={{
-            mb: 2,
-            minHeight: 44,
-            '& .MuiTab-root': { minHeight: 44, textTransform: 'none', color: 'var(--color-secondary)', fontWeight: 600 },
-            '& .Mui-selected': { color: 'var(--color-primary-dark)' },
-            '& .MuiTabs-indicator': { backgroundColor: 'var(--color-primary)' },
+            mb: 2.5,
+            minHeight: 40,
+            '& .MuiTabs-flexContainer': { gap: 1 },
+            '& .MuiTab-root': {
+              border: '1px solid var(--vv-line)',
+              borderRadius: 999,
+              color: 'var(--vv-primary-2)',
+              minHeight: 38,
+              px: 2,
+              textTransform: 'none',
+              fontWeight: 850,
+            },
+            '& .Mui-selected': {
+              bgcolor: 'var(--vv-primary)',
+              color: '#fff !important',
+            },
+            '& .MuiTabs-indicator': { display: 'none' },
           }}
         >
           <Tab icon={<SearchIcon />} iconPosition="start" label="Search" value="search" />
-          <Tab icon={<NotesIcon />} iconPosition="start" label="Meal Text" value="text" />
+          <Tab icon={<NotesIcon />} iconPosition="start" label="Meal text" value="text" />
           <Tab icon={<QrCodeScannerIcon />} iconPosition="start" label="Barcode" value="barcode" />
-          <Tab icon={<PhotoCameraIcon />} iconPosition="start" label="Photo" value="image" />
+          <Tab icon={<PhotoCameraIcon />} iconPosition="start" label="Image" value="image" />
         </Tabs>
 
         {lookupMode === 'search' && (
@@ -716,11 +709,8 @@ const FoodLog: React.FC = () => {
             sx={{
               mb: 3,
               '& .MuiOutlinedInput-root': {
-                bgcolor: 'var(--color-bg)',
-                borderRadius: 3,
-                '& fieldset': { border: 'none' }, // Cleaner look
-                '&:hover': { bgcolor: '#fbfbf0' },
-                '&.Mui-focused': { bgcolor: '#fbfbf0', boxShadow: '0 0 0 2px var(--color-primary)' },
+                bgcolor: 'var(--vv-surface)',
+                '& fieldset': { borderColor: 'var(--vv-line)' },
               }
             }}
           />
@@ -738,11 +728,8 @@ const FoodLog: React.FC = () => {
               onChange={(e) => setMealTextInput(e.target.value)}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  bgcolor: 'var(--color-bg)',
-                  borderRadius: 3,
-                  '& fieldset': { border: 'none' },
-                  '&:hover': { bgcolor: '#fbfbf0' },
-                  '&.Mui-focused': { bgcolor: '#fbfbf0', boxShadow: '0 0 0 2px var(--color-primary)' },
+                  bgcolor: 'var(--vv-surface)',
+                  '& fieldset': { borderColor: 'var(--vv-line)' },
                 }
               }}
             />
@@ -753,7 +740,7 @@ const FoodLog: React.FC = () => {
                 onClick={handleAnalyzeMealText}
                 disabled={isLoadingSearch}
                 disableElevation
-                sx={{ bgcolor: 'var(--color-primary)', color: 'white', fontWeight: 'bold', borderRadius: 2, '&:hover': { bgcolor: 'var(--color-primary-dark)' } }}
+                sx={{ bgcolor: 'var(--vv-primary)', color: 'white', fontWeight: 'bold' }}
               >
                 Analyze Meal
               </Button>
@@ -773,17 +760,14 @@ const FoodLog: React.FC = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <QrCodeScannerIcon sx={{ color: 'var(--color-primary)' }} />
+                      <QrCodeScannerIcon sx={{ color: 'var(--vv-primary)' }} />
                     </InputAdornment>
                   ),
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    bgcolor: 'var(--color-bg)',
-                    borderRadius: 3,
-                    '& fieldset': { border: 'none' },
-                    '&:hover': { bgcolor: '#fbfbf0' },
-                    '&.Mui-focused': { bgcolor: '#fbfbf0', boxShadow: '0 0 0 2px var(--color-primary)' },
+                    bgcolor: 'var(--vv-surface)',
+                    '& fieldset': { borderColor: 'var(--vv-line)' },
                   }
                 }}
               />
@@ -795,7 +779,7 @@ const FoodLog: React.FC = () => {
                 onClick={handleBarcodeLookup}
                 disabled={isLoadingSearch}
                 disableElevation
-                sx={{ bgcolor: 'var(--color-primary)', color: 'white', fontWeight: 'bold', borderRadius: 2, '&:hover': { bgcolor: 'var(--color-primary-dark)' } }}
+                sx={{ bgcolor: 'var(--vv-primary)', color: 'white', fontWeight: 'bold' }}
               >
                 Find
               </Button>
@@ -806,7 +790,7 @@ const FoodLog: React.FC = () => {
                 variant="outlined"
                 startIcon={<PhotoCameraIcon />}
                 disabled={isLoadingSearch}
-                sx={{ borderColor: 'var(--color-primary)', color: 'var(--color-primary)', fontWeight: 'bold', borderRadius: 2 }}
+                sx={{ borderColor: 'var(--vv-primary)', color: 'var(--vv-primary)', fontWeight: 'bold' }}
               >
                 Scan Image
                 <input hidden accept="image/*" type="file" onChange={handleBarcodeImageScan} />
@@ -823,41 +807,60 @@ const FoodLog: React.FC = () => {
               startIcon={<PhotoCameraIcon />}
               disabled={isLoadingSearch}
               disableElevation
-              sx={{ bgcolor: 'var(--color-primary)', color: 'white', fontWeight: 'bold', borderRadius: 2, '&:hover': { bgcolor: 'var(--color-primary-dark)' } }}
+              sx={{ bgcolor: 'var(--vv-primary)', color: 'white', fontWeight: 'bold' }}
             >
               Choose Photo
               <input hidden accept="image/jpeg,image/png,image/webp" type="file" onChange={handleImageRecognition} />
             </Button>
             {selectedImageName && (
-              <Typography variant="body2" sx={{ color: 'var(--color-secondary)' }}>
+              <Typography variant="body2" sx={{ color: 'var(--vv-muted)', fontWeight: 750 }}>
                 {selectedImageName}
+              </Typography>
+            )}
+            {compressedImageInfo && (
+              <Typography variant="body2" sx={{ color: 'var(--vv-primary-2)', fontWeight: 750 }}>
+                {formatBytes(compressedImageInfo.originalBytes)} to {formatBytes(compressedImageInfo.compressedBytes)}
+                {' '}({compressedImageInfo.width}x{compressedImageInfo.height})
               </Typography>
             )}
           </Box>
         )}
-        {isLoadingSearch && <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}><CircularProgress sx={{ color: 'var(--color-primary)' }} /></Box>}
+        {isLoadingSearch && <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}><CircularProgress sx={{ color: 'var(--vv-primary)' }} /></Box>}
+        {searchWarning && (
+          <Alert
+            severity="warning"
+            sx={{ mb: 2 }}
+            action={lookupMode === 'image' ? (
+              <Button color="inherit" size="small" onClick={() => setLookupMode('search')}>
+                Search
+              </Button>
+            ) : undefined}
+          >
+            {searchWarning}
+          </Alert>
+        )}
         {searchError && <Alert severity="error" sx={{ mb: 2 }}>{searchError}</Alert>}
         {!isLoadingSearch && searchResults.length > 0 && (
-          <Paper variant="outlined" sx={{ maxHeight: 300, overflow: 'auto', borderRadius: 2, borderColor: 'rgba(96, 108, 56, 0.1)', bgcolor: 'var(--color-bg)', p: 1 }}>
+          <Paper variant="outlined" sx={{ maxHeight: 330, overflow: 'auto', borderRadius: 2, borderColor: 'var(--vv-line)', bgcolor: 'var(--vv-surface-soft)', p: 1 }}>
             <List dense>
               {searchResults.map((food) => (
                 <ListItem
                   key={food.id}
                   divider
-                  sx={{ borderColor: 'rgba(96, 108, 56, 0.05)', borderRadius: 1, mb: 0.5, '&:hover': { bgcolor: 'rgba(96, 108, 56, 0.05)' } }}
+                  sx={{ borderColor: 'var(--vv-line)', borderRadius: 1, mb: 0.5, '&:hover': { bgcolor: 'rgba(47, 70, 29, 0.05)' } }}
                   secondaryAction={
                     <Button
                       variant="outlined"
                       size="small"
                       onClick={() => handleOpenLogDialog(food)}
                       sx={{
-                        borderColor: 'var(--color-primary)',
-                        color: 'var(--color-primary)',
+                        borderColor: 'var(--vv-primary)',
+                        color: 'var(--vv-primary)',
                         borderRadius: 2,
                         '&:hover': {
-                          bgcolor: 'var(--color-primary)',
+                          bgcolor: 'var(--vv-primary)',
                           color: 'white',
-                          borderColor: 'var(--color-primary)'
+                          borderColor: 'var(--vv-primary)'
                         }
                       }}
                     >
@@ -876,7 +879,7 @@ const FoodLog: React.FC = () => {
                     </ListItemAvatar>
                   )}
                   <ListItemText
-                    primary={<Typography sx={{ fontWeight: '500', color: 'var(--color-primary-dark)' }}>{food.name}</Typography>}
+                    primary={<Typography sx={{ fontWeight: '700', color: 'var(--vv-ink)' }}>{food.name}</Typography>}
                     secondary={`${food.brandName ? `${food.brandName} - ` : ''}${food.calories} ${food.calorieUnit || 'kcal'} per ${food.servingSize}`}
                   />
                 </ListItem>
@@ -885,127 +888,71 @@ const FoodLog: React.FC = () => {
           </Paper>
         )}
         {!isLoadingSearch && lookupMode === 'search' && searchQuery.trim() !== '' && searchResults.length === 0 && !searchError && (
-          <Typography sx={{ my: 2, color: 'var(--color-secondary)', textAlign: 'center', fontStyle: 'italic' }}>No results found for "{searchQuery}".</Typography>
+          <Typography sx={{ my: 2, color: 'var(--vv-muted)', textAlign: 'center', fontStyle: 'italic' }}>No results found for "{searchQuery}".</Typography>
         )}
-      </Paper>
-
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 4,
-          bgcolor: 'white',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
-        }}
-      >
-        <Typography variant="h6" gutterBottom sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>Daily Nutrition Summary</Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={6} sm={3}>
-            <Card elevation={0} sx={{ bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
-              <CardContent>
-                <Typography variant="subtitle2" sx={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>Calories</Typography>
-                <Typography variant="h5" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mt: 1 }}>{dailyTotals.calories.toFixed(0)}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={6} sm={3}>
-            <Card elevation={0} sx={{ bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
-              <CardContent>
-                <Typography variant="subtitle2" sx={{ color: '#606c38', fontWeight: 'bold' }}>Protein</Typography>
-                <Typography variant="h5" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mt: 1 }}>{dailyTotals.protein.toFixed(1)}g</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={6} sm={3}>
-            <Card elevation={0} sx={{ bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
-              <CardContent>
-                <Typography variant="subtitle2" sx={{ color: '#dda15e', fontWeight: 'bold' }}>Carbs</Typography>
-                <Typography variant="h5" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mt: 1 }}>{dailyTotals.carbs.toFixed(1)}g</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={6} sm={3}>
-            <Card elevation={0} sx={{ bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
-              <CardContent>
-                <Typography variant="subtitle2" sx={{ color: '#bc6c25', fontWeight: 'bold' }}>Fat</Typography>
-                <Typography variant="h5" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mt: 1 }}>{dailyTotals.fat.toFixed(1)}g</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+          </AppPanel>
         </Grid>
-      </Paper>
 
-      {/* Water Tracking Section */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 4,
-          bgcolor: '#effcf4', // Very light green/mint 
-          border: '1px solid #dcfce7'
-        }}
-      >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ p: 1, bgcolor: '#dcfce7', borderRadius: '50%', display: 'flex' }}>
-              <LocalDrinkIcon sx={{ color: '#166534' }} />
-            </Box>
-            <Typography variant="h6" sx={{ color: '#14532d', fontWeight: 'bold' }}>Water Intake</Typography>
-          </Box>
-          <Typography variant="h5" sx={{ color: '#14532d', fontWeight: 'bold' }}>
-            {dailyWater} <Typography component="span" variant="body2" sx={{ color: '#166534' }}>/ 2500 ml</Typography>
-          </Typography>
-        </Box>
-        <Grid container spacing={2}>
-          <Grid item>
-            <Button
-              variant="outlined"
-              onClick={() => handleAddWater(250)}
-              sx={{
-                borderColor: '#166534',
-                color: '#166534',
-                bgcolor: 'white',
-                borderRadius: 2,
-                '&:hover': { bgcolor: '#dcfce7', borderColor: '#14532d' }
-              }}
-            >
-              + 250ml
-            </Button>
-          </Grid>
-          <Grid item>
-            <Button
-              variant="outlined"
-              onClick={() => handleAddWater(500)}
-              sx={{
-                borderColor: '#166534',
-                color: '#166534',
-                bgcolor: 'white',
-                borderRadius: 2,
-                '&:hover': { bgcolor: '#dcfce7', borderColor: '#14532d' }
-              }}
-            >
-              + 500ml
-            </Button>
-          </Grid>
-          <Grid item>
-            <Button
-              variant="outlined"
-              onClick={() => handleAddWater(1000)}
-              sx={{
-                borderColor: '#166534',
-                color: '#166534',
-                bgcolor: 'white',
-                borderRadius: 2,
-                '&:hover': { bgcolor: '#dcfce7', borderColor: '#14532d' }
-              }}
-            >
-              + 1L
-            </Button>
-          </Grid>
+        <Grid item xs={12} lg={5}>
+          <Stack spacing={2.4} sx={{ height: '100%' }}>
+            <Grid container spacing={1.5}>
+              <Grid item xs={6}>
+                <MetricCard label="Calories" value={dailyTotals.calories.toFixed(0)} detail="logged today" progress={Math.min(dailyTotals.calories / 22, 100)} />
+              </Grid>
+              <Grid item xs={6}>
+                <MetricCard label="Water" value={`${(dailyWater / 1000).toFixed(2)} L`} detail="+ quick add" progress={Math.min((dailyWater / 2500) * 100, 100)} accent="var(--vv-accent-2)" />
+              </Grid>
+            </Grid>
+            <AppPanel sx={{ flex: 1 }}>
+              <Typography variant="h6" sx={{ color: 'var(--vv-ink)', fontWeight: 950, mb: 2 }}>
+                Logged today
+              </Typography>
+              {loggedEntries.length > 0 ? (
+                <Stack spacing={1.4} sx={{ mb: 2.5 }}>
+                  {loggedEntries.slice(0, 3).map((entry) => (
+                    <Box key={entry.log_entry_id} sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, borderBottom: '1px solid var(--vv-line)', pb: 1.2 }}>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ color: 'var(--vv-ink)', fontWeight: 850, lineHeight: 1.1 }}>
+                          {entry.food_name || 'Unknown food'}
+                        </Typography>
+                        <Typography sx={{ color: 'var(--vv-muted)', fontSize: '0.82rem', fontWeight: 750 }}>
+                          {entry.meal_type}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ alignSelf: 'center', bgcolor: 'var(--vv-surface-muted)', borderRadius: 999, px: 1.3, py: 0.6 }}>
+                        <Typography sx={{ color: 'var(--vv-primary-2)', fontSize: '0.78rem', fontWeight: 950 }}>
+                          {(parseFloat(String(entry.calories_consumed)) || 0).toFixed(0)} cal
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ))}
+                </Stack>
+              ) : (
+                <EmptyState>No food logged for {currentDate}.</EmptyState>
+              )}
+
+              <Stack spacing={1.1} sx={{ my: 2.4 }}>
+                <MacroBar label="Protein" value={`${dailyTotals.protein.toFixed(0)}g`} percent={Math.min((dailyTotals.protein / 140) * 100, 100)} color="var(--vv-primary-2)" />
+                <MacroBar label="Carbs" value={`${dailyTotals.carbs.toFixed(0)}g`} percent={Math.min((dailyTotals.carbs / 220) * 100, 100)} color="var(--vv-accent)" />
+                <MacroBar label="Fat" value={`${dailyTotals.fat.toFixed(0)}g`} percent={Math.min((dailyTotals.fat / 75) * 100, 100)} color="var(--vv-accent-2)" />
+              </Stack>
+
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {[250, 500, 750].map((amount) => (
+                  <Button
+                    key={amount}
+                    variant="outlined"
+                    onClick={() => handleAddWater(amount)}
+                    sx={{ borderColor: 'var(--vv-primary-2)', color: 'var(--vv-primary)' }}
+                  >
+                    + {amount === 750 ? '750ml' : `${amount}ml`}
+                  </Button>
+                ))}
+              </Box>
+            </AppPanel>
+          </Stack>
         </Grid>
-      </Paper>
+      </Grid>
 
       {isLoadingLog && <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress sx={{ color: 'var(--color-primary)' }} /></Box>}
       {logError && <Alert severity="error" sx={{ my: 2 }}>{logError}</Alert>}

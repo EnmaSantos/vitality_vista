@@ -28,7 +28,6 @@ import {
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useAuth } from '../context/AuthContext';
-import { useThemeContext, themeColors } from '../context/ThemeContext';
 import { getUserProfile, updateUserProfile, UserProfileData } from '../services/profileApi';
 
 interface ProfileFormState {
@@ -85,7 +84,6 @@ const lbsToKg = (lbs: number) => {
 
 const ProfilePage: React.FC = () => {
   const { user, token } = useAuth();
-  const { setCurrentThemeColor } = useThemeContext();
 
   const [profileData, setProfileData] = useState<ProfileFormState>({
     date_of_birth: '',
@@ -121,10 +119,6 @@ const ProfilePage: React.FC = () => {
   const [originalProfileData, setOriginalProfileData] = useState<ProfileFormState | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<string[]>([]);
-
-  useEffect(() => {
-    setCurrentThemeColor(themeColors.pakistanGreen);
-  }, [setCurrentThemeColor]);
 
   const processFetchedProfile = (fetchedProfile: UserProfileData) => {
     const formattedData = {

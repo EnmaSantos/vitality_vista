@@ -54,6 +54,14 @@ export interface AutocompleteSuggestion {
 export interface FatSecretAnalysisResponse {
   raw: unknown;
   foods: NutritionData[];
+  meta?: {
+    mode?: 'text' | 'image';
+    fallbackReason?: string;
+    originalBytes?: number;
+    compressedBytes?: number;
+    width?: number;
+    height?: number;
+  };
 }
 
 export interface FatSecretFoodCategory {

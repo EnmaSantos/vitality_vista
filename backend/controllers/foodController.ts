@@ -14,6 +14,7 @@ import {
   getFatSecretFoodSubCategories,
   normalizeFatSecretFood,
   normalizeFatSecretFoodsFromResponse,
+  FatSecretApiError,
 } from "../services/nutritionService.ts"; // Your existing service
 import dbClient from "../services/db.ts"; // Import the database client
 
@@ -49,6 +50,36 @@ const sendError = (
     message,
     ...(error instanceof Error ? { error: error.message } : {}),
   };
+};
+
+const MAX_NLP_INPUT_LENGTH = 1000;
+const MAX_FATSECRET_JSON_BODY_CHARS = 1_048_000;
+
+const normalizeImageBase64 = (imageInput: string): string => {
+  const trimmed = imageInput.trim();
+  const dataUrlMatch = trimmed.match(/^data:image\/(?:jpeg|jpg|png|webp);base64,(.*)$/i);
+  return dataUrlMatch ? dataUrlMatch[1].trim() : trimmed;
+};
+
+const getPayloadCharLength = (payload: Record<string, unknown>): number => {
+  return JSON.stringify(payload).length;
+};
+
+const sendFoodAiError = (
+  ctx: RouterContext<any, any>,
+  fallbackMessage: string,
+  error: unknown,
+) => {
+  if (error instanceof FatSecretApiError && error.isMissingScope) {
+    return sendError(
+      ctx,
+      "AI lookup unavailable. FatSecret NLP/image recognition add-on access is not enabled for this account.",
+      424,
+      error,
+    );
+  }
+
+  return sendError(ctx, fallbackMessage, 500, error);
 };
 
 const assertAuthenticated = (ctx: RouterContext<any, any, AppState>): boolean => {
@@ -322,18 +353,31 @@ export async function handleNaturalLanguageFoodAnalysis(ctx: RouterContext<strin
     if (!assertAuthenticated(ctx)) return;
 
     const payload = await readJsonBody<Record<string, unknown>>(ctx);
-    if (!payload.user_input || typeof payload.user_input !== "string") {
+    const userInput = typeof payload.user_input === "string" ? payload.user_input.trim() : "";
+    if (!userInput) {
       return sendError(ctx, "user_input is required.", 400);
     }
+    if (userInput.length > MAX_NLP_INPUT_LENGTH) {
+      return sendError(ctx, `user_input must be ${MAX_NLP_INPUT_LENGTH} characters or fewer.`, 400);
+    }
 
-    const result = await analyzeFatSecretNaturalLanguage(payload as any);
+    const normalizedPayload = {
+      ...payload,
+      user_input: userInput,
+      include_food_data: payload.include_food_data ?? true,
+      region: payload.region ?? "US",
+      language: payload.language ?? "en",
+    };
+
+    const result = await analyzeFatSecretNaturalLanguage(normalizedPayload as any);
     sendSuccess(ctx, {
       raw: result,
       foods: normalizeFatSecretFoodsFromResponse(result),
+      meta: { mode: "text" },
     });
   } catch (error) {
     console.error("Error in handleNaturalLanguageFoodAnalysis:", error);
-    sendError(ctx, "Server error analyzing meal text.", 500, error);
+    sendFoodAiError(ctx, "Server error analyzing meal text.", error);
   }
 }
 
@@ -342,18 +386,32 @@ export async function handleFoodImageRecognition(ctx: RouterContext<string, any,
     if (!assertAuthenticated(ctx)) return;
 
     const payload = await readJsonBody<Record<string, unknown>>(ctx);
-    if (!payload.image_b64 || typeof payload.image_b64 !== "string") {
+    const imageB64 = typeof payload.image_b64 === "string" ? normalizeImageBase64(payload.image_b64) : "";
+    if (!imageB64) {
       return sendError(ctx, "image_b64 is required.", 400);
     }
 
-    const result = await recognizeFatSecretFoodImage(payload as any);
+    const normalizedPayload = {
+      ...payload,
+      image_b64: imageB64,
+      include_food_data: payload.include_food_data ?? true,
+      region: payload.region ?? "US",
+      language: payload.language ?? "en",
+    };
+
+    if (getPayloadCharLength(normalizedPayload) > MAX_FATSECRET_JSON_BODY_CHARS) {
+      return sendError(ctx, "Image payload is too large for FatSecret image recognition.", 413);
+    }
+
+    const result = await recognizeFatSecretFoodImage(normalizedPayload as any);
     sendSuccess(ctx, {
       raw: result,
       foods: normalizeFatSecretFoodsFromResponse(result),
+      meta: { mode: "image" },
     });
   } catch (error) {
     console.error("Error in handleFoodImageRecognition:", error);
-    sendError(ctx, "Server error recognizing food image.", 500, error);
+    sendFoodAiError(ctx, "Server error recognizing food image.", error);
   }
 }
 
