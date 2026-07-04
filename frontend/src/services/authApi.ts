@@ -31,6 +31,12 @@ interface User {
   interface GoogleLoginCredentials {
       credential: string;
   }
+
+  export interface GitHubLoginCredentials {
+      code: string;
+      redirectUri: string;
+      codeVerifier: string;
+  }
   
   // --- Added: Type for the register credentials payload ---
   export interface RegisterCredentials extends LoginCredentials {
@@ -138,6 +144,47 @@ interface User {
           throw error;
       } else {
           throw new Error("An unknown error occurred during Google login.");
+      }
+    }
+  }
+
+  export async function loginWithGitHub(credentials: GitHubLoginCredentials): Promise<AuthResponseData> {
+    console.log("authApi: Sending GitHub login request...");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/github`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      let responseData: AuthApiResponse;
+      try {
+          responseData = await response.json();
+      } catch (jsonError) {
+          if (!response.ok) {
+               throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          console.error("JSON parsing failed despite OK status:", jsonError);
+          throw new Error("Failed to parse server response.");
+      }
+
+      if (!response.ok || !responseData.success || !responseData.data) {
+        console.log("authApi: GitHub login failed response:", responseData);
+        throw new Error(responseData.message || `GitHub login failed. Status: ${response.status}`);
+      }
+
+      console.log("authApi: GitHub login successful.");
+      return responseData.data;
+    } catch (error) {
+      console.error("authApi: GitHub login API call failed:", error);
+      if (error instanceof Error) {
+          throw error;
+      } else {
+          throw new Error("An unknown error occurred during GitHub login.");
       }
     }
   }

@@ -114,6 +114,7 @@ The landing page and this README now focus on actual app capabilities instead of
 - Deno 1.30 or newer
 - PostgreSQL database
 - Google OAuth Web client ID for Sign in with Google
+- GitHub OAuth App client ID and secret for Sign in with GitHub
 - FatSecret API credentials
 
 ### Frontend
@@ -131,6 +132,7 @@ To point the frontend at a different API server, set:
 ```bash
 VITE_API_BASE_URL=http://localhost:8000/api
 VITE_GOOGLE_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
+VITE_GITHUB_CLIENT_ID=your-github-oauth-app-client-id
 ```
 
 ### Backend
@@ -148,9 +150,20 @@ Create a backend `.env` file with the values your local environment needs:
 DATABASE_URL=postgres://user:password@localhost:5432/vitality_vista
 JWT_SECRET=replace-with-a-secret
 GOOGLE_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
+GITHUB_CLIENT_ID=your-github-oauth-app-client-id
+GITHUB_CLIENT_SECRET=your-github-oauth-app-client-secret
 FATSECRET_CLIENT_ID=replace-with-fatsecret-client-id
 FATSECRET_CLIENT_SECRET=replace-with-fatsecret-client-secret
 ```
+
+### GitHub Login
+
+Create a GitHub OAuth App with these production settings:
+
+- Homepage URL: `https://vitality-vista.enmasantos.dev`
+- Authorization callback URL: `https://vitality-vista.enmasantos.dev/auth/github/callback`
+
+The app requests `read:user user:email` so the backend can read the GitHub profile and a verified email address before issuing the app JWT. GitHub OAuth Apps allow one callback URL per app, so use a second local OAuth App for development with callback URL `http://localhost:5173/auth/github/callback`.
 
 The repo includes `backend/scripts/run_setup.ts` for the Google auth identity table, nullable Google-only user fields, water logs, and daily goals tables. Run it after the base user/profile/workout/food schema exists:
 

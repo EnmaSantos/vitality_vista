@@ -5,6 +5,8 @@ import { UserSchema, USER_TABLE_NAME } from "../models/user.model.ts"; // Import
 import { hash, compare } from "../services/password.ts"; // Import hash and compare from our custom password service
 import { verifyGoogleIdToken } from "../services/googleAuth.ts";
 import type { VerifiedGoogleProfile } from "../services/googleAuth.ts";
+import { verifyGitHubCode } from "../services/githubAuth.ts";
+import type { VerifiedGitHubProfile } from "../services/githubAuth.ts";
 
 // --- Interfaces (DTOs and API Response) ---
 // UserSchema from user.model.ts now represents the DB/internal user structure
@@ -36,6 +38,21 @@ interface GoogleLoginDTO {
   credential: string;
 }
 
+interface GitHubLoginDTO {
+  code: string;
+  redirectUri?: string;
+  codeVerifier?: string;
+}
+
+interface ExternalAuthUserProfile {
+  providerName: string;
+  email: string;
+  givenName?: string | null;
+  familyName?: string | null;
+  name?: string | null;
+  username?: string | null;
+}
+
 const AUTH_IDENTITIES_TABLE_NAME = "user_auth_identities";
 
 // --- Helper Functions ---
@@ -65,21 +82,21 @@ async function findUserByEmail(email: string): Promise<UserSchema | undefined> {
   }
 }
 
-async function findUserByGoogleSubject(providerUserId: string): Promise<UserSchema | undefined> {
+async function findUserByAuthIdentity(provider: string, providerUserId: string): Promise<UserSchema | undefined> {
   try {
     const result = await dbClient.queryObject<UserSchema>(
       `SELECT u.*
        FROM ${USER_TABLE_NAME} u
        INNER JOIN ${AUTH_IDENTITIES_TABLE_NAME} auth_identity
          ON auth_identity.user_id = u.id
-       WHERE auth_identity.provider = 'google'
-         AND auth_identity.provider_user_id = $1
+       WHERE auth_identity.provider = $1
+         AND auth_identity.provider_user_id = $2
        LIMIT 1`,
-      [providerUserId],
+      [provider, providerUserId],
     );
     return result.rows[0];
   } catch (dbError) {
-    console.error("Error in findUserByGoogleSubject:", dbError);
+    console.error("Error in findUserByAuthIdentity:", dbError);
     throw dbError;
   }
 }
@@ -121,54 +138,78 @@ async function createUser(data: RegisterDTO, passwordHash: string): Promise<User
   }
 }
 
-function getGoogleUserNames(profile: VerifiedGoogleProfile): { firstName: string; lastName: string } {
-  const fallbackName = profile.name?.trim() || profile.email.split("@")[0];
+function getExternalUserNames(profile: ExternalAuthUserProfile): { firstName: string; lastName: string } {
+  const fallbackName = profile.name?.trim() || profile.username?.trim() || profile.email.split("@")[0];
   const [fallbackFirstName, ...fallbackLastNameParts] = fallbackName.split(/\s+/);
 
   return {
-    firstName: profile.givenName?.trim() || fallbackFirstName || "Google",
+    firstName: profile.givenName?.trim() || fallbackFirstName || profile.providerName,
     lastName: profile.familyName?.trim() || fallbackLastNameParts.join(" "),
   };
 }
 
-async function createGoogleUser(profile: VerifiedGoogleProfile): Promise<UserSchema> {
+async function createExternalUser(profile: ExternalAuthUserProfile): Promise<UserSchema> {
   try {
-    const names = getGoogleUserNames(profile);
+    const names = getExternalUserNames(profile);
     const result = await dbClient.queryObject<UserSchema>(
       `INSERT INTO ${USER_TABLE_NAME} (email, password_hash, first_name, last_name)
        VALUES ($1, NULL, $2, $3)
        RETURNING *`,
-      [profile.email, names.firstName, names.lastName],
+      [profile.email.toLowerCase(), names.firstName, names.lastName],
     );
 
     if (!result.rows[0]) {
-      throw new Error("Google user creation failed, no data returned.");
+      throw new Error(`${profile.providerName} user creation failed, no data returned.`);
     }
 
     return result.rows[0];
   } catch (dbError) {
-    console.error("Error in createGoogleUser:", dbError);
+    console.error("Error in createExternalUser:", dbError);
     throw dbError;
   }
 }
 
-async function linkGoogleIdentity(userId: string, profile: VerifiedGoogleProfile): Promise<void> {
+async function linkAuthIdentity(
+  provider: string,
+  providerUserId: string,
+  userId: string,
+  email: string,
+): Promise<void> {
   try {
     await dbClient.queryObject(
       `INSERT INTO ${AUTH_IDENTITIES_TABLE_NAME}
          (provider, provider_user_id, user_id, email)
-       VALUES ('google', $1, $2, $3)
+       VALUES ($1, $2, $3, $4)
        ON CONFLICT (provider, provider_user_id)
        DO UPDATE SET
          user_id = EXCLUDED.user_id,
          email = EXCLUDED.email,
          updated_at = CURRENT_TIMESTAMP`,
-      [profile.sub, userId, profile.email],
+      [provider, providerUserId, userId, email.toLowerCase()],
     );
   } catch (dbError) {
-    console.error("Error in linkGoogleIdentity:", dbError);
+    console.error("Error in linkAuthIdentity:", dbError);
     throw dbError;
   }
+}
+
+function toExternalGoogleProfile(profile: VerifiedGoogleProfile): ExternalAuthUserProfile {
+  return {
+    providerName: "Google",
+    email: profile.email,
+    givenName: profile.givenName,
+    familyName: profile.familyName,
+    name: profile.name,
+  };
+}
+
+function toExternalGitHubProfile(profile: VerifiedGitHubProfile): ExternalAuthUserProfile {
+  return {
+    providerName: "GitHub",
+    email: profile.email,
+    name: profile.name,
+    username: profile.login,
+  };
 }
 
 function sendAuthSuccess(ctx: Context, user: UserSchema, token: string, message: string, status = 200) {
@@ -326,16 +367,16 @@ export async function googleLogin(ctx: Context) {
     }
 
     const googleProfile = await verifyGoogleIdToken(body.credential);
-    let user = await findUserByGoogleSubject(googleProfile.sub);
+    let user = await findUserByAuthIdentity("google", googleProfile.sub);
 
     if (!user) {
       user = await findUserByEmail(googleProfile.email);
 
       if (user) {
-        await linkGoogleIdentity(user.id, googleProfile);
+        await linkAuthIdentity("google", googleProfile.sub, user.id, googleProfile.email);
       } else {
-        user = await createGoogleUser(googleProfile);
-        await linkGoogleIdentity(user.id, googleProfile);
+        user = await createExternalUser(toExternalGoogleProfile(googleProfile));
+        await linkAuthIdentity("google", googleProfile.sub, user.id, googleProfile.email);
       }
     }
 
@@ -350,6 +391,52 @@ export async function googleLogin(ctx: Context) {
     ctx.response.body = {
       success: false,
       message: isConfigError ? "Google login is not configured" : "Google login failed",
+      error: message,
+    };
+  }
+}
+
+export async function githubLogin(ctx: Context) {
+  try {
+    await ensureConnection();
+
+    const result = ctx.request.body({ type: "json" });
+    const body: GitHubLoginDTO = await result.value;
+
+    if (!body.code) {
+      ctx.response.status = 400;
+      ctx.response.body = { success: false, message: "GitHub authorization code is required" };
+      return;
+    }
+
+    const githubProfile = await verifyGitHubCode(body.code, {
+      redirectUri: body.redirectUri,
+      codeVerifier: body.codeVerifier,
+    });
+    let user = await findUserByAuthIdentity("github", githubProfile.id);
+
+    if (!user) {
+      user = await findUserByEmail(githubProfile.email);
+
+      if (user) {
+        await linkAuthIdentity("github", githubProfile.id, user.id, githubProfile.email);
+      } else {
+        user = await createExternalUser(toExternalGitHubProfile(githubProfile));
+        await linkAuthIdentity("github", githubProfile.id, user.id, githubProfile.email);
+      }
+    }
+
+    const token = await generateToken(user.id);
+    sendAuthSuccess(ctx, user, token, "GitHub login successful");
+  } catch (error) {
+    console.error("GitHub login error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const isConfigError = message === "GitHub auth is not configured";
+
+    ctx.response.status = isConfigError ? 500 : 401;
+    ctx.response.body = {
+      success: false,
+      message: isConfigError ? "GitHub login is not configured" : "GitHub login failed",
       error: message,
     };
   }

@@ -14,6 +14,7 @@ import {
   Landing,
   Login,
   Signup,
+  GitHubOAuthCallback,
   ForgotPassword,
   ProfilePage,
   MyPlans,
@@ -26,7 +27,7 @@ import "./App.css";
 // AppLayout component remains the same
 const AppLayout = () => {
   const location = useLocation();
-  const noNavbarRoutes = ['/login', '/signup', '/forgot-password', '/landing'];
+  const noNavbarRoutes = ['/login', '/signup', '/forgot-password', '/landing', '/auth/github/callback'];
   const hideNavbar = noNavbarRoutes.includes(location.pathname);
 
   return (
@@ -39,6 +40,7 @@ const AppLayout = () => {
           <Route path="/landing" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/auth/github/callback" element={<GitHubOAuthCallback />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* --- Protected Routes (Wrap element with ProtectedRoute) --- */}

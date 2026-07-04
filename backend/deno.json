@@ -1,5 +1,10 @@
 {
   "tasks": {
     "start": "deno run --allow-net --allow-env --allow-read --watch server.ts"
+  },
+  "deploy": {
+    "org": "enmasantos",
+    "app": "vitality-vista"
   }
 }
+

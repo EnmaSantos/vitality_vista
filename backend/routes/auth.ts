@@ -1,6 +1,6 @@
 // routes/auth.ts
 import { Router } from "../deps.ts";
-import { register, login, googleLogin, getCurrentUser, logoutUser } from "../controllers/authController.ts";
+import { register, login, googleLogin, githubLogin, getCurrentUser, logoutUser } from "../controllers/authController.ts";
 import { authMiddleware } from "../middleware/authMiddleware.ts";
 
 const router = new Router({ prefix: "/auth" });
@@ -9,6 +9,7 @@ const router = new Router({ prefix: "/auth" });
 router.post("/register", register);
 router.post("/login", login);
 router.post("/google", googleLogin);
+router.post("/github", githubLogin);
 router.post("/logout", logoutUser);
 
 // Protected routes

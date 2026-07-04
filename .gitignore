@@ -51,4 +51,8 @@ logs
 # Deno
 test_random_calories.ts
 
+# Vercel local project metadata
+.vercel/
+
 GEMINI.md
+.vercel

@@ -13,13 +13,15 @@ import {
   FormControlLabel,
   CircularProgress,
   Alert,
-  Divider
+  Divider,
+  Stack
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
-import { GOOGLE_CLIENT_ID } from '../config';
+import GitHubSignInButton from '../components/GitHubSignInButton';
+import { GITHUB_CLIENT_ID, GOOGLE_CLIENT_ID } from '../config';
 
 const Signup: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -47,6 +49,7 @@ const Signup: React.FC = () => {
   };
 
   const navigate = useNavigate();
+  const hasSocialLogin = Boolean(GOOGLE_CLIENT_ID || GITHUB_CLIENT_ID);
 
   useEffect(() => {
     if (!isAuthLoading && isAuthenticated) {
@@ -148,14 +151,24 @@ const Signup: React.FC = () => {
           </Alert>
         )}
 
-        {GOOGLE_CLIENT_ID && (
+        {hasSocialLogin && (
           <>
-            <GoogleSignInButton
-              disabled={isSubmitting}
-              text="signup_with"
-              onCredential={handleGoogleCredential}
-              onError={setSubmitError}
-            />
+            <Stack spacing={1.5}>
+              {GOOGLE_CLIENT_ID && (
+                <GoogleSignInButton
+                  disabled={isSubmitting}
+                  text="signup_with"
+                  onCredential={handleGoogleCredential}
+                  onError={setSubmitError}
+                />
+              )}
+              {GITHUB_CLIENT_ID && (
+                <GitHubSignInButton
+                  disabled={isSubmitting}
+                  onError={setSubmitError}
+                />
+              )}
+            </Stack>
             <Divider sx={{ my: 3 }}>or</Divider>
           </>
         )}

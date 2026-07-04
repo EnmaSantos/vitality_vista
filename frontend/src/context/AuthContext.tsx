@@ -2,7 +2,7 @@
 
 import React, { createContext, useState, useContext, useEffect, useMemo, ReactNode } from 'react';
 import * as authApi from '../services/authApi';
-import { RegisterCredentials } from '../services/authApi';
+import { GitHubLoginCredentials, RegisterCredentials } from '../services/authApi';
 
 // Match the sanitized user data returned from your backend's /api/auth/login or /api/auth/me
 interface User {
@@ -20,6 +20,7 @@ export interface AuthContextType {
   isLoading: boolean; // To handle initial check for stored token
   login: (email: string, password: string) => Promise<void>; // Placeholder for now
   loginWithGoogle: (credential: string) => Promise<void>;
+  loginWithGitHub: (credentials: GitHubLoginCredentials) => Promise<void>;
   logout: () => void; // Placeholder for now
   register: (credentials: RegisterCredentials) => Promise<void>; // Added register
 }
@@ -33,6 +34,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true, // Start as true until initial check is done
   login: async () => { throw new Error('Login function not implemented'); },
   loginWithGoogle: async () => { throw new Error('Google login function not implemented'); },
+  loginWithGitHub: async () => { throw new Error('GitHub login function not implemented'); },
   logout: () => { throw new Error('Logout function not implemented'); },
   register: async () => { throw new Error('Register function not implemented'); }, // Added default
 });
@@ -132,6 +134,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const loginWithGitHub = async (credentials: GitHubLoginCredentials): Promise<void> => {
+    console.log("AuthProvider: Attempting GitHub login...");
+    try {
+      const responseData = await authApi.loginWithGitHub(credentials);
+      console.log("AuthProvider: GitHub login successful.", responseData);
+      applyAuthData(responseData);
+    } catch (error) {
+      console.error("AuthProvider: GitHub login failed.", error);
+      clearAuthData();
+      throw error;
+    }
+  };
+
   // --- Logout Function (Implemented) ---
   const logout = async (): Promise<void> => {
     console.log("AuthProvider: Logging out.");
@@ -172,6 +187,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isLoading,
     login,
     loginWithGoogle,
+    loginWithGitHub,
     logout,
     register
   }), [token, user, isAuthenticated, isLoading]);
