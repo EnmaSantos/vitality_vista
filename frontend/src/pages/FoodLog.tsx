@@ -31,6 +31,7 @@ import {
   Tabs,
   Tab,
   Stack,
+  Chip,
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -39,7 +40,6 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Search as SearchIcon,
-  Notes as NotesIcon,
   PhotoCamera as PhotoCameraIcon,
   QrCodeScanner as QrCodeScannerIcon,
 } from '@mui/icons-material';
@@ -50,17 +50,15 @@ import {
   NutritionServing,
   FoodLogEntry,
   CreateFoodLogEntryPayload,
+  FoodAttributeFlag,
   searchFoodsAPI,
-  analyzeMealTextAPI,
   findFoodByBarcodeAPI,
-  recognizeFoodImageAPI,
+  getFoodDetailsAPI,
   createFoodLogEntryAPI,
   getFoodLogEntriesAPI,
   deleteFoodLogEntryAPI,
 } from '../services/foodLogApi';
 import { getAvailableConversions, ConvertedOption } from '../utils/unitConversions';
-import { buildMealTextFallbackQuery } from '../utils/foodFallback';
-import { compressFoodImageForFatSecret, formatBytes, CompressedFoodImage } from '../utils/imageCompression';
 import { logWaterAPI, getDailyWaterAPI } from '../services/waterApi';
 import { AppPanel, EmptyState, MacroBar, MetricCard, PageHeader } from '../components/VitalityUI';
 
@@ -92,16 +90,12 @@ interface CurrentFoodEntry {
 const FoodLog: React.FC = () => {
   const auth = useAuth();
 
-  const [lookupMode, setLookupMode] = useState<'search' | 'text' | 'barcode' | 'image'>('search');
+  const [lookupMode, setLookupMode] = useState<'search' | 'barcode'>('search');
   const [searchQuery, setSearchQuery] = useState('');
-  const [mealTextInput, setMealTextInput] = useState('');
   const [barcodeInput, setBarcodeInput] = useState('');
-  const [selectedImageName, setSelectedImageName] = useState('');
   const [searchResults, setSearchResults] = useState<NutritionData[]>([]);
   const [isLoadingSearch, setIsLoadingSearch] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [searchWarning, setSearchWarning] = useState<string | null>(null);
-  const [compressedImageInfo, setCompressedImageInfo] = useState<CompressedFoodImage | null>(null);
 
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [selectedFoodForDialog, setSelectedFoodForDialog] = useState<NutritionData | null>(null);
@@ -123,6 +117,7 @@ const FoodLog: React.FC = () => {
     new Date().toISOString().split('T')[0]
   );
   const [loggedEntries, setLoggedEntries] = useState<FoodLogEntry[]>([]);
+  const [foodDetailsById, setFoodDetailsById] = useState<Record<string, NutritionData>>({});
   const [isLoadingLog, setIsLoadingLog] = useState(false);
   const [logError, setLogError] = useState<string | null>(null);
 
@@ -165,11 +160,11 @@ const FoodLog: React.FC = () => {
     }
   };
 
-  const handleLookupModeChange = (_event: React.SyntheticEvent, value: 'search' | 'text' | 'barcode' | 'image') => {
+  const handleLookupModeChange = (_event: React.SyntheticEvent, value: 'search' | 'barcode' | null) => {
+    if (!value) return;
     setLookupMode(value);
     setSearchResults([]);
     setSearchError(null);
-    setSearchWarning(null);
     setIsLoadingSearch(false);
   };
 
@@ -177,50 +172,6 @@ const FoodLog: React.FC = () => {
     const digitsOnly = value.replace(/\D/g, '');
     if (![8, 12, 13].includes(digitsOnly.length)) return digitsOnly;
     return digitsOnly.length === 13 ? digitsOnly : digitsOnly.padStart(13, '0');
-  };
-
-  const applyDetectedFoods = (foods: NutritionData[], emptyMessage: string) => {
-    setSearchResults(foods);
-    setSearchError(foods.length === 0 ? emptyMessage : null);
-  };
-
-  const handleAnalyzeMealText = async () => {
-    if (!auth.token) {
-      setSearchError("Authentication token not found. Please log in.");
-      return;
-    }
-    if (!mealTextInput.trim()) {
-      setSearchError("Meal text is required.");
-      return;
-    }
-    if (mealTextInput.trim().length > 1000) {
-      setSearchError("Meal text must be 1000 characters or fewer.");
-      return;
-    }
-
-    setIsLoadingSearch(true);
-    setSearchError(null);
-    setSearchWarning(null);
-    try {
-      const result = await analyzeMealTextAPI(mealTextInput.trim(), auth);
-      applyDetectedFoods(result.foods, "No foods were detected from that meal text.");
-    } catch (err) {
-      const fallbackQuery = buildMealTextFallbackQuery(mealTextInput);
-      try {
-        const fallbackResults = await searchFoodsAPI(fallbackQuery, auth);
-        setSearchResults(fallbackResults);
-        setSearchQuery(fallbackQuery);
-        setSearchWarning(
-          `${err instanceof Error ? err.message : "Meal text analysis is unavailable."} Showing normal search results for "${fallbackQuery}" instead.`,
-        );
-        setSearchError(fallbackResults.length ? null : "No fallback search results were found.");
-      } catch (fallbackError) {
-        setSearchError(fallbackError instanceof Error ? fallbackError.message : "Failed to analyze meal text.");
-        setSearchResults([]);
-      }
-    } finally {
-      setIsLoadingSearch(false);
-    }
   };
 
   const lookupBarcode = async (barcodeValue: string) => {
@@ -283,33 +234,6 @@ const FoodLog: React.FC = () => {
     }
   };
 
-  const handleImageRecognition = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-
-    setSelectedImageName(file.name);
-    setCompressedImageInfo(null);
-    setIsLoadingSearch(true);
-    setSearchError(null);
-    setSearchWarning(null);
-    try {
-      const compressedImage = await compressFoodImageForFatSecret(file);
-      setCompressedImageInfo(compressedImage);
-      const result = await recognizeFoodImageAPI(compressedImage.base64, auth);
-      applyDetectedFoods(result.foods, "No foods were recognized in that image.");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to recognize food image.";
-      setSearchWarning(`${message} Use search or manual entry to log this food.`);
-      setSearchError(null);
-      setSearchResults([]);
-    } finally {
-      setIsLoadingSearch(false);
-    }
-  };
-
-
-
   const fetchLoggedEntries = useCallback(async (date: string) => {
     if (!auth.token) return;
 
@@ -329,6 +253,45 @@ const FoodLog: React.FC = () => {
   useEffect(() => {
     fetchLoggedEntries(currentDate);
   }, [currentDate, fetchLoggedEntries]);
+
+  useEffect(() => {
+    if (!auth.token || loggedEntries.length === 0) return;
+
+    const foodIdsToLoad = Array.from(new Set(
+      loggedEntries
+        .map((entry) => entry.fatsecret_food_id)
+        .filter((foodId): foodId is string => Boolean(foodId && !foodDetailsById[foodId]))
+    ));
+
+    if (foodIdsToLoad.length === 0) return;
+
+    let cancelled = false;
+    Promise.all(
+      foodIdsToLoad.map(async (foodId) => {
+        try {
+          const details = await getFoodDetailsAPI(foodId, auth);
+          return details ? [foodId, details] as const : null;
+        } catch (error) {
+          console.warn(`Could not hydrate food metadata for ${foodId}:`, error);
+          return null;
+        }
+      })
+    ).then((details) => {
+      if (cancelled) return;
+      const nextDetails = details.reduce((acc, detail) => {
+        if (detail) acc[detail[0]] = detail[1];
+        return acc;
+      }, {} as Record<string, NutritionData>);
+
+      if (Object.keys(nextDetails).length > 0) {
+        setFoodDetailsById((previous) => ({ ...previous, ...nextDetails }));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.token, loggedEntries, foodDetailsById]);
 
   const debouncedSearch = useCallback(
     debounce(async (query: string) => {
@@ -626,11 +589,118 @@ const FoodLog: React.FC = () => {
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
   }, [loggedEntries]);
 
+  const getAttributeNames = (
+    attributes: FoodAttributeFlag[] | undefined,
+    status: FoodAttributeFlag['status']
+  ) => attributes?.filter((attribute) => attribute.status === status).map((attribute) => attribute.name) ?? [];
+
+  const renderFoodMetadataChips = (food: NutritionData | undefined | null, limit = 5) => {
+    if (!food) return null;
+
+    const positivePreferences = getAttributeNames(food.dietaryPreferences, 'contains');
+    const presentAllergens = getAttributeNames(food.allergens, 'contains');
+    const metadataItems = [
+      ...(food.isGeneric ? ['Generic'] : ['Brand']),
+      ...(food.foodSubCategories ?? []).slice(0, 2),
+      ...positivePreferences.slice(0, 2),
+      ...presentAllergens.slice(0, 1).map((name) => `Contains ${name}`),
+    ].slice(0, limit);
+
+    if (metadataItems.length === 0) return null;
+
+    return (
+      <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ mt: 0.75 }}>
+        {metadataItems.map((item) => (
+          <Chip
+            key={item}
+            label={item}
+            size="small"
+            sx={{
+              height: 22,
+              borderRadius: 1,
+              bgcolor: item.startsWith('Contains') ? 'rgba(190, 62, 52, 0.1)' : 'var(--vv-surface-muted)',
+              color: item.startsWith('Contains') ? '#9f2d24' : 'var(--vv-primary-2)',
+              fontWeight: 800,
+              fontSize: '0.72rem',
+            }}
+          />
+        ))}
+      </Stack>
+    );
+  };
+
+  const renderFoodAttributeSummary = (food: NutritionData) => {
+    const presentAllergens = getAttributeNames(food.allergens, 'contains');
+    const freeAllergens = getAttributeNames(food.allergens, 'free');
+    const unknownAllergens = getAttributeNames(food.allergens, 'unknown');
+    const positivePreferences = getAttributeNames(food.dietaryPreferences, 'contains');
+    const negativePreferences = getAttributeNames(food.dietaryPreferences, 'free');
+
+    const hasAllergenData = presentAllergens.length > 0
+      || freeAllergens.length > 0
+      || unknownAllergens.length > 0;
+    const hasPreferenceData = positivePreferences.length > 0 || negativePreferences.length > 0;
+
+    if (!hasAllergenData && !hasPreferenceData) return null;
+
+    return (
+      <Box sx={{ mt: 2, p: 1.5, bgcolor: 'white', borderRadius: 2, border: '1px solid rgba(96, 108, 56, 0.12)' }}>
+        <Typography variant="subtitle2" sx={{ color: 'var(--color-primary-dark)', fontWeight: 900, mb: 1 }}>
+          Allergens and dietary preferences
+        </Typography>
+
+        {positivePreferences.length > 0 && (
+          <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ mb: 1 }}>
+            {positivePreferences.map((preference) => (
+              <Chip key={preference} label={preference} size="small" sx={{ bgcolor: 'rgba(96, 108, 56, 0.12)', color: 'var(--color-primary-dark)', fontWeight: 800 }} />
+            ))}
+          </Stack>
+        )}
+        {positivePreferences.length === 0 && hasPreferenceData && (
+          <Typography variant="body2" sx={{ color: 'var(--color-secondary)', mb: 0.75 }}>
+            No dietary preferences are marked as present.
+          </Typography>
+        )}
+
+        {negativePreferences.length > 0 && (
+          <Typography variant="caption" sx={{ display: 'block', color: 'var(--color-secondary)', mb: hasAllergenData ? 1 : 0 }}>
+            Not marked: {negativePreferences.join(', ')}
+          </Typography>
+        )}
+
+        {hasAllergenData && (
+          presentAllergens.length > 0 ? (
+            <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ mb: 1 }}>
+              {presentAllergens.map((allergen) => (
+                <Chip key={allergen} label={`Contains ${allergen}`} size="small" sx={{ bgcolor: 'rgba(190, 62, 52, 0.1)', color: '#9f2d24', fontWeight: 800 }} />
+              ))}
+            </Stack>
+          ) : (
+            <Typography variant="body2" sx={{ color: 'var(--color-secondary)', mb: 0.75 }}>
+              No listed allergens are marked as present.
+            </Typography>
+          )
+        )}
+
+        {freeAllergens.length > 0 && (
+          <Typography variant="caption" sx={{ display: 'block', color: 'var(--color-secondary)' }}>
+            Marked free: {freeAllergens.join(', ')}
+          </Typography>
+        )}
+        {unknownAllergens.length > 0 && (
+          <Typography variant="caption" sx={{ display: 'block', color: 'var(--color-secondary)' }}>
+            Unknown: {unknownAllergens.join(', ')}
+          </Typography>
+        )}
+      </Box>
+    );
+  };
+
   return (
     <Box className="vv-page">
       <PageHeader
         title="Food and water log"
-        subtitle="Search foods, parse meal text, scan barcodes, recognize images, and track water."
+        subtitle="Search foods, scan barcodes, review nutrition details, and track water."
         action={(
           <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, gap: 1.5 }}>
           <TextField
@@ -692,9 +762,7 @@ const FoodLog: React.FC = () => {
           }}
         >
           <Tab icon={<SearchIcon />} iconPosition="start" label="Search" value="search" />
-          <Tab icon={<NotesIcon />} iconPosition="start" label="Meal text" value="text" />
           <Tab icon={<QrCodeScannerIcon />} iconPosition="start" label="Barcode" value="barcode" />
-          <Tab icon={<PhotoCameraIcon />} iconPosition="start" label="Image" value="image" />
         </Tabs>
 
         {lookupMode === 'search' && (
@@ -719,38 +787,6 @@ const FoodLog: React.FC = () => {
               }
             }}
           />
-        )}
-
-        {lookupMode === 'text' && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
-            <TextField
-              fullWidth
-              multiline
-              minRows={3}
-              variant="outlined"
-              placeholder="For breakfast I ate a slice of toast with butter and a cappuccino"
-              value={mealTextInput}
-              onChange={(e) => setMealTextInput(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: 'var(--vv-surface)',
-                  '& fieldset': { borderColor: 'var(--vv-line)' },
-                }
-              }}
-            />
-            <Box>
-              <Button
-                variant="contained"
-                startIcon={<NotesIcon />}
-                onClick={handleAnalyzeMealText}
-                disabled={isLoadingSearch}
-                disableElevation
-                sx={{ bgcolor: 'var(--vv-primary)', color: 'white', fontWeight: 'bold' }}
-              >
-                Analyze Meal
-              </Button>
-            </Box>
-          </Box>
         )}
 
         {lookupMode === 'barcode' && (
@@ -803,47 +839,7 @@ const FoodLog: React.FC = () => {
             </Grid>
           </Grid>
         )}
-
-        {lookupMode === 'image' && (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, mb: 3 }}>
-            <Button
-              component="label"
-              variant="contained"
-              startIcon={<PhotoCameraIcon />}
-              disabled={isLoadingSearch}
-              disableElevation
-              sx={{ bgcolor: 'var(--vv-primary)', color: 'white', fontWeight: 'bold' }}
-            >
-              Choose Photo
-              <input hidden accept="image/jpeg,image/png,image/webp" type="file" onChange={handleImageRecognition} />
-            </Button>
-            {selectedImageName && (
-              <Typography variant="body2" sx={{ color: 'var(--vv-muted)', fontWeight: 750 }}>
-                {selectedImageName}
-              </Typography>
-            )}
-            {compressedImageInfo && (
-              <Typography variant="body2" sx={{ color: 'var(--vv-primary-2)', fontWeight: 750 }}>
-                {formatBytes(compressedImageInfo.originalBytes)} to {formatBytes(compressedImageInfo.compressedBytes)}
-                {' '}({compressedImageInfo.width}x{compressedImageInfo.height})
-              </Typography>
-            )}
-          </Box>
-        )}
         {isLoadingSearch && <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}><CircularProgress sx={{ color: 'var(--vv-primary)' }} /></Box>}
-        {searchWarning && (
-          <Alert
-            severity="warning"
-            sx={{ mb: 2 }}
-            action={lookupMode === 'image' ? (
-              <Button color="inherit" size="small" onClick={() => setLookupMode('search')}>
-                Search
-              </Button>
-            ) : undefined}
-          >
-            {searchWarning}
-          </Alert>
-        )}
         {searchError && <Alert severity="error" sx={{ mb: 2 }}>{searchError}</Alert>}
         {!isLoadingSearch && searchResults.length > 0 && (
           <Paper variant="outlined" sx={{ maxHeight: 330, overflow: 'auto', borderRadius: 2, borderColor: 'var(--vv-line)', bgcolor: 'var(--vv-surface-soft)', p: 1 }}>
@@ -884,8 +880,17 @@ const FoodLog: React.FC = () => {
                     </ListItemAvatar>
                   )}
                   <ListItemText
-                    primary={<Typography sx={{ fontWeight: '700', color: 'var(--vv-ink)' }}>{food.name}</Typography>}
-                    secondary={`${food.brandName ? `${food.brandName} - ` : ''}${food.calories} ${food.calorieUnit || 'kcal'} per ${food.servingSize}`}
+                    primary={(
+                      <Box sx={{ pr: 1 }}>
+                        <Typography sx={{ fontWeight: '700', color: 'var(--vv-ink)' }}>{food.name}</Typography>
+                        {renderFoodMetadataChips(food)}
+                      </Box>
+                    )}
+                    secondary={(
+                      <Typography variant="body2" sx={{ color: 'var(--vv-muted)', mt: 0.5 }}>
+                        {food.brandName ? `${food.brandName} - ` : ''}{food.calories} {food.calorieUnit || 'kcal'} per {food.servingSize}
+                      </Typography>
+                    )}
                   />
                 </ListItem>
               ))}
@@ -1055,47 +1060,68 @@ const FoodLog: React.FC = () => {
             <Typography variant="h6" sx={{ textTransform: 'capitalize', color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>{mealType}</Typography>
             <Divider sx={{ my: 2, borderColor: 'rgba(96, 108, 56, 0.1)' }} />
             <List disablePadding>
-              {groupedEntries[mealType].map((entry) => (
-                <ListItem
-                  key={entry.log_entry_id}
-                  divider
-                  sx={{
-                    borderColor: 'rgba(96, 108, 56, 0.05)',
-                    py: 2,
-                    '&:last-child': { borderBottom: 'none' }
-                  }}
-                >
-                  <Grid container alignItems="center" spacing={1}>
-                    <Grid item xs={12} sm={4} md={3}>
-                      <ListItemText
-                        primary={<Typography sx={{ fontWeight: '600', color: 'var(--color-primary-dark)' }}>{entry.food_name || "Unknown Food"}</Typography>}
-                        secondary={<Typography variant="body2" sx={{ color: 'var(--color-secondary)' }}>{`${parseFloat(String(entry.logged_quantity)).toFixed(1)} x ${entry.logged_serving_description}`}</Typography>}
-                      />
+              {groupedEntries[mealType].map((entry) => {
+                const entryFoodDetails = foodDetailsById[entry.fatsecret_food_id];
+
+                return (
+                  <ListItem
+                    key={entry.log_entry_id}
+                    divider
+                    sx={{
+                      borderColor: 'rgba(96, 108, 56, 0.05)',
+                      py: 2,
+                      '&:last-child': { borderBottom: 'none' }
+                    }}
+                  >
+                    <Grid container alignItems="center" spacing={1}>
+                      <Grid item xs={12} sm={4} md={3}>
+                        <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'flex-start' }}>
+                          {entryFoodDetails?.imageUrl && (
+                            <Avatar
+                              variant="rounded"
+                              src={entryFoodDetails.imageUrl}
+                              alt={entry.food_name || 'Food'}
+                              sx={{ width: 44, height: 44, bgcolor: 'var(--color-bg)', flexShrink: 0 }}
+                            />
+                          )}
+                          <ListItemText
+                            primary={<Typography sx={{ fontWeight: '600', color: 'var(--color-primary-dark)' }}>{entry.food_name || "Unknown Food"}</Typography>}
+                            secondary={(
+                              <Box>
+                                <Typography variant="body2" sx={{ color: 'var(--color-secondary)' }}>
+                                  {`${parseFloat(String(entry.logged_quantity)).toFixed(1)} x ${entry.logged_serving_description}`}
+                                </Typography>
+                                {renderFoodMetadataChips(entryFoodDetails, 4)}
+                              </Box>
+                            )}
+                          />
+                        </Box>
+                      </Grid>
+                      <Grid item xs={10} sm={6} md={7}>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: { xs: 'flex-start', sm: 'space-around' }, alignItems: 'center', pl: { xs: 0, sm: 1 }, gap: { xs: 1, sm: 0.5 } }}>
+                          <Typography variant="body2" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', minWidth: '70px', textAlign: 'right' }}>{(parseFloat(String(entry.calories_consumed)) || 0).toFixed(0)} kcal</Typography>
+                          <Typography variant="body2" sx={{ color: '#606c38', minWidth: '60px', textAlign: 'right' }}>P: {parseFloat(String(entry.protein_consumed)).toFixed(1)}g</Typography>
+                          <Typography variant="body2" sx={{ color: '#dda15e', minWidth: '60px', textAlign: 'right' }}>C: {parseFloat(String(entry.carbs_consumed)).toFixed(1)}g</Typography>
+                          <Typography variant="body2" sx={{ color: '#bc6c25', minWidth: '60px', textAlign: 'right' }}>F: {parseFloat(String(entry.fat_consumed)).toFixed(1)}g</Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={2} sm={2} md={2} sx={{ textAlign: 'right', pt: { xs: 1, md: 0 } }}>
+                        <ListItemSecondaryAction>
+                          <IconButton
+                            edge="end"
+                            aria-label="delete"
+                            onClick={() => handleDeleteLogEntry(entry.log_entry_id)}
+                            size="small"
+                            sx={{ color: '#ef4444', opacity: 0.6, '&:hover': { opacity: 1, bgcolor: '#fee2e2' } }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </ListItemSecondaryAction>
+                      </Grid>
                     </Grid>
-                    <Grid item xs={10} sm={6} md={7}>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: { xs: 'flex-start', sm: 'space-around' }, alignItems: 'center', pl: { xs: 0, sm: 1 }, gap: { xs: 1, sm: 0.5 } }}>
-                        <Typography variant="body2" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', minWidth: '70px', textAlign: 'right' }}>{(parseFloat(String(entry.calories_consumed)) || 0).toFixed(0)} kcal</Typography>
-                        <Typography variant="body2" sx={{ color: '#606c38', minWidth: '60px', textAlign: 'right' }}>P: {parseFloat(String(entry.protein_consumed)).toFixed(1)}g</Typography>
-                        <Typography variant="body2" sx={{ color: '#dda15e', minWidth: '60px', textAlign: 'right' }}>C: {parseFloat(String(entry.carbs_consumed)).toFixed(1)}g</Typography>
-                        <Typography variant="body2" sx={{ color: '#bc6c25', minWidth: '60px', textAlign: 'right' }}>F: {parseFloat(String(entry.fat_consumed)).toFixed(1)}g</Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={2} sm={2} md={2} sx={{ textAlign: 'right', pt: { xs: 1, md: 0 } }}>
-                      <ListItemSecondaryAction>
-                        <IconButton
-                          edge="end"
-                          aria-label="delete"
-                          onClick={() => handleDeleteLogEntry(entry.log_entry_id)}
-                          size="small"
-                          sx={{ color: '#ef4444', opacity: 0.6, '&:hover': { opacity: 1, bgcolor: '#fee2e2' } }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </ListItemSecondaryAction>
-                    </Grid>
-                  </Grid>
-                </ListItem>
-              ))}
+                  </ListItem>
+                );
+              })}
             </List>
           </Paper>
         )
@@ -1114,6 +1140,25 @@ const FoodLog: React.FC = () => {
         <DialogContent sx={{ mt: 2 }}>
           {selectedFoodForDialog && (
             <Box sx={{ mb: 3, p: 2, bgcolor: 'var(--color-bg)', borderRadius: 2, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+              <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mb: 2 }}>
+                {selectedFoodForDialog.imageUrl && (
+                  <Avatar
+                    variant="rounded"
+                    src={selectedFoodForDialog.imageUrl}
+                    alt={selectedFoodForDialog.name}
+                    sx={{ width: 64, height: 64, bgcolor: 'white', border: '1px solid rgba(96, 108, 56, 0.12)' }}
+                  />
+                )}
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={{ color: 'var(--color-primary-dark)', fontWeight: 900, lineHeight: 1.15 }}>
+                    {selectedFoodForDialog.name}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'var(--color-secondary)', mt: 0.25 }}>
+                    {selectedFoodForDialog.brandName || (selectedFoodForDialog.isGeneric ? 'Generic food' : 'Brand food')}
+                  </Typography>
+                  {renderFoodMetadataChips(selectedFoodForDialog, 6)}
+                </Box>
+              </Box>
               <DialogContentText component="div" sx={{ color: 'var(--color-primary-dark)' }}>
                 <Typography variant="subtitle2" sx={{ color: 'var(--color-secondary)', mb: 0.5 }}>
                   Reference Serving
@@ -1180,6 +1225,7 @@ const FoodLog: React.FC = () => {
                   </Typography>
                 </Box>
               </DialogContentText>
+              {renderFoodAttributeSummary(selectedFoodForDialog)}
             </Box>
           )}
           <Grid container spacing={2} sx={{ mt: 0.5 }}>

@@ -30,7 +30,7 @@ The landing page and this README now focus on actual app capabilities instead of
 ### Food And Water Logging
 
 - Searches foods through the FatSecret-backed food lookup flow.
-- Supports meal text analysis, barcode lookup, image recognition, and manual entries.
+- Supports barcode lookup, manual entries, official food images, categories, allergens, and dietary preference metadata when returned by FatSecret.
 - Logs calories, protein, carbs, fat, servings, meal type, notes, and date.
 - Tracks water intake with quick-add amounts and daily totals.
 
@@ -44,7 +44,7 @@ The landing page and this README now focus on actual app capabilities instead of
 ### Recipe Discovery
 
 - Searches recipes and recipe categories through FatSecret recipe endpoints.
-- Displays recipe details, ingredients, instructions, and nutrition information.
+- Displays recipe images, details, ingredients, instructions, categories, filters, and nutrition information.
 - Helps users find meal ideas that fit their routine before logging food choices.
 
 ### Progress Tracking

@@ -151,7 +151,19 @@ export interface ApiFatSecretRecipeTypesResponse {
 export interface FatSecretSearchParams {
     search_expression?: string;
     recipe_types?: string; // Comma-separated
-    // Add other optional filters from docs as needed (calories, macros, time, etc.)
+    recipe_types_matchall?: boolean;
+    must_have_images?: boolean;
+    "calories.from"?: number;
+    "calories.to"?: number;
+    "carb_percentage.from"?: number;
+    "carb_percentage.to"?: number;
+    "protein_percentage.from"?: number;
+    "protein_percentage.to"?: number;
+    "fat_percentage.from"?: number;
+    "fat_percentage.to"?: number;
+    "prep_time.from"?: number;
+    "prep_time.to"?: number;
+    sort_by?: "newest" | "oldest" | "caloriesPerServingAscending" | "caloriesPerServingDescending";
     page_number?: number; // Zero-based
     max_results?: number; // Default 20, max 50
 }
@@ -160,12 +172,11 @@ export async function searchRecipesFromFatSecret(
     params: FatSecretSearchParams
 ): Promise<ApiFatSecretSearchResponse> {
     const url = new URL(API_BASE_URL + '/fatsecret/recipes/search');
-    // Add params to URL search query
-    if (params.search_expression) url.searchParams.append('search_expression', params.search_expression);
-    if (params.recipe_types) url.searchParams.append('recipe_types', params.recipe_types);
-    if (params.page_number !== undefined) url.searchParams.append('page_number', params.page_number.toString());
-    if (params.max_results !== undefined) url.searchParams.append('max_results', params.max_results.toString());
-    // Add other filters here...
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+            url.searchParams.append(key, String(value));
+        }
+    });
 
     console.log(`RecipeApi: Searching FatSecret recipes from ${url.toString()}`);
     try {

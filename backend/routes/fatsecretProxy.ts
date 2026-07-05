@@ -5,8 +5,6 @@ import {
   handleFoodAutocomplete,
   handleFoodSearchV5,
   handleFindFoodByBarcode,
-  handleNaturalLanguageFoodAnalysis,
-  handleFoodImageRecognition,
   handleFoodFeedback,
   handleFoodBrands,
   handleFoodCategories,
@@ -17,8 +15,6 @@ import { authMiddleware } from "../middleware/authMiddleware.ts";
 const fatsecretProxyRouter = new Router();
 
 fatsecretProxyRouter
-  .post("/nlp", authMiddleware, handleNaturalLanguageFoodAnalysis)
-  .post("/image-recognition", authMiddleware, handleFoodImageRecognition)
   .post("/feedback", authMiddleware, handleFoodFeedback)
   .get("/brands", authMiddleware, handleFoodBrands)
   .get("/categories", authMiddleware, handleFoodCategories)

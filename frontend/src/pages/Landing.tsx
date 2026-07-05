@@ -45,10 +45,10 @@ const capabilities = [
     eyebrow: 'Food and hydration',
     title: 'Log nutrition without bouncing between tools',
     description:
-      'Food Log supports normal search, meal text analysis, barcode lookup, image recognition, manual entries, macro totals, and quick water logging.',
+      'Food Log supports normal search, barcode lookup, manual entries, official food images, category metadata, macro totals, and quick water logging.',
     image: '/screenshots/food.png',
     alt: 'Vitality Vista food log screenshot showing food search results, macros, logged meals, and water tracking.',
-    bullets: ['Food search and serving details', 'Text, barcode, and image lookup modes', 'Macro totals and water quick-adds']
+    bullets: ['Food search and serving details', 'Barcode lookup and manual entries', 'Allergen and dietary metadata']
   },
   {
     icon: <FitnessCenterIcon />,

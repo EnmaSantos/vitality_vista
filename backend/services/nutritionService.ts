@@ -125,6 +125,24 @@ interface FatSecretFoodImage {
     image_type?: string;
 }
 
+interface FatSecretAttributeFlag {
+    id?: string | number;
+    name?: string;
+    value?: string | number;
+}
+
+export interface FoodAttributeFlag {
+    id: string;
+    name: string;
+    value: -1 | 0 | 1;
+    status: "contains" | "free" | "unknown";
+}
+
+export interface FoodAttributes {
+    allergens: FoodAttributeFlag[];
+    preferences: FoodAttributeFlag[];
+}
+
 // Define a type for individual serving from FatSecret API
 interface FatSecretServing {
     serving_id: string;
@@ -169,7 +187,9 @@ export interface NutritionData {
     sourceUrl?: string;
     imageUrl?: string;
     foodImages?: FatSecretFoodImage[];
-    foodAttributes?: unknown;
+    foodAttributes?: FoodAttributes;
+    allergens?: FoodAttributeFlag[];
+    dietaryPreferences?: FoodAttributeFlag[];
     foodSubCategories?: string[];
     availableServings?: NutritionServing[];
 }
@@ -206,22 +226,6 @@ export interface FatSecretFoodLookupParams extends FatSecretQueryParams {
     include_food_images?: string | boolean;
     include_food_attributes?: string | boolean;
     flag_default_serving?: string | boolean;
-    region?: string;
-    language?: string;
-}
-
-export interface FatSecretTextAnalysisPayload extends FatSecretPayload {
-    user_input: string;
-    include_food_data?: boolean;
-    eaten_foods?: unknown[];
-    region?: string;
-    language?: string;
-}
-
-export interface FatSecretImageRecognitionPayload extends FatSecretPayload {
-    image_b64: string;
-    include_food_data?: boolean;
-    eaten_foods?: unknown[];
     region?: string;
     language?: string;
 }
@@ -387,6 +391,50 @@ function getFoodSubCategories(food: any): string[] {
     return asArray<string>(food?.food_sub_categories?.food_sub_category);
 }
 
+function normalizeAttributeValue(value: unknown): -1 | 0 | 1 {
+    const numericValue = typeof value === "number" ? value : parseInt(String(value ?? "-1"), 10);
+    if (numericValue === 1) return 1;
+    if (numericValue === 0) return 0;
+    return -1;
+}
+
+function getAttributeStatus(value: -1 | 0 | 1): FoodAttributeFlag["status"] {
+    if (value === 1) return "contains";
+    if (value === 0) return "free";
+    return "unknown";
+}
+
+function normalizeAttributeList(attributeContainer: unknown, itemKey: string): FoodAttributeFlag[] {
+    const rawAttributes = (attributeContainer as Record<string, unknown> | undefined)?.[itemKey] as
+        | FatSecretAttributeFlag
+        | FatSecretAttributeFlag[]
+        | undefined;
+    const attributeItems = asArray<FatSecretAttributeFlag>(rawAttributes);
+
+    return attributeItems
+        .map((attribute) => {
+            const name = typeof attribute.name === "string" ? attribute.name.trim() : "";
+            if (!name) return null;
+
+            const value = normalizeAttributeValue(attribute.value);
+            return {
+                id: String(attribute.id ?? name),
+                name,
+                value,
+                status: getAttributeStatus(value),
+            };
+        })
+        .filter((attribute): attribute is FoodAttributeFlag => Boolean(attribute));
+}
+
+function normalizeFoodAttributes(foodAttributes: unknown): FoodAttributes {
+    const attributes = foodAttributes as Record<string, unknown> | undefined;
+    return {
+        allergens: normalizeAttributeList(attributes?.allergens, "allergen"),
+        preferences: normalizeAttributeList(attributes?.preferences, "preference"),
+    };
+}
+
 function servingToNutritionServing(serving: FatSecretServing): NutritionServing {
     return {
         servingId: String(serving.serving_id ?? "0"),
@@ -427,6 +475,7 @@ export function normalizeFatSecretFood(foodFromApi: any): NutritionData | null {
 
     const foodImages = getFoodImages(foodFromApi);
     const foodSubCategories = getFoodSubCategories(foodFromApi);
+    const foodAttributes = normalizeFoodAttributes(foodFromApi.food_attributes);
 
     return {
         id: String(foodFromApi.food_id),
@@ -450,7 +499,9 @@ export function normalizeFatSecretFood(foodFromApi: any): NutritionData | null {
         sourceUrl: foodFromApi.food_url,
         imageUrl: foodImages[0]?.image_url,
         foodImages,
-        foodAttributes: foodFromApi.food_attributes,
+        foodAttributes,
+        allergens: foodAttributes.allergens,
+        dietaryPreferences: foodAttributes.preferences,
         foodSubCategories,
         availableServings: servingsArray.map(servingToNutritionServing),
     };
@@ -484,6 +535,7 @@ function normalizeFatSecretFoodResponseItem(item: any): NutritionData | null {
     };
 
     const foodImages = getFoodImages(food);
+    const foodAttributes = normalizeFoodAttributes(food.food_attributes);
     return {
         id: String(item.food_id),
         name: item.food_entry_name,
@@ -506,7 +558,9 @@ function normalizeFatSecretFoodResponseItem(item: any): NutritionData | null {
         sourceUrl: food.food_url,
         imageUrl: foodImages[0]?.image_url,
         foodImages,
-        foodAttributes: food.food_attributes,
+        foodAttributes,
+        allergens: foodAttributes.allergens,
+        dietaryPreferences: foodAttributes.preferences,
         foodSubCategories: getFoodSubCategories(food),
         availableServings: [serving],
     };
@@ -597,6 +651,9 @@ export async function searchFoodNutrition(
             search_expression: ingredient,
             max_results: maxResults,
             flag_default_serving: true,
+            include_sub_categories: true,
+            include_food_images: true,
+            include_food_attributes: true,
         });
 
         // Handle no results or incorrect structure
@@ -719,36 +776,6 @@ export async function findFatSecretFoodByBarcode(
     });
 }
 
-export async function analyzeFatSecretNaturalLanguage(
-    payload: FatSecretTextAnalysisPayload,
-): Promise<any> {
-    return await fatSecretApiRequest("natural-language-processing/v1", {
-        method: "POST",
-        scope: "nlp",
-        body: {
-            include_food_data: true,
-            region: "US",
-            language: "en",
-            ...payload,
-        },
-    });
-}
-
-export async function recognizeFatSecretFoodImage(
-    payload: FatSecretImageRecognitionPayload,
-): Promise<any> {
-    return await fatSecretApiRequest("image-recognition/v2", {
-        method: "POST",
-        scope: "image-recognition",
-        body: {
-            include_food_data: true,
-            region: "US",
-            language: "en",
-            ...payload,
-        },
-    });
-}
-
 export async function submitFatSecretFoodFeedback(
     payload: FatSecretFeedbackPayload,
 ): Promise<any> {
@@ -856,10 +883,11 @@ export interface FatSecretRecipeAPISearchParams {
     [key: string]: string | undefined;
     search_expression?: string;
     recipe_types?: string; // Comma-separated string of recipe type names
-    // Add other relevant parameters from FatSecret docs: must_have_images, calories, etc.
+    recipe_types_matchall?: string;
+    must_have_images?: string;
+    sort_by?: string;
     page_number?: string; // FatSecret expects string for page_number and max_results in params
     max_results?: string;
-    // sort_by?: string;
 }
 
 /**

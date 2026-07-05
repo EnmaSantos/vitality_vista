@@ -27,9 +27,23 @@ export interface NutritionData {
   sourceUrl?: string;
   imageUrl?: string;
   foodImages?: { image_url: string; image_type?: string }[];
-  foodAttributes?: unknown;
+  foodAttributes?: FoodAttributes;
+  allergens?: FoodAttributeFlag[];
+  dietaryPreferences?: FoodAttributeFlag[];
   foodSubCategories?: string[];
   availableServings?: NutritionServing[];
+}
+
+export interface FoodAttributeFlag {
+  id: string;
+  name: string;
+  value: -1 | 0 | 1;
+  status: 'contains' | 'free' | 'unknown';
+}
+
+export interface FoodAttributes {
+  allergens: FoodAttributeFlag[];
+  preferences: FoodAttributeFlag[];
 }
 
 export interface NutritionServing {
@@ -51,17 +65,9 @@ export interface AutocompleteSuggestion {
   servingSize: string;
 }
 
-export interface FatSecretAnalysisResponse {
+export interface FatSecretFoodSearchResponse {
   raw: unknown;
   foods: NutritionData[];
-  meta?: {
-    mode?: 'text' | 'image';
-    fallbackReason?: string;
-    originalBytes?: number;
-    compressedBytes?: number;
-    width?: number;
-    height?: number;
-  };
 }
 
 export interface FatSecretFoodCategory {
@@ -196,11 +202,14 @@ export const searchFoodsV5API = async (
   auth: AuthContextType,
   maxResults = 10,
   options: Record<string, string | number | boolean | undefined> = {}
-): Promise<FatSecretAnalysisResponse> => {
+): Promise<FatSecretFoodSearchResponse> => {
   if (!auth.token) throw new Error("Authentication token not found.");
   const url = new URL(`${API_BASE_URL}/fatsecret/foods/search-v5`);
   url.searchParams.set("search_expression", query);
   url.searchParams.set("max_results", String(maxResults));
+  url.searchParams.set("include_sub_categories", "true");
+  url.searchParams.set("include_food_images", "true");
+  url.searchParams.set("include_food_attributes", "true");
   Object.entries(options).forEach(([key, value]) => {
     if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
   });
@@ -221,46 +230,6 @@ export const findFoodByBarcodeAPI = async (
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || 'Failed to find food by barcode.');
   return data.data.food;
-};
-
-export const analyzeMealTextAPI = async (
-  userInput: string,
-  auth: AuthContextType
-): Promise<FatSecretAnalysisResponse> => {
-  if (!auth.token) throw new Error("Authentication token not found.");
-  const url = `${API_BASE_URL}/fatsecret/foods/nlp`;
-  const response = await fetchWithAuth(url, {
-    method: 'POST',
-    body: JSON.stringify({
-      user_input: userInput,
-      include_food_data: true,
-      region: "US",
-      language: "en",
-    }),
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || 'Failed to analyze meal text.');
-  return data.data;
-};
-
-export const recognizeFoodImageAPI = async (
-  imageB64: string,
-  auth: AuthContextType
-): Promise<FatSecretAnalysisResponse> => {
-  if (!auth.token) throw new Error("Authentication token not found.");
-  const url = `${API_BASE_URL}/fatsecret/foods/image-recognition`;
-  const response = await fetchWithAuth(url, {
-    method: 'POST',
-    body: JSON.stringify({
-      image_b64: imageB64,
-      include_food_data: true,
-      region: "US",
-      language: "en",
-    }),
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || 'Failed to recognize food image.');
-  return data.data;
 };
 
 export const submitFoodFeedbackAPI = async (

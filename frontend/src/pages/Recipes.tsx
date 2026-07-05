@@ -3,7 +3,7 @@ import {
   Typography, Box, Paper, Grid, Card, CardContent, CardMedia,
   TextField, InputAdornment, Button, Chip, FormControl,
   InputLabel, Select, MenuItem, Pagination, CircularProgress, Alert,
-  SelectChangeEvent,
+  SelectChangeEvent, FormControlLabel, Switch, Stack,
   Dialog, DialogTitle, DialogContent, DialogActions, IconButton,
   List, ListItem, ListItemText, Divider
 } from '@mui/material';
@@ -18,6 +18,7 @@ import {
   searchRecipesFromFatSecret,
   getFatSecretRecipeDetailsById,
   getFatSecretRecipeTypes,
+  FatSecretSearchParams,
   ApiFatSecretSearchResponse, // Import response types if needed for direct handling
   ApiFatSecretGetRecipeResponse,
   ApiFatSecretRecipeTypesResponse
@@ -32,6 +33,10 @@ const Recipes: React.FC = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedRecipeType, setSelectedRecipeType] = useState<string>(ALL_CATEGORIES_VALUE);
   const [availableRecipeTypes, setAvailableRecipeTypes] = useState<string[]>([ALL_CATEGORIES_VALUE]);
+  const [mustHaveImages, setMustHaveImages] = useState(true);
+  const [sortBy, setSortBy] = useState<string>('newest');
+  const [caloriesFrom, setCaloriesFrom] = useState('');
+  const [caloriesTo, setCaloriesTo] = useState('');
 
   // Recipe List State
   const [recipes, setRecipes] = useState<FatSecretRecipeSummary[]>([]);
@@ -103,9 +108,13 @@ const Recipes: React.FC = () => {
     setListError(null);
     setRecipes([]); // Clear previous results
 
-    const params = {
+    const params: FatSecretSearchParams = {
       search_expression: debouncedSearchQuery || undefined,
       recipe_types: selectedRecipeType === ALL_CATEGORIES_VALUE ? undefined : selectedRecipeType,
+      must_have_images: mustHaveImages || undefined,
+      "calories.from": caloriesFrom ? Number(caloriesFrom) : undefined,
+      "calories.to": caloriesTo ? Number(caloriesTo) : undefined,
+      sort_by: sortBy === 'default' ? undefined : sortBy as FatSecretSearchParams['sort_by'],
       page_number: currentPage - 1, // API is 0-based
       max_results: ITEMS_PER_PAGE, // <--- This uses the ITEMS_PER_PAGE constant
     };
@@ -134,7 +143,7 @@ const Recipes: React.FC = () => {
     } finally {
       setIsLoadingList(false);
     }
-  }, [debouncedSearchQuery, selectedRecipeType, currentPage]);
+  }, [debouncedSearchQuery, selectedRecipeType, mustHaveImages, caloriesFrom, caloriesTo, sortBy, currentPage]);
 
   useEffect(() => {
     fetchRecipes();
@@ -176,6 +185,26 @@ const Recipes: React.FC = () => {
     setCurrentPage(1); // Reset page on category change
   };
 
+  const handleSortChange = (event: SelectChangeEvent<string>) => {
+    setSortBy(event.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleCaloriesFromChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setCaloriesFrom(event.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleCaloriesToChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setCaloriesTo(event.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleMustHaveImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setMustHaveImages(event.target.checked);
+    setCurrentPage(1);
+  };
+
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
   };
@@ -196,6 +225,23 @@ const Recipes: React.FC = () => {
   const getPrimaryRecipeType = (recipe: FatSecretRecipeSummary): string => {
     return recipe.recipe_types?.recipe_type?.[0] || 'Unknown';
   }
+
+  const getDietaryRecipeTypes = (types?: string[]) => {
+    return (types ?? []).filter((type) => ['vegan', 'vegetarian'].includes(type.toLowerCase()));
+  };
+
+  const getRecipeNutritionDetails = (serving?: FatSecretServingDetail) => {
+    if (!serving) return [];
+
+    return [
+      { label: 'Fiber', value: serving.fiber, unit: 'g' },
+      { label: 'Sugar', value: serving.sugar, unit: 'g' },
+      { label: 'Sodium', value: serving.sodium, unit: 'mg' },
+      { label: 'Sat fat', value: serving.saturated_fat, unit: 'g' },
+      { label: 'Cholesterol', value: serving.cholesterol, unit: 'mg' },
+      { label: 'Potassium', value: serving.potassium, unit: 'mg' },
+    ].filter((item) => item.value !== undefined && item.value !== '');
+  };
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: 'var(--color-bg)', minHeight: '100vh', pb: 8 }}>
@@ -220,8 +266,8 @@ const Recipes: React.FC = () => {
             border: '1px solid rgba(96, 108, 56, 0.1)'
           }}
         >
-          <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={8}>
+          <Grid container spacing={2.5} alignItems="center">
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 variant="outlined"
@@ -244,7 +290,7 @@ const Recipes: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth variant="outlined">
                 <InputLabel sx={{ color: 'var(--color-primary)' }}>Recipe Type</InputLabel>
                 <Select
@@ -269,6 +315,86 @@ const Recipes: React.FC = () => {
                   ))}
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel sx={{ color: 'var(--color-primary)' }}>Sort</InputLabel>
+                <Select
+                  value={sortBy}
+                  label="Sort"
+                  onChange={handleSortChange}
+                  sx={{
+                    borderRadius: 3,
+                    bgcolor: 'var(--color-bg)',
+                    color: 'var(--color-primary-dark)',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
+                    '& .MuiSvgIcon-root': { color: 'var(--color-primary)' }
+                  }}
+                >
+                  <MenuItem value="newest">Newest</MenuItem>
+                  <MenuItem value="oldest">Oldest</MenuItem>
+                  <MenuItem value="caloriesPerServingAscending">Calories low to high</MenuItem>
+                  <MenuItem value="caloriesPerServingDescending">Calories high to low</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={6} sm={4} md={2.5}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Min cal"
+                value={caloriesFrom}
+                onChange={handleCaloriesFromChange}
+                InputProps={{ inputProps: { min: 0 } }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 3,
+                    bgcolor: 'var(--color-bg)',
+                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '&:hover fieldset': { borderColor: 'var(--color-primary) !important' },
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary) !important' },
+                  },
+                  '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
+                }}
+              />
+            </Grid>
+            <Grid item xs={6} sm={4} md={2.5}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Max cal"
+                value={caloriesTo}
+                onChange={handleCaloriesToChange}
+                InputProps={{ inputProps: { min: 0 } }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 3,
+                    bgcolor: 'var(--color-bg)',
+                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '&:hover fieldset': { borderColor: 'var(--color-primary) !important' },
+                    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary) !important' },
+                  },
+                  '& .MuiInputLabel-root': { color: 'var(--color-primary)' }
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4} md={3}>
+              <FormControlLabel
+                control={(
+                  <Switch
+                    checked={mustHaveImages}
+                    onChange={handleMustHaveImagesChange}
+                    sx={{
+                      '& .MuiSwitch-switchBase.Mui-checked': { color: 'var(--color-primary)' },
+                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: 'var(--color-primary)' }
+                    }}
+                  />
+                )}
+                label="Images"
+                sx={{ color: 'var(--color-primary-dark)', fontWeight: 700 }}
+              />
             </Grid>
           </Grid>
         </Paper>
@@ -351,18 +477,41 @@ const Recipes: React.FC = () => {
                         {recipe.recipe_name}
                       </Typography>
 
-                      <Box sx={{ mb: 2 }}>
-                        <Chip
-                          label={getPrimaryRecipeType(recipe)}
-                          size="small"
-                          sx={{
-                            bgcolor: 'rgba(96, 108, 56, 0.1)',
-                            color: 'var(--color-primary)',
-                            fontWeight: 600,
-                            borderRadius: 1
-                          }}
-                        />
-                      </Box>
+                      <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ mb: 2 }}>
+                        {(recipe.recipe_types?.recipe_type?.length ? recipe.recipe_types.recipe_type.slice(0, 3) : [getPrimaryRecipeType(recipe)]).map((type) => {
+                          const isDietary = getDietaryRecipeTypes([type]).length > 0;
+                          return (
+                            <Chip
+                              key={type}
+                              label={type}
+                              size="small"
+                              sx={{
+                                bgcolor: isDietary ? 'rgba(96, 108, 56, 0.16)' : 'rgba(96, 108, 56, 0.1)',
+                                color: 'var(--color-primary)',
+                                fontWeight: 600,
+                                borderRadius: 1
+                              }}
+                            />
+                          );
+                        })}
+                      </Stack>
+
+                      {recipe.recipe_nutrition && (
+                        <Grid container spacing={1} sx={{ mb: 2 }}>
+                          <Grid item xs={4}>
+                            <Typography variant="caption" color="text.secondary">Protein</Typography>
+                            <Typography variant="body2" fontWeight="bold">{recipe.recipe_nutrition.protein}g</Typography>
+                          </Grid>
+                          <Grid item xs={4}>
+                            <Typography variant="caption" color="text.secondary">Carbs</Typography>
+                            <Typography variant="body2" fontWeight="bold">{recipe.recipe_nutrition.carbohydrate}g</Typography>
+                          </Grid>
+                          <Grid item xs={4}>
+                            <Typography variant="caption" color="text.secondary">Fat</Typography>
+                            <Typography variant="body2" fontWeight="bold">{recipe.recipe_nutrition.fat}g</Typography>
+                          </Grid>
+                        </Grid>
+                      )}
 
                       {recipe.recipe_description && (
                         <Typography
@@ -479,14 +628,23 @@ const Recipes: React.FC = () => {
                     <Box sx={{ mb: 2 }}>
                       {selectedRecipeDetails.recipe_types?.recipe_type && (
                         <Box sx={{ mb: 1 }}>
-                          {selectedRecipeDetails.recipe_types.recipe_type.map((type: string) => (
-                            <Chip
-                              key={type}
-                              label={type}
-                              size="small"
-                              sx={{ mr: 0.5, mb: 0.5, bgcolor: 'rgba(96, 108, 56, 0.1)', color: 'var(--color-primary)', fontWeight: 600 }}
-                            />
-                          ))}
+                          {selectedRecipeDetails.recipe_types.recipe_type.map((type: string) => {
+                            const isDietary = getDietaryRecipeTypes([type]).length > 0;
+                            return (
+                              <Chip
+                                key={type}
+                                label={type}
+                                size="small"
+                                sx={{
+                                  mr: 0.5,
+                                  mb: 0.5,
+                                  bgcolor: isDietary ? 'rgba(96, 108, 56, 0.18)' : 'rgba(96, 108, 56, 0.1)',
+                                  color: 'var(--color-primary)',
+                                  fontWeight: 600
+                                }}
+                              />
+                            );
+                          })}
                         </Box>
                       )}
                       {selectedRecipeDetails.recipe_categories?.recipe_category && (
@@ -581,6 +739,21 @@ const Recipes: React.FC = () => {
                             </Box>
                           </Grid>
                         </Grid>
+                        {getRecipeNutritionDetails(selectedRecipeDetails.serving_sizes.serving).length > 0 && (
+                          <>
+                            <Divider sx={{ my: 2, borderColor: 'rgba(221, 161, 94, 0.25)' }} />
+                            <Grid container spacing={1.5}>
+                              {getRecipeNutritionDetails(selectedRecipeDetails.serving_sizes.serving).map((item) => (
+                                <Grid item xs={6} key={item.label}>
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+                                    <Typography variant="caption" color="text.secondary">{item.label}</Typography>
+                                    <Typography variant="caption" fontWeight="bold">{item.value}{item.unit}</Typography>
+                                  </Box>
+                                </Grid>
+                              ))}
+                            </Grid>
+                          </>
+                        )}
                       </Paper>
                     )}
 
