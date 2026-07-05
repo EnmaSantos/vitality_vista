@@ -5,6 +5,7 @@ const GITHUB_API_VERSION = "2026-03-10";
 const GITHUB_USER_AGENT = "vitality-vista";
 
 const DEFAULT_ALLOWED_REDIRECT_URIS = [
+  "http://localhost:3000/auth/github/callback",
   "http://localhost:5173/auth/github/callback",
   "https://vitality-vista.vercel.app/auth/github/callback",
   "https://vitality-vista.enmasantos.dev/auth/github/callback",

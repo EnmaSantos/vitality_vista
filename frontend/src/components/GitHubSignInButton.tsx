@@ -28,10 +28,6 @@ const GitHubSignInButton: React.FC<GitHubSignInButtonProps> = ({
     }
   };
 
-  if (!GITHUB_CLIENT_ID) {
-    return null;
-  }
-
   return (
     <Button
       fullWidth

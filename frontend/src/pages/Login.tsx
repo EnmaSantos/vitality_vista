@@ -21,7 +21,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext'; // <-- Import useAuth
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import GitHubSignInButton from '../components/GitHubSignInButton';
-import { GITHUB_CLIENT_ID, GOOGLE_CLIENT_ID } from '../config';
+import { GOOGLE_CLIENT_ID } from '../config';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -38,7 +38,6 @@ const Login: React.FC = () => {
   // --- End Added ---
 
   const navigate = useNavigate();
-  const hasSocialLogin = Boolean(GOOGLE_CLIENT_ID || GITHUB_CLIENT_ID);
 
   // --- Added: Effect to redirect if already logged in ---
   // Redirect if the user is already authenticated (and the context isn't still loading)
@@ -143,27 +142,21 @@ const Login: React.FC = () => {
           </Alert>
         )}
 
-        {hasSocialLogin && (
-          <>
-            <Stack spacing={1.5}>
-              {GOOGLE_CLIENT_ID && (
-                <GoogleSignInButton
-                  disabled={isLoading}
-                  text="signin_with"
-                  onCredential={handleGoogleCredential}
-                  onError={setError}
-                />
-              )}
-              {GITHUB_CLIENT_ID && (
-                <GitHubSignInButton
-                  disabled={isLoading}
-                  onError={setError}
-                />
-              )}
-            </Stack>
-            <Divider sx={{ my: 3 }}>or</Divider>
-          </>
-        )}
+        <Stack spacing={1.5}>
+          {GOOGLE_CLIENT_ID && (
+            <GoogleSignInButton
+              disabled={isLoading}
+              text="signin_with"
+              onCredential={handleGoogleCredential}
+              onError={setError}
+            />
+          )}
+          <GitHubSignInButton
+            disabled={isLoading}
+            onError={setError}
+          />
+        </Stack>
+        <Divider sx={{ my: 3 }}>or</Divider>
 
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>

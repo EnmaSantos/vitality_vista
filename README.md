@@ -125,7 +125,7 @@ npm install
 npm run dev
 ```
 
-The frontend runs at `http://localhost:5173`.
+The frontend runs at `http://localhost:3000`.
 
 To point the frontend at a different API server, set:
 
@@ -163,7 +163,7 @@ Create a GitHub OAuth App with these production settings:
 - Homepage URL: `https://vitality-vista.enmasantos.dev`
 - Authorization callback URL: `https://vitality-vista.enmasantos.dev/auth/github/callback`
 
-The app requests `read:user user:email` so the backend can read the GitHub profile and a verified email address before issuing the app JWT. GitHub OAuth Apps allow one callback URL per app, so use a second local OAuth App for development with callback URL `http://localhost:5173/auth/github/callback`.
+The app requests `read:user user:email` so the backend can read the GitHub profile and a verified email address before issuing the app JWT. GitHub OAuth Apps allow one callback URL per app, so use a second local OAuth App for development with callback URL `http://localhost:3000/auth/github/callback`.
 
 The repo includes `backend/scripts/run_setup.ts` for the Google auth identity table, nullable Google-only user fields, water logs, and daily goals tables. Run it after the base user/profile/workout/food schema exists:
 
