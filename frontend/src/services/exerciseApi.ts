@@ -1,7 +1,7 @@
-// frontend/src/services/exerciseApi.ts
+import { API_BASE_URL as CENTRAL_API_BASE_URL } from '../config';
 
-// Import the base URL from the environment variable we set up in Step 1
-const API_BASE_URL = import.meta.env.VITE_EXERCISE_API_URL;
+// Route exercise requests through our Deno backend proxy to avoid CORS issues on custom domains
+const API_BASE_URL = `${CENTRAL_API_BASE_URL}/`;
 
 // Define a TypeScript interface matching the Exercise data structure
 // (Based on the Exercise API README provided earlier)

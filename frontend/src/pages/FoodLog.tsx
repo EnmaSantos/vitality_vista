@@ -31,6 +31,8 @@ import {
   Tabs,
   Tab,
   Stack,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -130,6 +132,7 @@ const FoodLog: React.FC = () => {
 
   // --- Water Tracking State ---
   const [dailyWater, setDailyWater] = useState(0);
+  const [waterUnit, setWaterUnit] = useState<'ml' | 'oz'>('ml');
 
   const fetchDailyWater = useCallback(async () => {
     if (!auth.token) return;
@@ -145,11 +148,13 @@ const FoodLog: React.FC = () => {
     fetchDailyWater();
   }, [fetchDailyWater]);
 
-  const handleAddWater = async (amount: number) => {
+  const handleAddWater = async (amount: number, isOz: boolean = false) => {
+    const amountInMl = isOz ? Math.round(amount * 29.5735) : amount;
     try {
-      await logWaterAPI(amount, currentDate, auth);
-      setDailyWater((prev) => prev + amount);
-      setSnackbarMessage(`Added ${amount}ml of water`);
+      await logWaterAPI(amountInMl, currentDate, auth);
+      setDailyWater((prev) => prev + amountInMl);
+      const displayAmount = isOz ? `${amount} oz` : `${amount}ml`;
+      setSnackbarMessage(`Added ${displayAmount} of water`);
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
     } catch (err) {
@@ -900,7 +905,13 @@ const FoodLog: React.FC = () => {
                 <MetricCard label="Calories" value={dailyTotals.calories.toFixed(0)} detail="logged today" progress={Math.min(dailyTotals.calories / 22, 100)} />
               </Grid>
               <Grid item xs={6}>
-                <MetricCard label="Water" value={`${(dailyWater / 1000).toFixed(2)} L`} detail="+ quick add" progress={Math.min((dailyWater / 2500) * 100, 100)} accent="var(--vv-accent-2)" />
+                <MetricCard
+                  label="Water"
+                  value={waterUnit === 'ml' ? `${(dailyWater / 1000).toFixed(2)} L` : `${(dailyWater / 29.5735).toFixed(1)} oz`}
+                  detail="+ quick add"
+                  progress={Math.min((dailyWater / 2500) * 100, 100)}
+                  accent="var(--vv-accent-2)"
+                />
               </Grid>
             </Grid>
             <AppPanel sx={{ flex: 1 }}>
@@ -937,17 +948,84 @@ const FoodLog: React.FC = () => {
                 <MacroBar label="Fat" value={`${dailyTotals.fat.toFixed(0)}g`} percent={Math.min((dailyTotals.fat / 75) * 100, 100)} color="var(--vv-accent-2)" />
               </Stack>
 
+              <Divider sx={{ my: 2.5, borderColor: 'var(--vv-line)' }} />
+
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+                <Typography sx={{ color: 'var(--vv-ink)', fontWeight: 850, fontSize: '0.95rem' }}>
+                  Water intake
+                </Typography>
+                <ToggleButtonGroup
+                  value={waterUnit}
+                  exclusive
+                  onChange={(_e, val) => val && setWaterUnit(val)}
+                  size="small"
+                  sx={{
+                    height: 28,
+                    '& .MuiToggleButton-root': {
+                      py: 0,
+                      px: 1.5,
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      textTransform: 'none',
+                      color: 'var(--vv-muted)',
+                      borderColor: 'var(--vv-line)',
+                      '&.Mui-selected': {
+                        color: 'var(--vv-primary)',
+                        bgcolor: 'var(--vv-surface-muted)',
+                        borderColor: 'var(--vv-line-strong)',
+                      }
+                    }
+                  }}
+                >
+                  <ToggleButton value="ml">ml</ToggleButton>
+                  <ToggleButton value="oz">oz</ToggleButton>
+                </ToggleButtonGroup>
+              </Stack>
+
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {[250, 500, 750].map((amount) => (
-                  <Button
-                    key={amount}
-                    variant="outlined"
-                    onClick={() => handleAddWater(amount)}
-                    sx={{ borderColor: 'var(--vv-primary-2)', color: 'var(--vv-primary)' }}
-                  >
-                    + {amount === 750 ? '750ml' : `${amount}ml`}
-                  </Button>
-                ))}
+                {waterUnit === 'ml' ? (
+                  [250, 500, 750].map((amount) => (
+                    <Button
+                      key={amount}
+                      variant="outlined"
+                      onClick={() => handleAddWater(amount, false)}
+                      sx={{
+                        borderColor: 'var(--vv-line-strong)',
+                        color: 'var(--vv-primary-2)',
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 800,
+                        '&:hover': {
+                          borderColor: 'var(--vv-primary-2)',
+                          bgcolor: 'var(--vv-surface-soft)',
+                        }
+                      }}
+                    >
+                      + {amount}ml
+                    </Button>
+                  ))
+                ) : (
+                  [8, 12, 16, 24].map((amount) => (
+                    <Button
+                      key={amount}
+                      variant="outlined"
+                      onClick={() => handleAddWater(amount, true)}
+                      sx={{
+                        borderColor: 'var(--vv-line-strong)',
+                        color: 'var(--vv-primary-2)',
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 800,
+                        '&:hover': {
+                          borderColor: 'var(--vv-primary-2)',
+                          bgcolor: 'var(--vv-surface-soft)',
+                        }
+                      }}
+                    >
+                      + {amount} oz
+                    </Button>
+                  ))
+                )}
               </Box>
             </AppPanel>
           </Stack>

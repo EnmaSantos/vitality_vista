@@ -49,6 +49,7 @@ import foodLogRouter from "./routes/foodLogRoutes.ts";
 import waterRouter from "./routes/water.ts";
 import setupRouter from "./routes/setup.ts";
 import goalsRouter from "./routes/goals.ts";
+import exercisesRouter from "./routes/exercises.ts";
 
 // Initialize the app
 const app = new Application();
@@ -106,6 +107,9 @@ apiRouter.use("/water-logs", waterRouter.routes(), waterRouter.allowedMethods())
 
 // Mount Daily Goals routes
 apiRouter.use("/goals", goalsRouter.routes(), goalsRouter.allowedMethods());
+
+// Mount Exercises proxy routes
+apiRouter.use("/exercises", exercisesRouter.routes(), exercisesRouter.allowedMethods());
 
 // Mount Setup routes (Temporary)
 apiRouter.use("/setup-db", setupRouter.routes(), setupRouter.allowedMethods());
