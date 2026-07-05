@@ -79,6 +79,15 @@ const sendFoodAiError = (
     );
   }
 
+  if (error instanceof FatSecretApiError && error.isInvalidClient) {
+    return sendError(
+      ctx,
+      "FatSecret credentials are invalid. Update FATSECRET_CLIENT_ID and FATSECRET_CLIENT_SECRET on the backend.",
+      502,
+      error,
+    );
+  }
+
   return sendError(ctx, fallbackMessage, 500, error);
 };
 

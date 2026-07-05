@@ -1,13 +1,70 @@
 import { load } from "https://deno.land/std@0.208.0/dotenv/mod.ts";
+import { dirname, fromFileUrl, join, normalize } from "https://deno.land/std@0.208.0/path/mod.ts";
 
-// Load environment variables once at the start
-const env = await load();
-const FATSECRET_CLIENT_ID = Deno.env.get("FATSECRET_CLIENT_ID") || env["FATSECRET_CLIENT_ID"];
-const FATSECRET_CLIENT_SECRET = Deno.env.get("FATSECRET_CLIENT_SECRET") || env["FATSECRET_CLIENT_SECRET"];
+type EnvMap = Record<string, string>;
+
+const serviceDir = dirname(fromFileUrl(import.meta.url));
+const backendDir = dirname(serviceDir);
+const projectRootDir = dirname(backendDir);
+
+const uniquePaths = (paths: string[]): string[] => {
+    const seen = new Set<string>();
+    return paths
+        .map((path) => normalize(path))
+        .filter((path) => {
+            if (seen.has(path)) return false;
+            seen.add(path);
+            return true;
+        });
+};
+
+const loadFatSecretEnv = async (): Promise<EnvMap> => {
+    const loadedEnv: EnvMap = {};
+    const envPaths = uniquePaths([
+        join(Deno.cwd(), ".env"),
+        join(Deno.cwd(), ".env.local"),
+        join(backendDir, ".env"),
+        join(backendDir, ".env.local"),
+        join(projectRootDir, ".env"),
+        join(projectRootDir, ".env.local"),
+    ]);
+
+    for (const envPath of envPaths) {
+        try {
+            Object.assign(loadedEnv, await load({ envPath, export: false, examplePath: null }));
+        } catch (error) {
+            if (!(error instanceof Deno.errors.NotFound)) {
+                console.warn(`Unable to load env file at ${envPath}:`, error);
+            }
+        }
+    }
+
+    return loadedEnv;
+};
+
+// Load environment variables once at the start. Deno.env wins over dotenv files.
+const env = await loadFatSecretEnv();
+const getEnvValue = (key: string): string | undefined => {
+    const runtimeValue = Deno.env.get(key)?.trim();
+    if (runtimeValue) return runtimeValue;
+
+    const fileValue = env[key]?.trim();
+    return fileValue || undefined;
+};
+
+const FATSECRET_CLIENT_ID = getEnvValue("FATSECRET_CLIENT_ID");
+const FATSECRET_CLIENT_SECRET = getEnvValue("FATSECRET_CLIENT_SECRET");
 
 // Check if credentials are available
 if (!FATSECRET_CLIENT_ID || !FATSECRET_CLIENT_SECRET) {
     console.error("Error: Missing FatSecret API credentials in environment variables");
+    const unsupportedKeys = ["FAST_SECRET_CLIENT_ID", "FAST_SECRET_API"].filter((key) => getEnvValue(key));
+    if (unsupportedKeys.length > 0) {
+        console.error(
+            `Ignoring unsupported FatSecret env key(s): ${unsupportedKeys.join(", ")}. ` +
+                "Use FATSECRET_CLIENT_ID and FATSECRET_CLIENT_SECRET.",
+        );
+    }
 }
 
 // Token cache with expiration management
@@ -22,13 +79,15 @@ export class FatSecretApiError extends Error {
     status: number;
     code?: string;
     isMissingScope: boolean;
+    isInvalidClient: boolean;
 
     constructor(message: string, status: number, code?: string) {
         super(message);
         this.name = "FatSecretApiError";
         this.status = status;
         this.code = code;
-        this.isMissingScope = /missing scope|invalid_scope|not enabled|not available|premier/i.test(message);
+        this.isMissingScope = /missing scope|invalid_scope|not enabled|not available|premier|add-?on/i.test(message);
+        this.isInvalidClient = /invalid_client|invalid client|client credentials/i.test(message);
     }
 }
 
@@ -185,6 +244,13 @@ export interface FatSecretFeedbackPayload extends FatSecretPayload {
  * Handles caching and automatic renewal
  */
 async function getFatSecretToken(scope = ""): Promise<string> {
+    if (!FATSECRET_CLIENT_ID || !FATSECRET_CLIENT_SECRET) {
+        throw new FatSecretApiError(
+            "FatSecret credentials are not configured. Set FATSECRET_CLIENT_ID and FATSECRET_CLIENT_SECRET.",
+            500,
+        );
+    }
+
     // Check if we have a valid cached token
     const now = Date.now();
     const cacheKey = scope.trim();
@@ -197,8 +263,6 @@ async function getFatSecretToken(scope = ""): Promise<string> {
     const tokenUrl = "https://oauth.fatsecret.com/connect/token";
     const params = new URLSearchParams();
     params.append("grant_type", "client_credentials");
-    params.append("client_id", FATSECRET_CLIENT_ID!);
-    params.append("client_secret", FATSECRET_CLIENT_SECRET!);
     if (cacheKey) {
         params.append("scope", cacheKey);
     }
@@ -208,6 +272,7 @@ async function getFatSecretToken(scope = ""): Promise<string> {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
+                "Authorization": `Basic ${btoa(`${FATSECRET_CLIENT_ID}:${FATSECRET_CLIENT_SECRET}`)}`,
             },
             body: params,
         });
