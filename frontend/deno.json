@@ -1,3 +1,11 @@
 {
-    "enable": false
+  "deploy": {
+    "install": "npm install",
+    "build": "npm run build",
+    "runtime": {
+      "type": "static",
+      "cwd": "./dist",
+      "spa": true
+    }
   }
+}
