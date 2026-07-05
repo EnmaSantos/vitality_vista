@@ -1,6 +1,7 @@
 import React, { ReactNode, useState } from 'react';
 import {
   Box,
+  Button,
   Drawer,
   IconButton,
   Menu,
@@ -125,6 +126,17 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
             <Box component={Link} to="/profile" className="vv-shell-action-link">
               Settings
             </Box>
+            <Button
+              type="button"
+              aria-label="Log out"
+              onClick={handleLogout}
+              startIcon={<LogoutIcon fontSize="small" />}
+              className="vv-shell-logout-button"
+            >
+              <Box component="span" className="vv-shell-logout-label">
+                Log out
+              </Box>
+            </Button>
             <IconButton
               aria-label="Account menu"
               onClick={(event) => setAnchorEl(event.currentTarget)}

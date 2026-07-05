@@ -135,6 +135,22 @@ a {
   color: var(--vv-primary);
 }
 
+.vv-shell-logout-button {
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid var(--vv-line-strong) !important;
+  color: var(--vv-primary) !important;
+  background: #fffef8 !important;
+  font-size: 0.84rem !important;
+  font-weight: 900 !important;
+  text-transform: none !important;
+}
+
+.vv-shell-logout-button:hover {
+  border-color: var(--vv-primary-2) !important;
+  background: var(--vv-surface-soft) !important;
+}
+
 .vv-shell-body {
   display: flex;
   min-height: calc(100vh - clamp(28px, 6vw, 92px) - 58px);
@@ -309,6 +325,20 @@ a {
   }
 
   .vv-shell-action-link {
+    display: none;
+  }
+
+  .vv-shell-logout-button {
+    min-width: 40px !important;
+    width: 40px;
+    padding: 0 !important;
+  }
+
+  .vv-shell-logout-button .MuiButton-startIcon {
+    margin: 0;
+  }
+
+  .vv-shell-logout-label {
     display: none;
   }
 }
