@@ -1,7 +1,8 @@
-import { API_BASE_URL as CENTRAL_API_BASE_URL } from '../config';
-
-// Route exercise requests through our Deno backend proxy to avoid CORS issues on custom domains
-const API_BASE_URL = `${CENTRAL_API_BASE_URL}/`;
+const DEFAULT_EXERCISE_API_BASE_URL = "https://excersice-api.fly.dev";
+const configuredExerciseApiBaseUrl = import.meta.env.VITE_EXERCISE_API_URL || DEFAULT_EXERCISE_API_BASE_URL;
+const API_BASE_URL = configuredExerciseApiBaseUrl.endsWith("/")
+  ? configuredExerciseApiBaseUrl
+  : `${configuredExerciseApiBaseUrl}/`;
 
 // Define a TypeScript interface matching the Exercise data structure
 // (Based on the Exercise API README provided earlier)
