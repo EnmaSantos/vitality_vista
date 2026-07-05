@@ -11,11 +11,13 @@ const uniquePaths = (paths: string[]): string[] => {
     const seen = new Set<string>();
     return paths
         .map((path) => normalize(path))
+        .reverse()
         .filter((path) => {
             if (seen.has(path)) return false;
             seen.add(path);
             return true;
-        });
+        })
+        .reverse();
 };
 
 const loadFatSecretEnv = async (): Promise<EnvMap> => {
