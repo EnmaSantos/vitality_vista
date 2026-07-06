@@ -1,13 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Typography, Box, Paper, Grid, Card, CardContent, CardMedia,
   TextField, InputAdornment, Button, Chip, FormControl,
   InputLabel, Select, MenuItem, Pagination, CircularProgress, Alert,
   SelectChangeEvent, FormControlLabel, Switch, Stack,
   Dialog, DialogTitle, DialogContent, DialogActions, IconButton,
-  List, ListItem, ListItemText, Divider
+  List, ListItem, ListItemText, Divider, ToggleButton, ToggleButtonGroup
 } from '@mui/material';
-import { Search as SearchIcon, Close as CloseIcon } from '@mui/icons-material';
+import {
+  Search as SearchIcon,
+  Close as CloseIcon,
+  WarningAmber as WarningAmberIcon,
+  CheckCircle as CheckCircleIcon
+} from '@mui/icons-material';
 
 // Import FatSecret types and functions
 import {
@@ -23,6 +28,14 @@ import {
   ApiFatSecretGetRecipeResponse,
   ApiFatSecretRecipeTypesResponse
 } from '../services/recipeApi';
+import {
+  ALLERGEN_OPTIONS,
+  AllergenKey,
+  IngredientSafetyMatch,
+  findIngredientSafetyMatches,
+  getMatchedIngredientLabels,
+  parseCustomExclusions,
+} from '../utils/allergenFilters';
 
 const ITEMS_PER_PAGE = 9; // Adjust as needed, max 50 per FatSecret API
 const ALL_CATEGORIES_VALUE = "ALL";
@@ -37,6 +50,9 @@ const Recipes: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('newest');
   const [caloriesFrom, setCaloriesFrom] = useState('');
   const [caloriesTo, setCaloriesTo] = useState('');
+  const [selectedAllergens, setSelectedAllergens] = useState<AllergenKey[]>([]);
+  const [customExclusionsInput, setCustomExclusionsInput] = useState('');
+  const [hideAllergenMatches, setHideAllergenMatches] = useState(true);
 
   // Recipe List State
   const [recipes, setRecipes] = useState<FatSecretRecipeSummary[]>([]);
@@ -205,6 +221,27 @@ const Recipes: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handleAllergenChange = (_event: React.MouseEvent<HTMLElement>, newAllergens: AllergenKey[]) => {
+    setSelectedAllergens(newAllergens);
+    setCurrentPage(1);
+  };
+
+  const handleCustomExclusionsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomExclusionsInput(event.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleHideAllergenMatchesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setHideAllergenMatches(event.target.checked);
+  };
+
+  const handleClearSafetyFilters = () => {
+    setSelectedAllergens([]);
+    setCustomExclusionsInput('');
+    setHideAllergenMatches(true);
+    setCurrentPage(1);
+  };
+
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
   };
@@ -241,6 +278,69 @@ const Recipes: React.FC = () => {
       { label: 'Cholesterol', value: serving.cholesterol, unit: 'mg' },
       { label: 'Potassium', value: serving.potassium, unit: 'mg' },
     ].filter((item) => item.value !== undefined && item.value !== '');
+  };
+
+  const customExclusionTerms = useMemo(
+    () => parseCustomExclusions(customExclusionsInput),
+    [customExclusionsInput]
+  );
+
+  const hasSafetyFilters = selectedAllergens.length > 0 || customExclusionTerms.length > 0;
+
+  const getRecipeSummaryIngredients = useCallback((recipe: FatSecretRecipeSummary): string[] => {
+    return recipe.recipe_ingredients?.ingredient ?? [];
+  }, []);
+
+  const recipeSafetyMatches = useMemo(() => {
+    const matchMap = new Map<string, IngredientSafetyMatch[]>();
+
+    recipes.forEach((recipe) => {
+      matchMap.set(
+        recipe.recipe_id,
+        findIngredientSafetyMatches(
+          getRecipeSummaryIngredients(recipe),
+          selectedAllergens,
+          customExclusionTerms
+        )
+      );
+    });
+
+    return matchMap;
+  }, [customExclusionTerms, getRecipeSummaryIngredients, recipes, selectedAllergens]);
+
+  const visibleRecipes = useMemo(() => {
+    if (!hasSafetyFilters || !hideAllergenMatches) return recipes;
+
+    return recipes.filter((recipe) => (recipeSafetyMatches.get(recipe.recipe_id) ?? []).length === 0);
+  }, [hasSafetyFilters, hideAllergenMatches, recipeSafetyMatches, recipes]);
+
+  const hiddenBySafetyFilterCount = recipes.length - visibleRecipes.length;
+  const flaggedRecipeCount = useMemo(
+    () => recipes.filter((recipe) => (recipeSafetyMatches.get(recipe.recipe_id) ?? []).length > 0).length,
+    [recipeSafetyMatches, recipes]
+  );
+
+  const detailIngredientsForSafety = useMemo(() => {
+    return selectedRecipeDetails?.ingredients?.ingredient.flatMap((ingredient: FatSecretIngredientDetail) => (
+      [ingredient.ingredient_description, ingredient.food_name].filter(Boolean)
+    )) ?? [];
+  }, [selectedRecipeDetails]);
+
+  const selectedRecipeSafetyMatches = useMemo(() => {
+    if (!hasSafetyFilters) return [];
+
+    return findIngredientSafetyMatches(
+      detailIngredientsForSafety,
+      selectedAllergens,
+      customExclusionTerms
+    );
+  }, [customExclusionTerms, detailIngredientsForSafety, hasSafetyFilters, selectedAllergens]);
+
+  const getIngredientSafetyLabels = (ingredient: FatSecretIngredientDetail) => {
+    return Array.from(new Set([
+      ...getMatchedIngredientLabels(ingredient.ingredient_description, selectedRecipeSafetyMatches),
+      ...getMatchedIngredientLabels(ingredient.food_name, selectedRecipeSafetyMatches),
+    ]));
   };
 
   return (
@@ -397,6 +497,114 @@ const Recipes: React.FC = () => {
               />
             </Grid>
           </Grid>
+
+          <Divider sx={{ my: 2.5, borderColor: 'rgba(96, 108, 56, 0.12)' }} />
+
+          <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 1.5 }}>
+              <Typography variant="subtitle2" sx={{ color: 'var(--color-primary-dark)', fontWeight: 900 }}>
+                Allergy filters
+              </Typography>
+              {hasSafetyFilters && (
+                <Button
+                  size="small"
+                  startIcon={<CloseIcon fontSize="small" />}
+                  onClick={handleClearSafetyFilters}
+                  sx={{
+                    color: 'var(--color-secondary)',
+                    textTransform: 'none',
+                    fontWeight: 800,
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+            </Box>
+
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={8}>
+                <ToggleButtonGroup
+                  value={selectedAllergens}
+                  onChange={handleAllergenChange}
+                  aria-label="Allergy filters"
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    '& .MuiToggleButtonGroup-grouped': {
+                      border: '1px solid rgba(96, 108, 56, 0.16)',
+                      borderRadius: '8px !important',
+                      mx: 0,
+                    },
+                  }}
+                >
+                  {ALLERGEN_OPTIONS.map((option) => (
+                    <ToggleButton
+                      key={option.key}
+                      value={option.key}
+                      size="small"
+                      sx={{
+                        px: 1.5,
+                        py: 0.75,
+                        color: 'var(--color-primary-dark)',
+                        bgcolor: 'var(--color-bg)',
+                        textTransform: 'none',
+                        fontWeight: 800,
+                        '&.Mui-selected': {
+                          bgcolor: 'rgba(190, 62, 52, 0.1)',
+                          color: '#9f2d24',
+                          borderColor: 'rgba(190, 62, 52, 0.35)',
+                        },
+                        '&.Mui-selected:hover': {
+                          bgcolor: 'rgba(190, 62, 52, 0.16)',
+                        },
+                      }}
+                    >
+                      {option.label}
+                    </ToggleButton>
+                  ))}
+                </ToggleButtonGroup>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  label="Exclude ingredients"
+                  placeholder="cilantro, mushrooms"
+                  value={customExclusionsInput}
+                  onChange={handleCustomExclusionsChange}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 3,
+                      bgcolor: 'var(--color-bg)',
+                      '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                      '&:hover fieldset': { borderColor: 'var(--color-primary) !important' },
+                      '&.Mui-focused fieldset': { borderColor: 'var(--color-primary) !important' },
+                    },
+                    '& .MuiInputLabel-root': { color: 'var(--color-primary)' },
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={(
+                    <Switch
+                      checked={hideAllergenMatches}
+                      disabled={!hasSafetyFilters}
+                      onChange={handleHideAllergenMatchesChange}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': { color: 'var(--color-primary)' },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: 'var(--color-primary)' }
+                      }}
+                    />
+                  )}
+                  label="Hide matches"
+                  sx={{ color: hasSafetyFilters ? 'var(--color-primary-dark)' : 'text.secondary', fontWeight: 700 }}
+                />
+              </Grid>
+            </Grid>
+          </Box>
         </Paper>
 
         {isLoadingList && (
@@ -414,146 +622,176 @@ const Recipes: React.FC = () => {
           </Paper>
         )}
 
-        {!isLoadingList && !listError && recipes.length > 0 && (
+        {!isLoadingList && !listError && recipes.length > 0 && visibleRecipes.length === 0 && (
+          <Alert severity="info" sx={{ my: 2 }}>
+            All {recipes.length} loaded recipes matched your allergy filters.
+          </Alert>
+        )}
+
+        {!isLoadingList && !listError && visibleRecipes.length > 0 && (
           <>
             <Typography variant="body2" sx={{ mb: 2 }}>
-              Showing {recipes.length} of {totalResults} results {totalPages > 1 ? ` (Page ${currentPage} of ${totalPages})` : ''}
+              Showing {visibleRecipes.length} of {totalResults} results
+              {totalPages > 1 ? ` (Page ${currentPage} of ${totalPages})` : ''}
+              {hasSafetyFilters && hideAllergenMatches && hiddenBySafetyFilterCount > 0 ? `, ${hiddenBySafetyFilterCount} hidden` : ''}
+              {hasSafetyFilters && !hideAllergenMatches && flaggedRecipeCount > 0 ? `, ${flaggedRecipeCount} flagged` : ''}
             </Typography>
             <Grid container spacing={3}>
-              {recipes.map((recipe) => (
-                <Grid item xs={12} sm={6} md={4} key={recipe.recipe_id}>
-                  <Card
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      height: '100%',
-                      borderRadius: 4,
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-                      border: 'none',
-                      transition: 'transform 0.2s, box-shadow 0.2s',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 12px 24px rgba(0,0,0,0.1)'
-                      }
-                    }}
-                  >
-                    <Box sx={{ position: 'relative' }}>
-                      <CardMedia
-                        component="img"
-                        height="220"
-                        image={recipe.recipe_image || 'https://via.placeholder.com/300x200.png?text=No+Image'}
-                        alt={recipe.recipe_name}
-                      />
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: 12,
-                          right: 12,
-                          bgcolor: 'rgba(255, 255, 255, 0.9)',
-                          backdropFilter: 'blur(4px)',
-                          borderRadius: 2,
-                          px: 1,
-                          py: 0.5,
-                          fontSize: '0.75rem',
-                          fontWeight: 'bold',
-                          color: 'var(--color-primary-dark)'
-                        }}
-                      >
-                        {recipe.recipe_nutrition?.calories || 'N/A'} kcal
-                      </Box>
-                    </Box>
-                    <CardContent sx={{ flexGrow: 1, p: 3 }}>
-                      <Typography
-                        gutterBottom
-                        variant="h6"
-                        component="div"
-                        sx={{
-                          fontFamily: 'Outfit, sans-serif',
-                          fontWeight: 600,
-                          color: 'var(--color-primary-dark)',
-                          mb: 1
-                        }}
-                      >
-                        {recipe.recipe_name}
-                      </Typography>
+              {visibleRecipes.map((recipe) => {
+                const safetyMatches = recipeSafetyMatches.get(recipe.recipe_id) ?? [];
+                const hasRecipeSafetyMatches = safetyMatches.length > 0;
 
-                      <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ mb: 2 }}>
-                        {(recipe.recipe_types?.recipe_type?.length ? recipe.recipe_types.recipe_type.slice(0, 3) : [getPrimaryRecipeType(recipe)]).map((type) => {
-                          const isDietary = getDietaryRecipeTypes([type]).length > 0;
-                          return (
-                            <Chip
-                              key={type}
-                              label={type}
-                              size="small"
-                              sx={{
-                                bgcolor: isDietary ? 'rgba(96, 108, 56, 0.16)' : 'rgba(96, 108, 56, 0.1)',
-                                color: 'var(--color-primary)',
-                                fontWeight: 600,
-                                borderRadius: 1
-                              }}
-                            />
-                          );
-                        })}
-                      </Stack>
-
-                      {recipe.recipe_nutrition && (
-                        <Grid container spacing={1} sx={{ mb: 2 }}>
-                          <Grid item xs={4}>
-                            <Typography variant="caption" color="text.secondary">Protein</Typography>
-                            <Typography variant="body2" fontWeight="bold">{recipe.recipe_nutrition.protein}g</Typography>
-                          </Grid>
-                          <Grid item xs={4}>
-                            <Typography variant="caption" color="text.secondary">Carbs</Typography>
-                            <Typography variant="body2" fontWeight="bold">{recipe.recipe_nutrition.carbohydrate}g</Typography>
-                          </Grid>
-                          <Grid item xs={4}>
-                            <Typography variant="caption" color="text.secondary">Fat</Typography>
-                            <Typography variant="body2" fontWeight="bold">{recipe.recipe_nutrition.fat}g</Typography>
-                          </Grid>
-                        </Grid>
-                      )}
-
-                      {recipe.recipe_description && (
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={recipe.recipe_id}>
+                    <Card
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%',
+                        borderRadius: 4,
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                        border: 'none',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        '&:hover': {
+                          transform: 'translateY(-4px)',
+                          boxShadow: '0 12px 24px rgba(0,0,0,0.1)'
+                        }
+                      }}
+                    >
+                      <Box sx={{ position: 'relative' }}>
+                        <CardMedia
+                          component="img"
+                          height="220"
+                          image={recipe.recipe_image || 'https://via.placeholder.com/300x200.png?text=No+Image'}
+                          alt={recipe.recipe_name}
+                        />
+                        <Box
                           sx={{
-                            mb: 2,
-                            maxHeight: 60,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: 'vertical'
+                            position: 'absolute',
+                            top: 12,
+                            right: 12,
+                            bgcolor: 'rgba(255, 255, 255, 0.9)',
+                            backdropFilter: 'blur(4px)',
+                            borderRadius: 2,
+                            px: 1,
+                            py: 0.5,
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            color: 'var(--color-primary-dark)'
                           }}
                         >
-                          {recipe.recipe_description}
+                          {recipe.recipe_nutrition?.calories || 'N/A'} kcal
+                        </Box>
+                      </Box>
+                      <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                        <Typography
+                          gutterBottom
+                          variant="h6"
+                          component="div"
+                          sx={{
+                            fontFamily: 'Outfit, sans-serif',
+                            fontWeight: 600,
+                            color: 'var(--color-primary-dark)',
+                            mb: 1
+                          }}
+                        >
+                          {recipe.recipe_name}
                         </Typography>
-                      )}
-                    </CardContent>
-                    <Box sx={{ p: 3, pt: 0 }}>
-                      <Button
-                        variant="outlined"
-                        fullWidth
-                        onClick={() => handleOpenRecipe(recipe.recipe_id)}
-                        sx={{
-                          borderRadius: 2,
-                          textTransform: 'none',
-                          fontWeight: 600,
-                          color: 'var(--color-primary)',
-                          borderColor: 'var(--color-primary)',
-                          '&:hover': {
-                            borderColor: 'var(--color-primary-dark)',
-                            bgcolor: 'rgba(96, 108, 56, 0.05)'
-                          }
-                        }}
-                      >
-                        View Recipe
-                      </Button>
-                    </Box>
-                  </Card>
-                </Grid>
-              ))}
+
+                        <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ mb: 2 }}>
+                          {(recipe.recipe_types?.recipe_type?.length ? recipe.recipe_types.recipe_type.slice(0, 3) : [getPrimaryRecipeType(recipe)]).map((type) => {
+                            const isDietary = getDietaryRecipeTypes([type]).length > 0;
+                            return (
+                              <Chip
+                                key={type}
+                                label={type}
+                                size="small"
+                                sx={{
+                                  bgcolor: isDietary ? 'rgba(96, 108, 56, 0.16)' : 'rgba(96, 108, 56, 0.1)',
+                                  color: 'var(--color-primary)',
+                                  fontWeight: 600,
+                                  borderRadius: 1
+                                }}
+                              />
+                            );
+                          })}
+                          {hasSafetyFilters && (
+                            <Chip
+                              icon={hasRecipeSafetyMatches ? <WarningAmberIcon /> : <CheckCircleIcon />}
+                              label={hasRecipeSafetyMatches ? `Review: ${safetyMatches.slice(0, 2).map((match) => match.label).join(', ')}` : 'No selected matches'}
+                              size="small"
+                              sx={{
+                                bgcolor: hasRecipeSafetyMatches ? 'rgba(190, 62, 52, 0.1)' : 'rgba(96, 108, 56, 0.12)',
+                                color: hasRecipeSafetyMatches ? '#9f2d24' : 'var(--color-primary-dark)',
+                                fontWeight: 800,
+                                borderRadius: 1,
+                                '& .MuiChip-icon': {
+                                  color: hasRecipeSafetyMatches ? '#9f2d24' : 'var(--color-primary)',
+                                },
+                              }}
+                            />
+                          )}
+                        </Stack>
+
+                        {recipe.recipe_nutrition && (
+                          <Grid container spacing={1} sx={{ mb: 2 }}>
+                            <Grid item xs={4}>
+                              <Typography variant="caption" color="text.secondary">Protein</Typography>
+                              <Typography variant="body2" fontWeight="bold">{recipe.recipe_nutrition.protein}g</Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <Typography variant="caption" color="text.secondary">Carbs</Typography>
+                              <Typography variant="body2" fontWeight="bold">{recipe.recipe_nutrition.carbohydrate}g</Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <Typography variant="caption" color="text.secondary">Fat</Typography>
+                              <Typography variant="body2" fontWeight="bold">{recipe.recipe_nutrition.fat}g</Typography>
+                            </Grid>
+                          </Grid>
+                        )}
+
+                        {recipe.recipe_description && (
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              mb: 2,
+                              maxHeight: 60,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: 'vertical'
+                            }}
+                          >
+                            {recipe.recipe_description}
+                          </Typography>
+                        )}
+                      </CardContent>
+                      <Box sx={{ p: 3, pt: 0 }}>
+                        <Button
+                          variant="outlined"
+                          fullWidth
+                          onClick={() => handleOpenRecipe(recipe.recipe_id)}
+                          sx={{
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            color: 'var(--color-primary)',
+                            borderColor: 'var(--color-primary)',
+                            '&:hover': {
+                              borderColor: 'var(--color-primary-dark)',
+                              bgcolor: 'rgba(96, 108, 56, 0.05)'
+                            }
+                          }}
+                        >
+                          View Recipe
+                        </Button>
+                      </Box>
+                    </Card>
+                  </Grid>
+                );
+              })}
             </Grid>
             {totalPages > 1 && (
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2 }}>
@@ -660,6 +898,52 @@ const Recipes: React.FC = () => {
                         </Box>
                       )}
                     </Box>
+
+                    {hasSafetyFilters && (
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2,
+                          mb: 3,
+                          borderRadius: 3,
+                          bgcolor: selectedRecipeSafetyMatches.length > 0 ? 'rgba(190, 62, 52, 0.06)' : 'rgba(96, 108, 56, 0.08)',
+                          border: selectedRecipeSafetyMatches.length > 0 ? '1px solid rgba(190, 62, 52, 0.22)' : '1px solid rgba(96, 108, 56, 0.16)',
+                        }}
+                      >
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                          {selectedRecipeSafetyMatches.length > 0 ? (
+                            <WarningAmberIcon sx={{ color: '#9f2d24' }} fontSize="small" />
+                          ) : (
+                            <CheckCircleIcon sx={{ color: 'var(--color-primary)' }} fontSize="small" />
+                          )}
+                          <Typography variant="subtitle2" sx={{ color: 'var(--color-primary-dark)', fontWeight: 900 }}>
+                            Allergen review
+                          </Typography>
+                        </Stack>
+
+                        {selectedRecipeSafetyMatches.length > 0 ? (
+                          <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
+                            {selectedRecipeSafetyMatches.map((match) => (
+                              <Chip
+                                key={match.id}
+                                label={`${match.kind === 'custom' ? 'Exclude' : 'Possible'} ${match.label}`}
+                                size="small"
+                                sx={{
+                                  bgcolor: 'rgba(190, 62, 52, 0.12)',
+                                  color: '#9f2d24',
+                                  fontWeight: 800,
+                                  borderRadius: 1,
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                        ) : (
+                          <Typography variant="body2" sx={{ color: 'var(--color-secondary)' }}>
+                            No selected matches in listed ingredients.
+                          </Typography>
+                        )}
+                      </Paper>
+                    )}
 
                     {/* Meta Info */}
                     <Box sx={{ p: 2, bgcolor: 'var(--color-bg)', borderRadius: 2, mb: 3 }}>
@@ -771,23 +1055,75 @@ const Recipes: React.FC = () => {
                         <Typography variant="h6" sx={{ mb: 2, color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>Ingredients</Typography>
                         <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                           <List dense disablePadding>
-                            {selectedRecipeDetails?.ingredients?.ingredient.map((ing: any, index: number) => (
-                              <ListItem
-                                key={ing.food_id + index}
-                                divider={index < (selectedRecipeDetails?.ingredients?.ingredient.length || 0) - 1}
-                                sx={{ px: 3, py: 1.5, '&:hover': { bgcolor: 'var(--color-bg)' } }}
-                              >
-                                <Box sx={{ mr: 2, width: 6, height: 6, borderRadius: '50%', bgcolor: 'var(--color-accent)' }} />
-                                <ListItemText
-                                  primary={
-                                    <Typography variant="body2" fontWeight="500" color="text.primary">
-                                      {ing.ingredient_description}
-                                    </Typography>
-                                  }
-                                  secondary={ing.food_name !== ing.ingredient_description ? `(${ing.food_name})` : null}
-                                />
-                              </ListItem>
-                            ))}
+                            {selectedRecipeDetails?.ingredients?.ingredient.map((ing: FatSecretIngredientDetail, index: number) => {
+                              const safetyLabels = getIngredientSafetyLabels(ing);
+                              const hasIngredientSafetyMatch = safetyLabels.length > 0;
+                              const secondaryName = ing.food_name !== ing.ingredient_description ? `(${ing.food_name})` : null;
+
+                              return (
+                                <ListItem
+                                  key={ing.food_id + index}
+                                  divider={index < (selectedRecipeDetails?.ingredients?.ingredient.length || 0) - 1}
+                                  sx={{
+                                    px: 3,
+                                    py: 1.5,
+                                    bgcolor: hasIngredientSafetyMatch ? 'rgba(190, 62, 52, 0.06)' : 'transparent',
+                                    '&:hover': {
+                                      bgcolor: hasIngredientSafetyMatch ? 'rgba(190, 62, 52, 0.1)' : 'var(--color-bg)',
+                                    },
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      mr: 2,
+                                      width: 6,
+                                      height: 6,
+                                      borderRadius: '50%',
+                                      bgcolor: hasIngredientSafetyMatch ? '#9f2d24' : 'var(--color-accent)',
+                                    }}
+                                  />
+                                  <ListItemText
+                                    primary={
+                                      <Typography
+                                        variant="body2"
+                                        fontWeight={hasIngredientSafetyMatch ? 800 : 500}
+                                        color={hasIngredientSafetyMatch ? '#7d241e' : 'text.primary'}
+                                      >
+                                        {ing.ingredient_description}
+                                      </Typography>
+                                    }
+                                    secondary={(secondaryName || hasIngredientSafetyMatch) ? (
+                                      <Box sx={{ mt: 0.5 }}>
+                                        {secondaryName && (
+                                          <Typography component="span" variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: hasIngredientSafetyMatch ? 0.75 : 0 }}>
+                                            {secondaryName}
+                                          </Typography>
+                                        )}
+                                        {hasIngredientSafetyMatch && (
+                                          <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
+                                            {safetyLabels.map((label) => (
+                                              <Chip
+                                                key={label}
+                                                label={`Possible ${label}`}
+                                                size="small"
+                                                sx={{
+                                                  height: 22,
+                                                  bgcolor: 'rgba(190, 62, 52, 0.12)',
+                                                  color: '#9f2d24',
+                                                  fontWeight: 800,
+                                                  fontSize: '0.72rem',
+                                                  borderRadius: 1,
+                                                }}
+                                              />
+                                            ))}
+                                          </Stack>
+                                        )}
+                                      </Box>
+                                    ) : null}
+                                  />
+                                </ListItem>
+                              );
+                            })}
                           </List>
                         </Paper>
                       </Box>
