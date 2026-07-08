@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Stack, Typography, TextField, IconButton, Button, CircularProgress, Snackbar, Alert, Box, Checkbox, FormControlLabel } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
-import { Exercise } from '../services/exerciseApi';
+import { Exercise, ExerciseSummary } from '../services/exerciseApi';
 import { createWorkoutLog, logExerciseDetail } from '../services/workoutLogApi';
 
 interface LogWorkoutModalProps {
   open: boolean;
-  exercise: Exercise | null;
+  exercise: Exercise | ExerciseSummary | null;
   token: string | null;
   onClose: () => void;
   onLogged?: () => void;

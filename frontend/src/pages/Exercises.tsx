@@ -1,4 +1,4 @@
-// frontend/src/pages/ExercisesPage.tsx (With Dynamic Categories - Client-Side)
+// frontend/src/pages/ExercisesPage.tsx
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -32,7 +32,7 @@ import {
   Chip
 } from '@mui/material';
 import { Search as SearchIcon, Close as CloseIcon, FitnessCenter as FitnessCenterIcon, Add as AddIcon, PlayCircleOutline as PlayCircleOutlineIcon } from '@mui/icons-material';
-import { getAllExercises, searchExercisesByName, Exercise } from '../services/exerciseApi';
+import { getExerciseById, getExerciseMeta, getExercises, Exercise, ExerciseSummary } from '../services/exerciseApi';
 import {
   getUserWorkoutPlans,
   createWorkoutPlan,
@@ -64,26 +64,28 @@ interface NewWorkoutPlanForm {
 }
 
 const ExercisesPage: React.FC = () => {
-  console.log('--- ExercisesPage Component Rendered ---'); // <-- ADD THIS LINE
-
   // --- State Variables ---
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [category, setCategory] = useState('all');
   const { token } = useAuth();
-  const [allExercises, setAllExercises] = useState<Exercise[]>([]); // Holds all exercises from API
+  const [allExercises, setAllExercises] = useState<ExerciseSummary[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalExerciseCount, setTotalExerciseCount] = useState<number>(0);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
   // --- Added: State for Exercise Details Modal ---
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isDetailsLoading, setIsDetailsLoading] = useState(false);
   const [selectedExerciseForModal, setSelectedExerciseForModal] = useState<Exercise | null>(null);
   // --- End Added ---
 
   // --- Added: State for "Add to Workout" Modal ---
   const [isAddToWorkoutModalOpen, setIsAddToWorkoutModalOpen] = useState(false);
-  const [exerciseToLog, setExerciseToLog] = useState<Exercise | null>(null);
+  const [exerciseToLog, setExerciseToLog] = useState<ExerciseSummary | Exercise | null>(null);
   const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<number | 'new' | ''>('');
@@ -121,35 +123,82 @@ const ExercisesPage: React.FC = () => {
   // --- Create Workout Plan Modal State ---
   const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false);
   const [planForm, setPlanForm] = useState({ name: '', description: '' });
-  const [planExercises, setPlanExercises] = useState<Exercise[]>([]);
+  const [planExercises, setPlanExercises] = useState<ExerciseSummary[]>([]);
   const [planSearchQuery, setPlanSearchQuery] = useState('');
-  const [planSearchResults, setPlanSearchResults] = useState<Exercise[]>([]);
+  const [planSearchResults, setPlanSearchResults] = useState<ExerciseSummary[]>([]);
   const [isSavingPlan, setIsSavingPlan] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation(); // Get location object
 
   // --- Effects ---
-  // Effect to fetch all exercises once on component mount
   useEffect(() => {
-    const fetchAllData = async () => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim());
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchMetadata = async () => {
+      try {
+        const metadata = await getExerciseMeta();
+        if (isMounted) {
+          setAvailableCategories(metadata.categories);
+        }
+      } catch (err) {
+        console.error('Failed to load exercise metadata:', err);
+      }
+    };
+
+    fetchMetadata();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchExercises = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const exercisesData = await getAllExercises();
-        setAllExercises(exercisesData);
-        // Extract unique categories from the full list
-        const uniqueCategories = Array.from(new Set(exercisesData.map(ex => ex.category).filter(Boolean) as string[])).sort();
-        setAvailableCategories(uniqueCategories);
+        const result = await getExercises({
+          page: currentPage,
+          limit: ITEMS_PER_PAGE,
+          q: debouncedSearchQuery || undefined,
+          category: category === 'all' ? undefined : category,
+        });
+
+        if (isMounted) {
+          setAllExercises(result.items);
+          setTotalExerciseCount(result.total);
+          setTotalPages(result.totalPages);
+        }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load exercises';
-        setError(errorMessage);
+        if (isMounted) {
+          const errorMessage = err instanceof Error ? err.message : 'Failed to load exercises';
+          setError(errorMessage);
+          setAllExercises([]);
+          setTotalExerciseCount(0);
+          setTotalPages(1);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
-    fetchAllData();
-  }, []); // Empty dependency array ensures this runs only once
+
+    fetchExercises();
+    return () => {
+      isMounted = false;
+    };
+  }, [currentPage, debouncedSearchQuery, category]);
 
   // Effect to automatically open Create Plan Modal if signaled by navigation state
   useEffect(() => {
@@ -160,19 +209,37 @@ const ExercisesPage: React.FC = () => {
     }
   }, [location.state, navigate]); // Added navigate to dependency array
 
-  // --- Client-Side Filtering Logic ---
-  const filteredExercises = allExercises.filter(exercise => {
-    const matchesCategory = category === 'all' || exercise.category === category;
-    const matchesSearch = exercise.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  useEffect(() => {
+    if (!isCreatePlanModalOpen) return;
 
-  // --- Client-Side Pagination Calculations ---
-  const totalPages = Math.ceil(filteredExercises.length / ITEMS_PER_PAGE);
-  const currentExercises = filteredExercises.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+    const query = planSearchQuery.trim();
+    if (!query) {
+      setPlanSearchResults([]);
+      return;
+    }
+
+    let isMounted = true;
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const result = await getExercises({ q: query, page: 1, limit: 10 });
+        if (isMounted) {
+          setPlanSearchResults(result.items);
+        }
+      } catch (err) {
+        console.error('Failed to search exercises for plan:', err);
+        if (isMounted) {
+          setPlanSearchResults([]);
+        }
+      }
+    }, 300);
+
+    return () => {
+      isMounted = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [isCreatePlanModalOpen, planSearchQuery]);
+
+  const currentExercises = allExercises;
 
   // --- Event Handlers ---
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
@@ -180,15 +247,26 @@ const ExercisesPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, category]);
-
   // --- Added: Handlers for Details Modal ---
-  const handleOpenDetailsModal = (exercise: Exercise) => {
-    setSelectedExerciseForModal(exercise);
-    setIsDetailsModalOpen(true);
+  const handleOpenDetailsModal = async (exercise: ExerciseSummary | Exercise) => {
+    setIsDetailsLoading(true);
+    try {
+      const exerciseDetail = 'instructions' in exercise && Array.isArray(exercise.instructions)
+        ? exercise
+        : await getExerciseById(exercise.id);
+
+      setSelectedExerciseForModal(exerciseDetail);
+      setIsDetailsModalOpen(true);
+    } catch (err) {
+      console.error('Failed to load exercise details:', err);
+      setSnackbar({
+        open: true,
+        message: err instanceof Error ? err.message : 'Failed to load exercise details',
+        severity: 'error'
+      });
+    } finally {
+      setIsDetailsLoading(false);
+    }
   };
 
   const handleCloseDetailsModal = () => {
@@ -223,7 +301,7 @@ const ExercisesPage: React.FC = () => {
   };
 
   // --- Added: Handlers for "Add to Workout" Modal ---
-  const handleOpenAddToWorkoutModal = (exercise: Exercise) => {
+  const handleOpenAddToWorkoutModal = (exercise: ExerciseSummary | Exercise) => {
     setExerciseToLog(exercise); // Store the exercise context
     // Reset form for the new exercise
     setAddToWorkoutForm({ sets: '', reps: '', weight: '', duration: '', notes: '' });
@@ -352,7 +430,7 @@ const ExercisesPage: React.FC = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  const handleOpenLogWorkoutModal = (exercise: Exercise) => {
+  const handleOpenLogWorkoutModal = (exercise: ExerciseSummary | Exercise) => {
     setExerciseToLog(exercise);
     setIsLogWorkoutModalOpen(true);
     setLogWorkoutForm({ sets: '', reps: '', weight: '', duration: '', notes: '' });
@@ -460,7 +538,7 @@ const ExercisesPage: React.FC = () => {
     setPlanForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const addExerciseToPlanList = (ex: Exercise) => {
+  const addExerciseToPlanList = (ex: ExerciseSummary) => {
     if (planExercises.find(pe => pe.id === ex.id)) return;
     setPlanExercises(prev => [...prev, ex]);
   };
@@ -530,11 +608,6 @@ const ExercisesPage: React.FC = () => {
       setIsSavingPlan(false);
     }
   };
-
-  // --- Log before Render ---
-  console.log('Filtered Exercises Count:', currentExercises.length); // <-- ADD THIS LOG
-  console.log('Total Count from API:', allExercises.length);
-  console.log('Current Page Exercises:', currentExercises); // <-- ADD THIS LOG
 
   // --- Render Logic ---
   return (
@@ -624,6 +697,7 @@ const ExercisesPage: React.FC = () => {
                 onChange={(e) => {
                   const newQuery = e.target.value;
                   setSearchQuery(newQuery);
+                  setCurrentPage(1);
                 }}
                 InputProps={{
                   startAdornment: (
@@ -650,7 +724,10 @@ const ExercisesPage: React.FC = () => {
                   id="category-select"
                   value={category}
                   label="Category"
-                  onChange={(e) => setCategory(e.target.value as string)}
+                  onChange={(e) => {
+                    setCategory(e.target.value as string);
+                    setCurrentPage(1);
+                  }}
                   disabled={isLoading}
                   sx={{
                     borderRadius: 3,
@@ -686,7 +763,7 @@ const ExercisesPage: React.FC = () => {
         ) : (
           <>
             <Typography variant="h6" sx={{ color: 'var(--color-primary-dark)', mb: 2, fontWeight: 600, fontFamily: 'Outfit, sans-serif' }}>
-              {currentExercises.length} Exercises Found
+              {totalExerciseCount} Exercises Found
             </Typography>
             <Grid container spacing={3}>
               {currentExercises.map((exercise) => {
@@ -792,6 +869,7 @@ const ExercisesPage: React.FC = () => {
                             size="small"
                             variant="outlined"
                             onClick={() => handleOpenDetailsModal(exercise)}
+                            disabled={isDetailsLoading}
                             fullWidth
                             sx={{
                               borderRadius: 2,

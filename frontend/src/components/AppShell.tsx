@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getPageThemeForPath, getThemeVariables, themePalette, usePageTheme } from '../hooks/usePageTheme';
 
 interface AppShellProps {
   children: ReactNode;
@@ -35,45 +36,45 @@ const navItems = [
     label: 'Dashboard',
     icon: <MonitorHeartIcon fontSize="small" />,
     match: ['/', '/dashboard'],
-    color: '#64743a',
-    activeColor: '#40512e',
-    tint: 'rgba(100, 116, 58, 0.16)',
+    color: themePalette.dashboard.navColor,
+    activeColor: themePalette.dashboard.navActive,
+    tint: themePalette.dashboard.navTint,
   },
   {
     path: '/food-log',
     label: 'Food Log',
     icon: <LocalDiningIcon fontSize="small" />,
     match: ['/food-log'],
-    color: '#d99a47',
-    activeColor: '#7d5529',
-    tint: 'rgba(217, 154, 71, 0.18)',
+    color: themePalette.foodLog.navColor,
+    activeColor: themePalette.foodLog.navActive,
+    tint: themePalette.foodLog.navTint,
   },
   {
     path: '/exercises',
     label: 'Workouts',
     icon: <FitnessCenterIcon fontSize="small" />,
     match: ['/exercises', '/my-plans', '/workout-history', '/workout/session'],
-    color: '#2f461d',
-    activeColor: '#2f461d',
-    tint: 'rgba(47, 70, 29, 0.14)',
+    color: themePalette.workouts.navColor,
+    activeColor: themePalette.workouts.navActive,
+    tint: themePalette.workouts.navTint,
   },
   {
     path: '/recipes',
     label: 'Recipes',
     icon: <MenuBookIcon fontSize="small" />,
     match: ['/recipes'],
-    color: '#c66a1e',
-    activeColor: '#79400f',
-    tint: 'rgba(198, 106, 30, 0.17)',
+    color: themePalette.recipes.navColor,
+    activeColor: themePalette.recipes.navActive,
+    tint: themePalette.recipes.navTint,
   },
   {
     path: '/progress',
     label: 'Progress',
     icon: <InsightsIcon fontSize="small" />,
     match: ['/progress'],
-    color: '#69754d',
-    activeColor: '#4d5932',
-    tint: 'rgba(105, 117, 77, 0.17)',
+    color: themePalette.progress.navColor,
+    activeColor: themePalette.progress.navActive,
+    tint: themePalette.progress.navTint,
   },
 ];
 
@@ -93,6 +94,9 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const pageTheme = getPageThemeForPath(location.pathname);
+
+  usePageTheme(pageTheme);
 
   const handleLogout = async () => {
     setAnchorEl(null);
@@ -131,7 +135,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
   );
 
   return (
-    <Box className="vv-app-shell">
+    <Box className="vv-app-shell" style={getThemeVariables(pageTheme) as React.CSSProperties}>
       <Box className="vv-shell-window">
         <Box className="vv-shell-topbar">
           <Stack direction="row" alignItems="center" spacing={1.25} className="vv-window-dots" aria-hidden="true">
