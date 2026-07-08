@@ -196,8 +196,8 @@ const ProgressPage: React.FC = () => {
 
       {isLoading ? (
         <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-          <CircularProgress size={40} sx={{ color: '#606c38ff' }} />
-          <Typography sx={{ mt: 2, color: '#606c38ff' }}>Loading your progress data...</Typography>
+          <CircularProgress size={40} sx={{ color: 'var(--color-primary)' }} />
+          <Typography sx={{ mt: 2, color: 'var(--color-primary)' }}>Loading your progress data...</Typography>
         </Box>
       ) : error ? (
         <Alert
@@ -226,7 +226,7 @@ const ProgressPage: React.FC = () => {
             {/* Metrics Summary Cards */}
             <Grid item xs={12} sm={6} md={3}>
               <Card sx={{
-                borderTop: '4px solid #283618ff',
+                borderTop: '4px solid var(--color-primary-dark)',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
@@ -235,17 +235,17 @@ const ProgressPage: React.FC = () => {
               }}>
                 <CardContent>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <Typography color="#606c38ff" gutterBottom sx={{ fontSize: '0.9rem', fontWeight: 600 }}>
+                    <Typography color="var(--color-primary)" gutterBottom sx={{ fontSize: '0.9rem', fontWeight: 600 }}>
                       ⚖️ Current Weight
                     </Typography>
                   </Box>
-                  <Typography variant="h4" component="div" sx={{ color: '#283618ff', fontWeight: 'bold', mb: 1 }}>
+                  <Typography variant="h4" component="div" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mb: 1 }}>
                     {progressData.summary.currentWeight} lbs
                   </Typography>
                   <Typography
                     variant="body2"
                     sx={{
-                      color: progressData.summary.weightChange > 0 ? '#f57c00' : progressData.summary.weightChange < 0 ? '#388e3c' : '#606c38ff',
+                      color: progressData.summary.weightChange > 0 ? '#f57c00' : progressData.summary.weightChange < 0 ? '#388e3c' : 'var(--color-primary)',
                       fontWeight: 500,
                       display: 'flex',
                       alignItems: 'center'
@@ -259,7 +259,7 @@ const ProgressPage: React.FC = () => {
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <Card sx={{
-                borderTop: '4px solid #dda15e',
+                borderTop: '4px solid #b6d6cc',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
@@ -268,17 +268,17 @@ const ProgressPage: React.FC = () => {
               }}>
                 <CardContent>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <Typography color="#606c38ff" gutterBottom sx={{ fontSize: '0.9rem', fontWeight: 600 }}>
+                    <Typography color="var(--color-primary)" gutterBottom sx={{ fontSize: '0.9rem', fontWeight: 600 }}>
                       📊 Body Fat %
                     </Typography>
                   </Box>
-                  <Typography variant="h4" component="div" sx={{ color: '#283618ff', fontWeight: 'bold', mb: 1 }}>
+                  <Typography variant="h4" component="div" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mb: 1 }}>
                     {progressData.summary.bodyFatPercentage}%
                   </Typography>
                   <Typography
                     variant="body2"
                     sx={{
-                      color: progressData.summary.bodyFatChange > 0 ? '#f57c00' : progressData.summary.bodyFatChange < 0 ? '#388e3c' : '#606c38ff',
+                      color: progressData.summary.bodyFatChange > 0 ? '#f57c00' : progressData.summary.bodyFatChange < 0 ? '#388e3c' : 'var(--color-primary)',
                       fontWeight: 500,
                       display: 'flex',
                       alignItems: 'center'
@@ -292,7 +292,7 @@ const ProgressPage: React.FC = () => {
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <Card sx={{
-                borderTop: '4px solid #bc6c25',
+                borderTop: '4px solid #806443',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
@@ -301,14 +301,14 @@ const ProgressPage: React.FC = () => {
               }}>
                 <CardContent>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <Typography color="#606c38ff" gutterBottom sx={{ fontSize: '0.9rem', fontWeight: 600 }}>
+                    <Typography color="var(--color-primary)" gutterBottom sx={{ fontSize: '0.9rem', fontWeight: 600 }}>
                       🔥 Avg. Daily Calories
                     </Typography>
                   </Box>
-                  <Typography variant="h4" component="div" sx={{ color: '#283618ff', fontWeight: 'bold', mb: 1 }}>
+                  <Typography variant="h4" component="div" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mb: 1 }}>
                     {progressData.summary.avgDailyCalories || 0}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#606c38ff', fontWeight: 500 }}>
+                  <Typography variant="body2" sx={{ color: 'var(--color-primary)', fontWeight: 500 }}>
                     {timeRange === 'week' ? 'Past 7 days' : timeRange === 'month' ? 'Past 30 days' : `Past ${timeRange}`}
                   </Typography>
                 </CardContent>
@@ -316,7 +316,7 @@ const ProgressPage: React.FC = () => {
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <Card sx={{
-                borderTop: '4px solid #606c38',
+                borderTop: '4px solid #0c8346',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
@@ -325,14 +325,14 @@ const ProgressPage: React.FC = () => {
               }}>
                 <CardContent>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <Typography color="#606c38ff" gutterBottom sx={{ fontSize: '0.9rem', fontWeight: 600 }}>
+                    <Typography color="var(--color-primary)" gutterBottom sx={{ fontSize: '0.9rem', fontWeight: 600 }}>
                       💪 Workout Frequency
                     </Typography>
                   </Box>
-                  <Typography variant="h4" component="div" sx={{ color: '#283618ff', fontWeight: 'bold', mb: 1 }}>
-                    {progressData.summary.workoutFrequency || 0} <Typography component="span" variant="h6" sx={{ color: '#606c38ff' }}>times/week</Typography>
+                  <Typography variant="h4" component="div" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', mb: 1 }}>
+                    {progressData.summary.workoutFrequency || 0} <Typography component="span" variant="h6" sx={{ color: 'var(--color-primary)' }}>times/week</Typography>
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#606c38ff', fontWeight: 500 }}>
+                  <Typography variant="body2" sx={{ color: 'var(--color-primary)', fontWeight: 500 }}>
                     {progressData.summary.workoutFrequency >= 3 ? '🎯 Great consistency!' :
                       progressData.summary.workoutFrequency >= 1 ? '👍 Keep it up!' :
                         '📅 Start tracking workouts'}
@@ -345,7 +345,7 @@ const ProgressPage: React.FC = () => {
           {/* Progress Charts */}
           {/* Progress Charts */}
           <Paper elevation={0} sx={{ mb: 4, borderRadius: 4, overflow: 'hidden', bgcolor: 'white', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-            <Box sx={{ borderBottom: 1, borderColor: 'rgba(96, 108, 56, 0.1)' }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'rgba(182, 214, 204, 0.30)' }}>
               <Tabs
                 value={tabValue}
                 onChange={handleTabChange}
@@ -391,7 +391,7 @@ const ProgressPage: React.FC = () => {
                     borderRadius: 2,
                     bgcolor: 'white',
                     color: 'var(--color-primary-dark)',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(182, 214, 204, 0.50)' },
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
                     '& .MuiSvgIcon-root': { color: 'var(--color-primary)' }
@@ -427,8 +427,8 @@ const ProgressPage: React.FC = () => {
                             {
                               label: 'Weight (lbs)',
                               data: progressData.charts.weight.data,
-                              borderColor: '#606c38',
-                              backgroundColor: 'rgba(96, 108, 56, 0.2)',
+                              borderColor: '#0c8346',
+                              backgroundColor: 'rgba(182, 214, 204, 0.50)',
                               tension: 0.3,
                               fill: true
                             },
@@ -458,8 +458,8 @@ const ProgressPage: React.FC = () => {
                             {
                               label: 'Body Fat (%)',
                               data: progressData.charts.bodyFat.data,
-                              borderColor: '#dda15e',
-                              backgroundColor: 'rgba(221, 161, 94, 0.2)',
+                              borderColor: '#b6d6cc',
+                              backgroundColor: 'rgba(8, 61, 119, 0.20)',
                               tension: 0.3,
                               fill: true
                             },
@@ -494,8 +494,8 @@ const ProgressPage: React.FC = () => {
                             {
                               label: 'Calories',
                               data: progressData.charts.calories.data,
-                              borderColor: '#bc6c25',
-                              backgroundColor: 'rgba(188, 108, 37, 0.2)',
+                              borderColor: '#806443',
+                              backgroundColor: 'rgba(128, 100, 67, 0.20)',
                               tension: 0.3,
                               fill: true
                             },
@@ -525,22 +525,22 @@ const ProgressPage: React.FC = () => {
                             {
                               label: 'Protein (g)',
                               data: progressData.charts.macros.proteinData,
-                              borderColor: '#606c38',
-                              backgroundColor: 'rgba(96, 108, 56, 0.5)',
+                              borderColor: '#0c8346',
+                              backgroundColor: 'rgba(12, 131, 70, 0.46)',
                               tension: 0.3,
                             },
                             {
                               label: 'Carbs (g)',
                               data: progressData.charts.macros.carbsData,
-                              borderColor: '#dda15e',
-                              backgroundColor: 'rgba(221, 161, 94, 0.5)',
+                              borderColor: '#b6d6cc',
+                              backgroundColor: 'rgba(182, 214, 204, 0.58)',
                               tension: 0.3,
                             },
                             {
                               label: 'Fat (g)',
                               data: progressData.charts.macros.fatData,
-                              borderColor: '#bc6c25',
-                              backgroundColor: 'rgba(188, 108, 37, 0.5)',
+                              borderColor: '#806443',
+                              backgroundColor: 'rgba(128, 100, 67, 0.48)',
                               tension: 0.3,
                             },
                           ],
@@ -566,7 +566,7 @@ const ProgressPage: React.FC = () => {
                     borderRadius: 2,
                     textTransform: 'none',
                     fontWeight: 600,
-                    '&:hover': { bgcolor: 'rgba(96,108,56,0.05)', borderColor: 'var(--color-primary-dark)' }
+                    '&:hover': { bgcolor: 'rgba(182,214,204,0.22)', borderColor: 'var(--color-primary-dark)' }
                   }}
                 >
                   View Detailed History
@@ -593,8 +593,8 @@ const ProgressPage: React.FC = () => {
                             {
                               label: 'Duration (min)',
                               data: progressData.charts.workoutDuration.data,
-                              borderColor: '#606c38',
-                              backgroundColor: 'rgba(96, 108, 56, 0.2)',
+                              borderColor: '#0c8346',
+                              backgroundColor: 'rgba(182, 214, 204, 0.50)',
                               tension: 0.3,
                               fill: true
                             },
@@ -624,22 +624,22 @@ const ProgressPage: React.FC = () => {
                             {
                               label: 'Strength',
                               data: progressData.charts.workoutTypes.strengthData,
-                              borderColor: '#606c38',
-                              backgroundColor: 'rgba(96, 108, 56, 0.5)',
+                              borderColor: '#0c8346',
+                              backgroundColor: 'rgba(12, 131, 70, 0.46)',
                               tension: 0.3,
                             },
                             {
                               label: 'Cardio',
                               data: progressData.charts.workoutTypes.cardioData,
-                              borderColor: '#dda15e',
-                              backgroundColor: 'rgba(221, 161, 94, 0.5)',
+                              borderColor: '#b6d6cc',
+                              backgroundColor: 'rgba(182, 214, 204, 0.58)',
                               tension: 0.3,
                             },
                             {
                               label: 'Stretching',
                               data: progressData.charts.workoutTypes.stretchingData,
-                              borderColor: '#bc6c25',
-                              backgroundColor: 'rgba(188, 108, 37, 0.5)',
+                              borderColor: '#806443',
+                              backgroundColor: 'rgba(128, 100, 67, 0.48)',
                               tension: 0.3,
                             },
                           ],
@@ -665,7 +665,7 @@ const ProgressPage: React.FC = () => {
                       <Box sx={{
                         width: '100%',
                         height: 12,
-                        bgcolor: 'rgba(96, 108, 56, 0.1)',
+                        bgcolor: 'rgba(182, 214, 204, 0.30)',
                         borderRadius: 6,
                         mb: 1
                       }}>
@@ -697,7 +697,7 @@ const ProgressPage: React.FC = () => {
                             value="weight"
                             sx={{
                               borderRadius: 2,
-                              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(182, 214, 204, 0.50)' },
                               '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
                               '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' }
                             }}
@@ -716,7 +716,7 @@ const ProgressPage: React.FC = () => {
                             value="165"
                             sx={{
                               borderRadius: 2,
-                              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(182, 214, 204, 0.50)' },
                               '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
                               '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' }
                             }}
@@ -764,7 +764,7 @@ const ProgressPage: React.FC = () => {
                           label="Exercise"
                           sx={{
                             borderRadius: 2,
-                            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(182, 214, 204, 0.50)' },
                             '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
                             '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' }
                           }}
@@ -781,7 +781,7 @@ const ProgressPage: React.FC = () => {
                     {selectedExercise && exerciseData && (
                       <Grid container spacing={4}>
                         <Grid item xs={12} md={3}>
-                          <Box sx={{ p: 3, bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+                          <Box sx={{ p: 3, bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(182, 214, 204, 0.30)' }}>
                             <Typography variant="body2" sx={{ color: 'var(--color-secondary)', fontWeight: 600, textTransform: 'uppercase', mb: 1 }}>Max Weight (PR)</Typography>
                             <Typography variant="h4" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
                               {exerciseData.stats.find((s: any) => s.exercise_name === selectedExercise)?.max_weight || 0} <span style={{ fontSize: '1rem', opacity: 0.7 }}>kg</span>
@@ -789,7 +789,7 @@ const ProgressPage: React.FC = () => {
                           </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <Box sx={{ p: 3, bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+                          <Box sx={{ p: 3, bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(182, 214, 204, 0.30)' }}>
                             <Typography variant="body2" sx={{ color: 'var(--color-secondary)', fontWeight: 600, textTransform: 'uppercase', mb: 1 }}>Max Reps</Typography>
                             <Typography variant="h4" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
                               {exerciseData.stats.find((s: any) => s.exercise_name === selectedExercise)?.max_reps || 0}
@@ -797,7 +797,7 @@ const ProgressPage: React.FC = () => {
                           </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <Box sx={{ p: 3, bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+                          <Box sx={{ p: 3, bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(182, 214, 204, 0.30)' }}>
                             <Typography variant="body2" sx={{ color: 'var(--color-secondary)', fontWeight: 600, textTransform: 'uppercase', mb: 1 }}>Total Sessions</Typography>
                             <Typography variant="h4" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
                               {exerciseData.stats.find((s: any) => s.exercise_name === selectedExercise)?.total_sessions || 0}
@@ -805,7 +805,7 @@ const ProgressPage: React.FC = () => {
                           </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <Box sx={{ p: 3, bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+                          <Box sx={{ p: 3, bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(182, 214, 204, 0.30)' }}>
                             <Typography variant="body2" sx={{ color: 'var(--color-secondary)', fontWeight: 600, textTransform: 'uppercase', mb: 1 }}>Last Performed</Typography>
                             <Typography variant="h6" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>
                               {new Date(exerciseData.stats.find((s: any) => s.exercise_name === selectedExercise)?.last_performed).toLocaleDateString()}
@@ -851,16 +851,16 @@ const ProgressPage: React.FC = () => {
                             {
                               label: 'Weight (kg)',
                               data: exerciseData.history[selectedExercise].map((h: any) => h.weight),
-                              borderColor: '#606c38',
-                              backgroundColor: 'rgba(96, 108, 56, 0.2)',
+                              borderColor: '#0c8346',
+                              backgroundColor: 'rgba(182, 214, 204, 0.50)',
                               yAxisID: 'y',
                               tension: 0.2,
                             },
                             {
                               label: 'Reps',
                               data: exerciseData.history[selectedExercise].map((h: any) => h.reps),
-                              borderColor: '#dda15e',
-                              backgroundColor: 'rgba(221, 161, 94, 0.2)',
+                              borderColor: '#b6d6cc',
+                              backgroundColor: 'rgba(8, 61, 119, 0.20)',
                               yAxisID: 'y1',
                               tension: 0.2,
                             }
@@ -880,10 +880,10 @@ const ProgressPage: React.FC = () => {
         </>
       ) : (
         <Box sx={{ mt: 4, textAlign: 'center', py: 8 }}>
-          <Typography variant="h5" sx={{ color: '#606c38ff', mb: 2 }}>
+          <Typography variant="h5" sx={{ color: 'var(--color-primary)', mb: 2 }}>
             📊 Start Your Fitness Journey!
           </Typography>
-          <Typography variant="body1" sx={{ color: '#283618ff', mb: 3, maxWidth: 600, mx: 'auto' }}>
+          <Typography variant="body1" sx={{ color: 'var(--color-primary-dark)', mb: 3, maxWidth: 600, mx: 'auto' }}>
             Track your progress by logging workouts, meals, and body measurements.
             Your data will appear here as beautiful charts and insights.
           </Typography>
@@ -893,9 +893,9 @@ const ProgressPage: React.FC = () => {
                 variant="outlined"
                 onClick={() => window.location.href = '/exercises'}
                 sx={{
-                  color: '#606c38ff',
-                  borderColor: '#606c38ff',
-                  '&:hover': { bgcolor: 'rgba(96,108,56,0.05)' }
+                  color: 'var(--color-primary)',
+                  borderColor: 'var(--color-primary)',
+                  '&:hover': { bgcolor: 'rgba(182,214,204,0.22)' }
                 }}
               >
                 💪 Log Workouts
@@ -906,9 +906,9 @@ const ProgressPage: React.FC = () => {
                 variant="outlined"
                 onClick={() => window.location.href = '/food-log'}
                 sx={{
-                  color: '#606c38ff',
-                  borderColor: '#606c38ff',
-                  '&:hover': { bgcolor: 'rgba(96,108,56,0.05)' }
+                  color: 'var(--color-primary)',
+                  borderColor: 'var(--color-primary)',
+                  '&:hover': { bgcolor: 'rgba(182,214,204,0.22)' }
                 }}
               >
                 🍎 Track Food
@@ -919,9 +919,9 @@ const ProgressPage: React.FC = () => {
                 variant="outlined"
                 onClick={() => window.location.href = '/profile'}
                 sx={{
-                  color: '#606c38ff',
-                  borderColor: '#606c38ff',
-                  '&:hover': { bgcolor: 'rgba(96,108,56,0.05)' }
+                  color: 'var(--color-primary)',
+                  borderColor: 'var(--color-primary)',
+                  '&:hover': { bgcolor: 'rgba(182,214,204,0.22)' }
                 }}
               >
                 📏 Body Metrics

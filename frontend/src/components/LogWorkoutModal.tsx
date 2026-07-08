@@ -193,7 +193,7 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
       case 'cardio':
         return (
           <>
-            <Typography variant="body2" color="#283618ff">
+            <Typography variant="body2" color="var(--color-primary-dark)">
               Log your {cardioSubType} session details
             </Typography>
             <TextField 
@@ -277,7 +277,7 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
       case 'stretching':
         return (
           <>
-            <Typography variant="body2" color="#283618ff">Log your stretching session</Typography>
+            <Typography variant="body2" color="var(--color-primary-dark)">Log your stretching session</Typography>
             <TextField 
               label="Duration (minutes)" 
               name="duration" 
@@ -314,7 +314,7 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
       default: // strength
         return (
           <>
-            <Typography variant="body2" color="#283618ff">Log your actual performance for this exercise</Typography>
+            <Typography variant="body2" color="var(--color-primary-dark)">Log your actual performance for this exercise</Typography>
             <TextField 
               label="Sets Completed" 
               name="sets" 
@@ -373,7 +373,7 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
   return (
     <>
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ bgcolor: '#606c38ff', color: 'white' }}>
+        <DialogTitle sx={{ bgcolor: 'var(--color-primary)', color: 'white' }}>
           {exercise ? `Log "${exercise.name}" Workout` : 'Log Workout'}
           {exercise && (
             <Typography variant="caption" display="block" sx={{ color: '#e0e0e0', mt: 0.5 }}>
@@ -384,19 +384,19 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{ backgroundColor: '#fefae0' }}>
+        <DialogContent dividers sx={{ backgroundColor: 'var(--color-bg)' }}>
           <Stack spacing={2} mt={1}>
             {renderFormFields()}
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ backgroundColor:'#fefae0', borderTop:'1px solid #dda15eff' }}>
-          <Button onClick={handleClose} sx={{ color:'#bc6c25ff' }}>Cancel</Button>
+        <DialogActions sx={{ backgroundColor:'var(--color-bg)', borderTop:'1px solid var(--color-accent)' }}>
+          <Button onClick={handleClose} sx={{ color:'var(--color-secondary)' }}>Cancel</Button>
           <Button 
             variant="contained" 
             startIcon={<FitnessCenterIcon />} 
             onClick={handleSave} 
             disabled={isSaving || (exerciseType === 'strength' && !form.sets) || ((exerciseType === 'cardio' || exerciseType === 'stretching') && !form.duration)} 
-            sx={{ bgcolor:'#606c38ff', '&:hover':{ bgcolor:'#283618ff' } }}
+            sx={{ bgcolor:'var(--color-primary)', '&:hover':{ bgcolor:'var(--color-primary-dark)' } }}
           >
             {isSaving ? <CircularProgress size={20} /> : 'Save Workout'}
           </Button>

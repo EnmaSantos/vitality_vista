@@ -633,7 +633,7 @@ const ExercisesPage: React.FC = () => {
                 color: 'var(--color-primary)',
                 borderColor: 'var(--color-primary)',
                 '&:hover': {
-                  bgcolor: 'rgba(96,108,56,0.05)',
+                  bgcolor: 'rgba(182,214,204,0.22)',
                   borderColor: 'var(--color-primary-dark)'
                 }
               }}
@@ -650,7 +650,7 @@ const ExercisesPage: React.FC = () => {
                 color: 'var(--color-primary)',
                 borderColor: 'var(--color-primary)',
                 '&:hover': {
-                  bgcolor: 'rgba(96,108,56,0.05)',
+                  bgcolor: 'rgba(182,214,204,0.22)',
                   borderColor: 'var(--color-primary-dark)'
                 }
               }}
@@ -684,7 +684,7 @@ const ExercisesPage: React.FC = () => {
             borderRadius: 4,
             bgcolor: 'white',
             boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-            border: '1px solid rgba(96, 108, 56, 0.1)'
+            border: '1px solid rgba(182, 214, 204, 0.30)'
           }}
         >
           <Grid container spacing={3} alignItems="center">
@@ -708,7 +708,7 @@ const ExercisesPage: React.FC = () => {
                   sx: {
                     borderRadius: 3,
                     bgcolor: 'var(--color-bg)',
-                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '& fieldset': { borderColor: 'rgba(182, 214, 204, 0.50)' },
                     '&:hover fieldset': { borderColor: 'var(--color-primary) !important' },
                     '&.Mui-focused fieldset': { borderColor: 'var(--color-primary) !important' },
                   }
@@ -733,7 +733,7 @@ const ExercisesPage: React.FC = () => {
                     borderRadius: 3,
                     bgcolor: 'var(--color-bg)',
                     color: 'var(--color-primary-dark)',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(182, 214, 204, 0.50)' },
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
                     '& .MuiSvgIcon-root': { color: 'var(--color-primary)' }
@@ -756,7 +756,7 @@ const ExercisesPage: React.FC = () => {
         {/* Conditional Rendering & Exercise List */}
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <CircularProgress sx={{ color: '#606c38ff' }} />
+            <CircularProgress sx={{ color: 'var(--color-primary)' }} />
           </Box>
         ) : error ? (
           <Alert severity="error" sx={{ mt: 2 }}>Error: {error}</Alert>
@@ -793,7 +793,7 @@ const ExercisesPage: React.FC = () => {
                             label={exercise.level || 'General'}
                             size="small"
                             sx={{
-                              bgcolor: 'rgba(96, 108, 56, 0.1)',
+                              bgcolor: 'rgba(182, 214, 204, 0.30)',
                               color: 'var(--color-primary)',
                               fontSize: '0.7rem',
                               fontWeight: 600,
@@ -879,7 +879,7 @@ const ExercisesPage: React.FC = () => {
                               color: 'var(--color-primary)',
                               '&:hover': {
                                 borderColor: 'var(--color-primary-dark)',
-                                backgroundColor: 'rgba(96, 108, 56, 0.05)'
+                                backgroundColor: 'rgba(182, 214, 204, 0.22)'
                               }
                             }}
                           >
@@ -895,7 +895,7 @@ const ExercisesPage: React.FC = () => {
                               textTransform: 'none',
                               fontWeight: 600,
                               color: 'var(--color-accent)',
-                              '&:hover': { backgroundColor: 'rgba(188, 108, 37, 0.1)' }
+                              '&:hover': { backgroundColor: 'rgba(128, 100, 67, 0.18)' }
                             }}
                             startIcon={<FitnessCenterIcon />}
                           >
@@ -926,7 +926,7 @@ const ExercisesPage: React.FC = () => {
                   sx={{
                     '& .MuiPaginationItem-root': { color: 'var(--color-primary)' },
                     '& .Mui-selected': {
-                      backgroundColor: 'rgba(96, 108, 56, 0.1) !important',
+                      backgroundColor: 'rgba(182, 214, 204, 0.30) !important',
                       color: 'var(--color-primary-dark)',
                       fontWeight: 'bold'
                     }
@@ -1016,7 +1016,7 @@ const ExercisesPage: React.FC = () => {
                     <Typography variant="subtitle2" sx={{ color: 'var(--color-secondary)', mb: 1 }}>Primary Muscles</Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                       {selectedExerciseForModal.primaryMuscles?.map(muscle => (
-                        <Chip key={muscle} label={muscle} size="small" sx={{ bgcolor: 'rgba(96, 108, 56, 0.1)', color: 'var(--color-primary-dark)' }} />
+                        <Chip key={muscle} label={muscle} size="small" sx={{ bgcolor: 'rgba(182, 214, 204, 0.30)', color: 'var(--color-primary-dark)' }} />
                       ))}
                     </Box>
                   </Box>
@@ -1026,7 +1026,7 @@ const ExercisesPage: React.FC = () => {
                       <Typography variant="subtitle2" sx={{ color: 'var(--color-secondary)', mb: 1 }}>Secondary Muscles</Typography>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                         {selectedExerciseForModal.secondaryMuscles.map(muscle => (
-                          <Chip key={muscle} label={muscle} size="small" variant="outlined" sx={{ borderColor: 'rgba(96, 108, 56, 0.2)', color: 'var(--color-secondary)' }} />
+                          <Chip key={muscle} label={muscle} size="small" variant="outlined" sx={{ borderColor: 'rgba(182, 214, 204, 0.50)', color: 'var(--color-secondary)' }} />
                         ))}
                       </Box>
                     </Box>
@@ -1113,7 +1113,7 @@ const ExercisesPage: React.FC = () => {
                   borderRadius: 2,
                   color: 'var(--color-primary)',
                   borderColor: 'var(--color-primary)',
-                  '&:hover': { borderColor: 'var(--color-primary-dark)', bgcolor: 'rgba(96, 108, 56, 0.05)' }
+                  '&:hover': { borderColor: 'var(--color-primary-dark)', bgcolor: 'rgba(182, 214, 204, 0.22)' }
                 }}
               >
                 Close

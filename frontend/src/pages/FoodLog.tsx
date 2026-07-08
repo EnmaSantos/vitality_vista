@@ -644,7 +644,7 @@ const FoodLog: React.FC = () => {
     if (!hasAllergenData && !hasPreferenceData) return null;
 
     return (
-      <Box sx={{ mt: 2, p: 1.5, bgcolor: 'white', borderRadius: 2, border: '1px solid rgba(96, 108, 56, 0.12)' }}>
+      <Box sx={{ mt: 2, p: 1.5, bgcolor: 'white', borderRadius: 2, border: '1px solid rgba(182, 214, 204, 0.34)' }}>
         <Typography variant="subtitle2" sx={{ color: 'var(--color-primary-dark)', fontWeight: 900, mb: 1 }}>
           Allergens and dietary preferences
         </Typography>
@@ -652,7 +652,7 @@ const FoodLog: React.FC = () => {
         {positivePreferences.length > 0 && (
           <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ mb: 1 }}>
             {positivePreferences.map((preference) => (
-              <Chip key={preference} label={preference} size="small" sx={{ bgcolor: 'rgba(96, 108, 56, 0.12)', color: 'var(--color-primary-dark)', fontWeight: 800 }} />
+              <Chip key={preference} label={preference} size="small" sx={{ bgcolor: 'rgba(182, 214, 204, 0.34)', color: 'var(--color-primary-dark)', fontWeight: 800 }} />
             ))}
           </Stack>
         )}
@@ -1040,7 +1040,7 @@ const FoodLog: React.FC = () => {
       {isLoadingLog && <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress sx={{ color: 'var(--color-primary)' }} /></Box>}
       {logError && <Alert severity="error" sx={{ my: 2 }}>{logError}</Alert>}
       {!isLoadingLog && !logError && loggedEntries.length === 0 && (
-        <Paper elevation={0} sx={{ p: 4, textAlign: 'center', my: 2, bgcolor: 'white', borderRadius: 3, border: '1px dashed rgba(96, 108, 56, 0.3)' }}>
+        <Paper elevation={0} sx={{ p: 4, textAlign: 'center', my: 2, bgcolor: 'white', borderRadius: 3, border: '1px dashed rgba(13, 93, 86, 0.28)' }}>
           <Typography sx={{ color: 'var(--color-secondary)' }}>No food logged for {currentDate}. Add some from the search above or add manually!</Typography>
         </Paper>
       )}
@@ -1058,7 +1058,7 @@ const FoodLog: React.FC = () => {
             }}
           >
             <Typography variant="h6" sx={{ textTransform: 'capitalize', color: 'var(--color-primary-dark)', fontWeight: 'bold' }}>{mealType}</Typography>
-            <Divider sx={{ my: 2, borderColor: 'rgba(96, 108, 56, 0.1)' }} />
+            <Divider sx={{ my: 2, borderColor: 'rgba(182, 214, 204, 0.30)' }} />
             <List disablePadding>
               {groupedEntries[mealType].map((entry) => {
                 const entryFoodDetails = foodDetailsById[entry.fatsecret_food_id];
@@ -1068,7 +1068,7 @@ const FoodLog: React.FC = () => {
                     key={entry.log_entry_id}
                     divider
                     sx={{
-                      borderColor: 'rgba(96, 108, 56, 0.05)',
+                      borderColor: 'rgba(182, 214, 204, 0.22)',
                       py: 2,
                       '&:last-child': { borderBottom: 'none' }
                     }}
@@ -1100,9 +1100,9 @@ const FoodLog: React.FC = () => {
                       <Grid item xs={10} sm={6} md={7}>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: { xs: 'flex-start', sm: 'space-around' }, alignItems: 'center', pl: { xs: 0, sm: 1 }, gap: { xs: 1, sm: 0.5 } }}>
                           <Typography variant="body2" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', minWidth: '70px', textAlign: 'right' }}>{(parseFloat(String(entry.calories_consumed)) || 0).toFixed(0)} kcal</Typography>
-                          <Typography variant="body2" sx={{ color: '#606c38', minWidth: '60px', textAlign: 'right' }}>P: {parseFloat(String(entry.protein_consumed)).toFixed(1)}g</Typography>
-                          <Typography variant="body2" sx={{ color: '#dda15e', minWidth: '60px', textAlign: 'right' }}>C: {parseFloat(String(entry.carbs_consumed)).toFixed(1)}g</Typography>
-                          <Typography variant="body2" sx={{ color: '#bc6c25', minWidth: '60px', textAlign: 'right' }}>F: {parseFloat(String(entry.fat_consumed)).toFixed(1)}g</Typography>
+                          <Typography variant="body2" sx={{ color: '#0c8346', minWidth: '60px', textAlign: 'right' }}>P: {parseFloat(String(entry.protein_consumed)).toFixed(1)}g</Typography>
+                          <Typography variant="body2" sx={{ color: '#b6d6cc', minWidth: '60px', textAlign: 'right' }}>C: {parseFloat(String(entry.carbs_consumed)).toFixed(1)}g</Typography>
+                          <Typography variant="body2" sx={{ color: '#806443', minWidth: '60px', textAlign: 'right' }}>F: {parseFloat(String(entry.fat_consumed)).toFixed(1)}g</Typography>
                         </Box>
                       </Grid>
                       <Grid item xs={2} sm={2} md={2} sx={{ textAlign: 'right', pt: { xs: 1, md: 0 } }}>
@@ -1139,14 +1139,14 @@ const FoodLog: React.FC = () => {
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
           {selectedFoodForDialog && (
-            <Box sx={{ mb: 3, p: 2, bgcolor: 'var(--color-bg)', borderRadius: 2, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+            <Box sx={{ mb: 3, p: 2, bgcolor: 'var(--color-bg)', borderRadius: 2, border: '1px solid rgba(182, 214, 204, 0.30)' }}>
               <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mb: 2 }}>
                 {selectedFoodForDialog.imageUrl && (
                   <Avatar
                     variant="rounded"
                     src={selectedFoodForDialog.imageUrl}
                     alt={selectedFoodForDialog.name}
-                    sx={{ width: 64, height: 64, bgcolor: 'white', border: '1px solid rgba(96, 108, 56, 0.12)' }}
+                    sx={{ width: 64, height: 64, bgcolor: 'white', border: '1px solid rgba(182, 214, 204, 0.34)' }}
                   />
                 )}
                 <Box sx={{ minWidth: 0 }}>
@@ -1208,17 +1208,17 @@ const FoodLog: React.FC = () => {
                 )}
 
                 <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                  <Typography variant="body2" sx={{ color: '#606c38' }}>
+                  <Typography variant="body2" sx={{ color: '#0c8346' }}>
                     P: {selectedFoodForDialog.availableServings
                       ? (formDataForDialog.base_protein !== undefined ? formDataForDialog.base_protein : selectedFoodForDialog.protein)
                       : selectedFoodForDialog.protein}{selectedFoodForDialog.proteinUnit || 'g'}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#dda15e' }}>
+                  <Typography variant="body2" sx={{ color: '#b6d6cc' }}>
                     C: {selectedFoodForDialog.availableServings
                       ? (formDataForDialog.base_carbs !== undefined ? formDataForDialog.base_carbs : selectedFoodForDialog.carbs)
                       : selectedFoodForDialog.carbs}{selectedFoodForDialog.carbsUnit || 'g'}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#bc6c25' }}>
+                  <Typography variant="body2" sx={{ color: '#806443' }}>
                     F: {selectedFoodForDialog.availableServings
                       ? (formDataForDialog.base_fat !== undefined ? formDataForDialog.base_fat : selectedFoodForDialog.fat)
                       : selectedFoodForDialog.fat}{selectedFoodForDialog.fatUnit || 'g'}
@@ -1241,7 +1241,7 @@ const FoodLog: React.FC = () => {
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
-                      '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                      '& fieldset': { borderColor: 'rgba(13, 93, 86, 0.28)' },
                       '&:hover fieldset': { borderColor: 'var(--color-primary)' },
                       '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                     },
@@ -1258,7 +1258,7 @@ const FoodLog: React.FC = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
-                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                    '& fieldset': { borderColor: 'rgba(13, 93, 86, 0.28)' },
                     '&:hover fieldset': { borderColor: 'var(--color-primary)' },
                     '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                   },
@@ -1271,7 +1271,7 @@ const FoodLog: React.FC = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
-                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                    '& fieldset': { borderColor: 'rgba(13, 93, 86, 0.28)' },
                     '&:hover fieldset': { borderColor: 'var(--color-primary)' },
                     '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                   },
@@ -1299,7 +1299,7 @@ const FoodLog: React.FC = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
-                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                    '& fieldset': { borderColor: 'rgba(13, 93, 86, 0.28)' },
                     '&:hover fieldset': { borderColor: 'var(--color-primary)' },
                     '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                   },
@@ -1314,7 +1314,7 @@ const FoodLog: React.FC = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
-                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                    '& fieldset': { borderColor: 'rgba(13, 93, 86, 0.28)' },
                     '&:hover fieldset': { borderColor: 'var(--color-primary)' },
                     '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                   },
@@ -1330,7 +1330,7 @@ const FoodLog: React.FC = () => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                        '& fieldset': { borderColor: 'rgba(13, 93, 86, 0.28)' },
                         '&:hover fieldset': { borderColor: 'var(--color-primary)' },
                         '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                       },
@@ -1342,7 +1342,7 @@ const FoodLog: React.FC = () => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                        '& fieldset': { borderColor: 'rgba(13, 93, 86, 0.28)' },
                         '&:hover fieldset': { borderColor: 'var(--color-primary)' },
                         '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                       },
@@ -1354,7 +1354,7 @@ const FoodLog: React.FC = () => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                        '& fieldset': { borderColor: 'rgba(13, 93, 86, 0.28)' },
                         '&:hover fieldset': { borderColor: 'var(--color-primary)' },
                         '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                       },
@@ -1366,7 +1366,7 @@ const FoodLog: React.FC = () => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                        '& fieldset': { borderColor: 'rgba(13, 93, 86, 0.28)' },
                         '&:hover fieldset': { borderColor: 'var(--color-primary)' },
                         '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                       },
@@ -1378,7 +1378,7 @@ const FoodLog: React.FC = () => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                        '& fieldset': { borderColor: 'rgba(13, 93, 86, 0.28)' },
                         '&:hover fieldset': { borderColor: 'var(--color-primary)' },
                         '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' },
                       },

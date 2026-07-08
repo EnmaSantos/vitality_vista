@@ -363,7 +363,7 @@ const Recipes: React.FC = () => {
             borderRadius: 4,
             bgcolor: 'white',
             boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-            border: '1px solid rgba(96, 108, 56, 0.1)'
+            border: '1px solid rgba(182, 214, 204, 0.30)'
           }}
         >
           <Grid container spacing={2.5} alignItems="center">
@@ -383,7 +383,7 @@ const Recipes: React.FC = () => {
                   sx: {
                     borderRadius: 3,
                     bgcolor: 'var(--color-bg)',
-                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '& fieldset': { borderColor: 'rgba(182, 214, 204, 0.50)' },
                     '&:hover fieldset': { borderColor: 'var(--color-primary) !important' },
                     '&.Mui-focused fieldset': { borderColor: 'var(--color-primary) !important' },
                   }
@@ -402,7 +402,7 @@ const Recipes: React.FC = () => {
                     borderRadius: 3,
                     bgcolor: 'var(--color-bg)',
                     color: 'var(--color-primary-dark)',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(182, 214, 204, 0.50)' },
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
                     '& .MuiSvgIcon-root': { color: 'var(--color-primary)' }
@@ -427,7 +427,7 @@ const Recipes: React.FC = () => {
                     borderRadius: 3,
                     bgcolor: 'var(--color-bg)',
                     color: 'var(--color-primary-dark)',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(182, 214, 204, 0.50)' },
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-primary)' },
                     '& .MuiSvgIcon-root': { color: 'var(--color-primary)' }
@@ -452,7 +452,7 @@ const Recipes: React.FC = () => {
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 3,
                     bgcolor: 'var(--color-bg)',
-                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '& fieldset': { borderColor: 'rgba(182, 214, 204, 0.50)' },
                     '&:hover fieldset': { borderColor: 'var(--color-primary) !important' },
                     '&.Mui-focused fieldset': { borderColor: 'var(--color-primary) !important' },
                   },
@@ -472,7 +472,7 @@ const Recipes: React.FC = () => {
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 3,
                     bgcolor: 'var(--color-bg)',
-                    '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                    '& fieldset': { borderColor: 'rgba(182, 214, 204, 0.50)' },
                     '&:hover fieldset': { borderColor: 'var(--color-primary) !important' },
                     '&.Mui-focused fieldset': { borderColor: 'var(--color-primary) !important' },
                   },
@@ -498,7 +498,7 @@ const Recipes: React.FC = () => {
             </Grid>
           </Grid>
 
-          <Divider sx={{ my: 2.5, borderColor: 'rgba(96, 108, 56, 0.12)' }} />
+          <Divider sx={{ my: 2.5, borderColor: 'rgba(182, 214, 204, 0.34)' }} />
 
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 1.5 }}>
@@ -532,7 +532,7 @@ const Recipes: React.FC = () => {
                     flexWrap: 'wrap',
                     gap: 1,
                     '& .MuiToggleButtonGroup-grouped': {
-                      border: '1px solid rgba(96, 108, 56, 0.16)',
+                      border: '1px solid rgba(182, 214, 204, 0.42)',
                       borderRadius: '8px !important',
                       mx: 0,
                     },
@@ -577,7 +577,7 @@ const Recipes: React.FC = () => {
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 3,
                       bgcolor: 'var(--color-bg)',
-                      '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.2)' },
+                      '& fieldset': { borderColor: 'rgba(182, 214, 204, 0.50)' },
                       '&:hover fieldset': { borderColor: 'var(--color-primary) !important' },
                       '&.Mui-focused fieldset': { borderColor: 'var(--color-primary) !important' },
                     },
@@ -707,7 +707,7 @@ const Recipes: React.FC = () => {
                                 label={type}
                                 size="small"
                                 sx={{
-                                  bgcolor: isDietary ? 'rgba(96, 108, 56, 0.16)' : 'rgba(96, 108, 56, 0.1)',
+                                  bgcolor: isDietary ? 'rgba(182, 214, 204, 0.42)' : 'rgba(182, 214, 204, 0.30)',
                                   color: 'var(--color-primary)',
                                   fontWeight: 600,
                                   borderRadius: 1
@@ -721,7 +721,7 @@ const Recipes: React.FC = () => {
                               label={hasRecipeSafetyMatches ? `Review: ${safetyMatches.slice(0, 2).map((match) => match.label).join(', ')}` : 'No selected matches'}
                               size="small"
                               sx={{
-                                bgcolor: hasRecipeSafetyMatches ? 'rgba(190, 62, 52, 0.1)' : 'rgba(96, 108, 56, 0.12)',
+                                bgcolor: hasRecipeSafetyMatches ? 'rgba(190, 62, 52, 0.1)' : 'rgba(182, 214, 204, 0.34)',
                                 color: hasRecipeSafetyMatches ? '#9f2d24' : 'var(--color-primary-dark)',
                                 fontWeight: 800,
                                 borderRadius: 1,
@@ -781,7 +781,7 @@ const Recipes: React.FC = () => {
                             borderColor: 'var(--color-primary)',
                             '&:hover': {
                               borderColor: 'var(--color-primary-dark)',
-                              bgcolor: 'rgba(96, 108, 56, 0.05)'
+                              bgcolor: 'rgba(182, 214, 204, 0.22)'
                             }
                           }}
                         >
@@ -876,7 +876,7 @@ const Recipes: React.FC = () => {
                                 sx={{
                                   mr: 0.5,
                                   mb: 0.5,
-                                  bgcolor: isDietary ? 'rgba(96, 108, 56, 0.18)' : 'rgba(96, 108, 56, 0.1)',
+                                  bgcolor: isDietary ? 'rgba(182, 214, 204, 0.46)' : 'rgba(182, 214, 204, 0.30)',
                                   color: 'var(--color-primary)',
                                   fontWeight: 600
                                 }}
@@ -906,8 +906,8 @@ const Recipes: React.FC = () => {
                           p: 2,
                           mb: 3,
                           borderRadius: 3,
-                          bgcolor: selectedRecipeSafetyMatches.length > 0 ? 'rgba(190, 62, 52, 0.06)' : 'rgba(96, 108, 56, 0.08)',
-                          border: selectedRecipeSafetyMatches.length > 0 ? '1px solid rgba(190, 62, 52, 0.22)' : '1px solid rgba(96, 108, 56, 0.16)',
+                          bgcolor: selectedRecipeSafetyMatches.length > 0 ? 'rgba(190, 62, 52, 0.06)' : 'rgba(182, 214, 204, 0.26)',
+                          border: selectedRecipeSafetyMatches.length > 0 ? '1px solid rgba(190, 62, 52, 0.22)' : '1px solid rgba(182, 214, 204, 0.42)',
                         }}
                       >
                         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
@@ -981,7 +981,7 @@ const Recipes: React.FC = () => {
                           p: 2.5,
                           mb: 2,
                           bgcolor: 'white',
-                          border: '1px solid rgba(221, 161, 94, 0.3)',
+                          border: '1px solid rgba(8, 61, 119, 0.28)',
                           borderRadius: 3,
                           position: 'relative',
                           overflow: 'hidden'
@@ -1025,7 +1025,7 @@ const Recipes: React.FC = () => {
                         </Grid>
                         {getRecipeNutritionDetails(selectedRecipeDetails.serving_sizes.serving).length > 0 && (
                           <>
-                            <Divider sx={{ my: 2, borderColor: 'rgba(221, 161, 94, 0.25)' }} />
+                            <Divider sx={{ my: 2, borderColor: 'rgba(8, 61, 119, 0.24)' }} />
                             <Grid container spacing={1.5}>
                               {getRecipeNutritionDetails(selectedRecipeDetails.serving_sizes.serving).map((item) => (
                                 <Grid item xs={6} key={item.label}>

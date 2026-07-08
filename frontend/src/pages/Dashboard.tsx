@@ -329,7 +329,7 @@ const Dashboard: React.FC = () => {
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {/* Calories Card Main */}
-              <Card elevation={0} sx={{ bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(96, 108, 56, 0.1)' }}>
+              <Card elevation={0} sx={{ bgcolor: 'var(--color-bg)', borderRadius: 3, border: '1px solid rgba(182, 214, 204, 0.30)' }}>
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <Typography variant="subtitle2" sx={{ color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 'bold' }}>
@@ -345,7 +345,7 @@ const Dashboard: React.FC = () => {
                   </Box>
 
                   {/* Progress Bar Visual */}
-                  <Box sx={{ mt: 2, mb: 1, height: 8, bgcolor: 'rgba(96, 108, 56, 0.2)', borderRadius: 4, overflow: 'hidden' }}>
+                  <Box sx={{ mt: 2, mb: 1, height: 8, bgcolor: 'rgba(182, 214, 204, 0.50)', borderRadius: 4, overflow: 'hidden' }}>
                     <Box
                       sx={{
                         width: typeof displayConsumed === 'number' && displayTDEE !== "N/A"
@@ -374,9 +374,9 @@ const Dashboard: React.FC = () => {
               {/* Macros Row */}
               <Box sx={{ display: 'flex', gap: 2 }}>
                 {[
-                  { label: 'Protein', value: dailyCalorieSummary?.macros.protein_consumed, color: '#606c38' },
-                  { label: 'Carbs', value: dailyCalorieSummary?.macros.carbs_consumed, color: '#dda15e' },
-                  { label: 'Fat', value: dailyCalorieSummary?.macros.fat_consumed, color: '#bc6c25' }
+                  { label: 'Protein', value: dailyCalorieSummary?.macros.protein_consumed, color: '#0c8346' },
+                  { label: 'Carbs', value: dailyCalorieSummary?.macros.carbs_consumed, color: '#b6d6cc' },
+                  { label: 'Fat', value: dailyCalorieSummary?.macros.fat_consumed, color: '#806443' }
                 ].map((macro) => (
                   <Card key={macro.label} elevation={0} sx={{ flex: 1, bgcolor: 'white', borderRadius: 3, border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
                     <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
@@ -393,7 +393,7 @@ const Dashboard: React.FC = () => {
               </Box>
 
               {/* Water Card */}
-              <Card elevation={0} sx={{ bgcolor: '#dcfce7', borderRadius: 3, border: 'none' }}>
+              <Card elevation={0} sx={{ bgcolor: 'rgba(182, 214, 204, 0.48)', borderRadius: 3, border: 'none' }}>
                 <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="subtitle2" sx={{ color: '#166534', fontWeight: 'bold' }}>Water Intake</Typography>
@@ -432,10 +432,10 @@ const Dashboard: React.FC = () => {
               </Box>
             ) : dailyCalorieSummary && dailyCalorieSummary.calories_burned > 0 ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Card elevation={0} sx={{ bgcolor: '#f0fdf4', borderRadius: 3, border: '1px solid #bbf7d0' }}>
+                <Card elevation={0} sx={{ bgcolor: 'rgba(182, 214, 204, 0.26)', borderRadius: 3, border: '1px solid rgba(12, 131, 70, 0.24)' }}>
                   <CardContent sx={{ py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', '&:last-child': { pb: 2 } }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Box sx={{ p: 1, bgcolor: '#dcfce7', borderRadius: '50%', mr: 2 }}>
+                      <Box sx={{ p: 1, bgcolor: 'rgba(182, 214, 204, 0.48)', borderRadius: '50%', mr: 2 }}>
                         <Typography variant="h6">💪</Typography>
                       </Box>
                       <Box>
@@ -450,7 +450,7 @@ const Dashboard: React.FC = () => {
                   </CardContent>
                 </Card>
 
-                <Card elevation={0} sx={{ bgcolor: '#f0f9ff', borderRadius: 3, border: '1px solid #bae6fd' }}>
+                <Card elevation={0} sx={{ bgcolor: 'rgba(8, 61, 119, 0.08)', borderRadius: 3, border: '1px solid rgba(8, 61, 119, 0.24)' }}>
                   <CardContent sx={{ py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', '&:last-child': { pb: 2 } }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Box sx={{ p: 1, bgcolor: '#e0f2fe', borderRadius: '50%', mr: 2 }}>
@@ -468,10 +468,10 @@ const Dashboard: React.FC = () => {
                   </CardContent>
                 </Card>
 
-                <Card elevation={0} sx={{ bgcolor: '#fffbeb', borderRadius: 3, border: '1px solid #fde68a' }}>
+                <Card elevation={0} sx={{ bgcolor: 'rgba(128, 100, 67, 0.08)', borderRadius: 3, border: '1px solid rgba(128, 100, 67, 0.24)' }}>
                   <CardContent sx={{ py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', '&:last-child': { pb: 2 } }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Box sx={{ p: 1, bgcolor: '#fef3c7', borderRadius: '50%', mr: 2 }}>
+                      <Box sx={{ p: 1, bgcolor: 'rgba(128, 100, 67, 0.12)', borderRadius: '50%', mr: 2 }}>
                         <Typography variant="h6">🧘</Typography>
                       </Box>
                       <Box>
@@ -541,12 +541,12 @@ const Dashboard: React.FC = () => {
                       sx={{
                         justifyContent: 'flex-start',
                         color: 'var(--color-primary-dark)',
-                        borderColor: 'rgba(96, 108, 56, 0.3)',
+                        borderColor: 'rgba(13, 93, 86, 0.28)',
                         borderRadius: 2,
                         py: 1.5,
                         '&:hover': {
                           borderColor: 'var(--color-primary)',
-                          bgcolor: 'rgba(96, 108, 56, 0.05)'
+                          bgcolor: 'rgba(182, 214, 204, 0.22)'
                         }
                       }}
                     >
@@ -572,7 +572,7 @@ const Dashboard: React.FC = () => {
                       '& .MuiOutlinedInput-root': {
                         bgcolor: 'var(--color-bg)',
                         borderRadius: '8px 0 0 8px',
-                        '& fieldset': { borderColor: 'rgba(96, 108, 56, 0.3)' },
+                        '& fieldset': { borderColor: 'rgba(13, 93, 86, 0.28)' },
                         '&:hover fieldset': { borderColor: 'var(--color-primary)' },
                         '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)' }
                       }
@@ -597,7 +597,7 @@ const Dashboard: React.FC = () => {
                   </Button>
                 </Box>
 
-                <List dense sx={{ bgcolor: 'rgba(96, 108, 56, 0.03)', borderRadius: 3, p: 1 }}>
+                <List dense sx={{ bgcolor: 'rgba(182, 214, 204, 0.16)', borderRadius: 3, p: 1 }}>
                   {dailyGoals.length === 0 && (
                     <Box sx={{ p: 4, textAlign: 'center' }}>
                       <Typography variant="body2" sx={{ color: 'var(--color-secondary)', fontStyle: 'italic' }}>
