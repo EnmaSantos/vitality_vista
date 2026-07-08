@@ -51,7 +51,7 @@ const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 const EXERCISES_URL = `${API_BASE_URL}/exercises`;
 
 function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("authToken");
   if (token) {
     return { Authorization: `Bearer ${token}` };
   }
