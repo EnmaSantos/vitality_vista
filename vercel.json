@@ -2,6 +2,17 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "vitality-vista.vercel.app"
+        }
+      ],
+      "destination": "https://vitality-vista.enmasantos.dev/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

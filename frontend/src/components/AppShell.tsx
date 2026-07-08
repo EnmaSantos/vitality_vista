@@ -30,16 +30,51 @@ interface AppShellProps {
 }
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: <MonitorHeartIcon fontSize="small" />, match: ['/', '/dashboard'] },
-  { path: '/food-log', label: 'Food Log', icon: <LocalDiningIcon fontSize="small" />, match: ['/food-log'] },
+  {
+    path: '/',
+    label: 'Dashboard',
+    icon: <MonitorHeartIcon fontSize="small" />,
+    match: ['/', '/dashboard'],
+    color: '#64743a',
+    activeColor: '#40512e',
+    tint: 'rgba(100, 116, 58, 0.16)',
+  },
+  {
+    path: '/food-log',
+    label: 'Food Log',
+    icon: <LocalDiningIcon fontSize="small" />,
+    match: ['/food-log'],
+    color: '#d99a47',
+    activeColor: '#7d5529',
+    tint: 'rgba(217, 154, 71, 0.18)',
+  },
   {
     path: '/exercises',
     label: 'Workouts',
     icon: <FitnessCenterIcon fontSize="small" />,
     match: ['/exercises', '/my-plans', '/workout-history', '/workout/session'],
+    color: '#2f461d',
+    activeColor: '#2f461d',
+    tint: 'rgba(47, 70, 29, 0.14)',
   },
-  { path: '/recipes', label: 'Recipes', icon: <MenuBookIcon fontSize="small" />, match: ['/recipes'] },
-  { path: '/progress', label: 'Progress', icon: <InsightsIcon fontSize="small" />, match: ['/progress'] },
+  {
+    path: '/recipes',
+    label: 'Recipes',
+    icon: <MenuBookIcon fontSize="small" />,
+    match: ['/recipes'],
+    color: '#c66a1e',
+    activeColor: '#79400f',
+    tint: 'rgba(198, 106, 30, 0.17)',
+  },
+  {
+    path: '/progress',
+    label: 'Progress',
+    icon: <InsightsIcon fontSize="small" />,
+    match: ['/progress'],
+    color: '#69754d',
+    activeColor: '#4d5932',
+    tint: 'rgba(105, 117, 77, 0.17)',
+  },
 ];
 
 const isNavActive = (pathname: string, matches: string[]) => {
@@ -78,6 +113,11 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
               to={item.path}
               onClick={() => setMobileOpen(false)}
               className={`vv-shell-nav-item${active ? ' is-active' : ''}`}
+              style={{
+                '--vv-nav-color': item.color,
+                '--vv-nav-active': item.activeColor,
+                '--vv-nav-tint': item.tint,
+              } as React.CSSProperties}
             >
               <Box className="vv-shell-nav-icon" aria-hidden="true">
                 {item.icon}
