@@ -1,5 +1,5 @@
 // frontend/src/pages/FoodLog.tsx
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Typography,
   Box,
@@ -28,12 +28,11 @@ import {
   InputAdornment,
   DialogContentText,
   Snackbar,
-  Tabs,
-  Tab,
   Stack,
   Chip,
   ToggleButton,
   ToggleButtonGroup,
+  Skeleton,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -42,7 +41,11 @@ import {
   Search as SearchIcon,
   PhotoCamera as PhotoCameraIcon,
   QrCodeScanner as QrCodeScannerIcon,
+  Restaurant as RestaurantIcon,
+  CameraAlt as CameraAltIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
+import { Html5Qrcode } from 'html5-qrcode';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -90,12 +93,19 @@ interface CurrentFoodEntry {
 const FoodLog: React.FC = () => {
   const auth = useAuth();
 
-  const [lookupMode, setLookupMode] = useState<'search' | 'barcode'>('search');
   const [searchQuery, setSearchQuery] = useState('');
-  const [barcodeInput, setBarcodeInput] = useState('');
   const [searchResults, setSearchResults] = useState<NutritionData[]>([]);
   const [isLoadingSearch, setIsLoadingSearch] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [detectedMode, setDetectedMode] = useState<'text' | 'barcode' | null>(null);
+
+  // Camera scanner state
+  const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
+  const [isCameraScanning, setIsCameraScanning] = useState(false);
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  const scannerContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const BARCODE_PATTERN = /^\d{8,13}$/;
 
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [selectedFoodForDialog, setSelectedFoodForDialog] = useState<NutritionData | null>(null);
@@ -160,13 +170,7 @@ const FoodLog: React.FC = () => {
     }
   };
 
-  const handleLookupModeChange = (_event: React.SyntheticEvent, value: 'search' | 'barcode' | null) => {
-    if (!value) return;
-    setLookupMode(value);
-    setSearchResults([]);
-    setSearchError(null);
-    setIsLoadingSearch(false);
-  };
+
 
   const normalizeBarcodeInput = (value: string) => {
     const digitsOnly = value.replace(/\D/g, '');
@@ -186,12 +190,12 @@ const FoodLog: React.FC = () => {
       return;
     }
 
-    setBarcodeInput(normalizedBarcode);
     setIsLoadingSearch(true);
     setSearchError(null);
     try {
       const food = await findFoodByBarcodeAPI(normalizedBarcode, auth);
       setSearchResults([food]);
+      setSearchQuery(normalizedBarcode);
     } catch (err) {
       setSearchError(err instanceof Error ? err.message : "Failed to find food by barcode.");
       setSearchResults([]);
@@ -200,39 +204,125 @@ const FoodLog: React.FC = () => {
     }
   };
 
-  const handleBarcodeLookup = () => lookupBarcode(barcodeInput);
-
   const handleBarcodeImageScan = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
 
-    const BarcodeDetectorClass = (window as any).BarcodeDetector;
-    if (!BarcodeDetectorClass || !('createImageBitmap' in window)) {
-      setSearchError("Barcode image scanning is not supported in this browser. Enter the barcode number instead.");
-      return;
-    }
-
     setIsLoadingSearch(true);
     setSearchError(null);
+
+    // Try native BarcodeDetector first (Chromium browsers)
+    const BarcodeDetectorClass = (window as any).BarcodeDetector;
+    if (BarcodeDetectorClass && 'createImageBitmap' in window) {
+      try {
+        const detector = new BarcodeDetectorClass({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+        const imageBitmap = await createImageBitmap(file);
+        const detectedCodes = await detector.detect(imageBitmap);
+        const rawBarcode = detectedCodes?.[0]?.rawValue;
+        if (rawBarcode) {
+          await lookupBarcode(rawBarcode);
+          return;
+        }
+      } catch (_nativeErr) {
+        // Native detection failed, fall through to html5-qrcode
+      }
+    }
+
+    // Fallback: use html5-qrcode for all browsers (including iOS Safari, Firefox)
     try {
-      const detector = new BarcodeDetectorClass({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
-      const imageBitmap = await createImageBitmap(file);
-      const detectedCodes = await detector.detect(imageBitmap);
-      const rawBarcode = detectedCodes?.[0]?.rawValue;
+      const html5QrCode = new Html5Qrcode('barcode-scan-fallback', /* verbose= */ false);
+      const result = await html5QrCode.scanFileV2(file, /* showImage= */ false);
+      const rawBarcode = result?.decodedText;
+      await html5QrCode.clear();
       if (!rawBarcode) {
         setSearchResults([]);
-        setSearchError("No barcode was detected in that image.");
+        setSearchError("No barcode was detected in that image. Try a clearer photo.");
         return;
       }
       await lookupBarcode(rawBarcode);
     } catch (err) {
-      setSearchError(err instanceof Error ? err.message : "Failed to scan barcode image.");
+      setSearchError("No barcode was detected in that image. Try a clearer photo or enter the number manually.");
       setSearchResults([]);
     } finally {
       setIsLoadingSearch(false);
     }
   };
+
+  // --- Live Camera Scanner ---
+  const stopCameraScanner = useCallback(async () => {
+    if (html5QrCodeRef.current) {
+      try {
+        const state = html5QrCodeRef.current.getState();
+        if (state === 2) { // SCANNING
+          await html5QrCodeRef.current.stop();
+        }
+        await html5QrCodeRef.current.clear();
+      } catch (_e) { /* ignore cleanup errors */ }
+      html5QrCodeRef.current = null;
+    }
+    setIsCameraScanning(false);
+  }, []);
+
+  const startCameraScanner = useCallback(async () => {
+    await stopCameraScanner();
+    setIsCameraScanning(true);
+    setSearchError(null);
+
+    // Give the DOM a tick to render the container
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    try {
+      const scannerId = 'live-barcode-scanner';
+      const html5QrCode = new Html5Qrcode(scannerId, /* verbose= */ false);
+      html5QrCodeRef.current = html5QrCode;
+
+      await html5QrCode.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: { width: 280, height: 160 },
+          aspectRatio: 1.5,
+        },
+        async (decodedText: string) => {
+          // Barcode detected — stop scanning and look it up
+          await stopCameraScanner();
+          setCameraDialogOpen(false);
+          await lookupBarcode(decodedText);
+        },
+        () => {
+          // QR scanning frame — no-op for continuous scanning
+        }
+      );
+    } catch (err) {
+      setSearchError(
+        err instanceof Error && err.message.includes('Permission')
+          ? 'Camera access was denied. Please allow camera permissions and try again.'
+          : 'Could not start the camera. Make sure no other app is using it.'
+      );
+      setIsCameraScanning(false);
+    }
+  }, [stopCameraScanner]);
+
+  const handleCloseCameraDialog = useCallback(async () => {
+    await stopCameraScanner();
+    setCameraDialogOpen(false);
+  }, [stopCameraScanner]);
+
+  const handleOpenCameraDialog = () => {
+    setCameraDialogOpen(true);
+  };
+
+  // Start scanning when the camera dialog opens
+  useEffect(() => {
+    if (cameraDialogOpen) {
+      startCameraScanner();
+    }
+    return () => {
+      stopCameraScanner();
+    };
+  }, [cameraDialogOpen]);
+
 
   const fetchLoggedEntries = useCallback(async (date: string) => {
     if (!auth.token) return;
@@ -300,12 +390,29 @@ const FoodLog: React.FC = () => {
         setIsLoadingSearch(false);
         return;
       }
-      if (query.trim() === '') {
+      const trimmed = query.trim();
+      if (trimmed === '') {
         setSearchResults([]);
         setSearchError(null);
         setIsLoadingSearch(false);
+        setDetectedMode(null);
         return;
       }
+
+      // Auto-detect barcode pattern
+      if (/^\d{8,13}$/.test(trimmed)) {
+        setDetectedMode('barcode');
+        await lookupBarcode(trimmed);
+        return;
+      }
+
+      setDetectedMode('text');
+      if (trimmed.length < 2) {
+        setSearchResults([]);
+        setIsLoadingSearch(false);
+        return;
+      }
+
       setIsLoadingSearch(true);
       setSearchError(null);
       try {
@@ -317,21 +424,21 @@ const FoodLog: React.FC = () => {
       } finally {
         setIsLoadingSearch(false);
       }
-    }, 500),
+    }, 300),
     [auth]
   );
 
   useEffect(() => {
-    if (lookupMode !== 'search') return;
-
     if (searchQuery.trim() !== '') {
+      setIsLoadingSearch(true);
       debouncedSearch(searchQuery);
     } else {
       setSearchResults([]);
       setIsLoadingSearch(false);
       setSearchError(null);
+      setDetectedMode(null);
     }
-  }, [lookupMode, searchQuery, debouncedSearch]);
+  }, [searchQuery, debouncedSearch]);
 
   const [foodEntries_mock, setFoodEntries_mock] = useState<CurrentFoodEntry[]>([
     { id: 1, name: 'Oatmeal with Berries', calories: 320, protein: 12, carbs: 54, fat: 6, mealType: 'breakfast', time: '08:00' },

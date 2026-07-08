@@ -1,8 +1,4 @@
-const DEFAULT_EXERCISE_API_BASE_URL = "https://excersice-api.fly.dev";
-const configuredExerciseApiBaseUrl = import.meta.env.VITE_EXERCISE_API_URL || DEFAULT_EXERCISE_API_BASE_URL;
-const API_BASE_URL = configuredExerciseApiBaseUrl.endsWith("/")
-  ? configuredExerciseApiBaseUrl
-  : `${configuredExerciseApiBaseUrl}/`;
+import { API_BASE_URL } from "../config";
 
 export interface Exercise {
   name: string;
@@ -52,8 +48,18 @@ export interface ExerciseMeta {
 const CACHE_KEY = "vitality_exercises_cache";
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
-function buildUrl(path: string, params?: Record<string, string | number | undefined>): string {
-  const url = new URL(path, API_BASE_URL);
+const EXERCISES_URL = `${API_BASE_URL}/exercises`;
+
+function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem("token");
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+  return {};
+}
+
+function buildUrl(basePath: string, params?: Record<string, string | number | undefined>): string {
+  const url = new URL(basePath, window.location.origin);
   Object.entries(params || {}).forEach(([key, value]) => {
     if (value !== undefined && value !== "") {
       url.searchParams.set(key, String(value));
@@ -63,7 +69,11 @@ function buildUrl(path: string, params?: Record<string, string | number | undefi
 }
 
 async function fetchJson<T>(url: string, operationName: string): Promise<T> {
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    headers: {
+      ...getAuthHeaders(),
+    },
+  });
 
   if (!response.ok) {
     const errorBody = await response.text();
@@ -75,7 +85,7 @@ async function fetchJson<T>(url: string, operationName: string): Promise<T> {
 }
 
 export async function getExercises(params: ExerciseQueryParams = {}): Promise<PaginatedExercisesResponse> {
-  const url = buildUrl("v2/exercises", {
+  const url = buildUrl(EXERCISES_URL, {
     page: params.page,
     limit: params.limit,
     q: params.q,
@@ -89,7 +99,7 @@ export async function getExercises(params: ExerciseQueryParams = {}): Promise<Pa
 }
 
 export async function getExerciseMeta(): Promise<ExerciseMeta> {
-  const url = buildUrl("v2/exercises/meta");
+  const url = buildUrl(`${EXERCISES_URL}/meta`);
   return fetchJson<ExerciseMeta>(url, "Fetching exercise metadata");
 }
 
@@ -115,9 +125,8 @@ export async function getAllExercises(): Promise<Exercise[]> {
     }
   }
 
-  const url = `${API_BASE_URL}exercises`;
-  console.log(`getAllExercises - Fetching all exercises from: ${url}`);
-  const data = await fetchJson<Exercise[]>(url, "Fetching all exercises");
+  console.log(`getAllExercises - Fetching all exercises from: ${EXERCISES_URL}`);
+  const data = await fetchJson<Exercise[]>(EXERCISES_URL, "Fetching all exercises");
 
   // 2. Save to cache
   try {
@@ -138,7 +147,7 @@ export async function getAllExercises(): Promise<Exercise[]> {
  * @returns {Promise<Exercise>} A promise that resolves to the exercise data.
  */
 export async function getExerciseById(id: string | number): Promise<Exercise> {
-  const url = buildUrl(`v2/exercises/${id}`);
+  const url = buildUrl(`${EXERCISES_URL}/${id}`);
   console.log(`Fetching exercise by ID: ${url}`);
   return fetchJson<Exercise>(url, `Fetching exercise ${id}`);
 }
