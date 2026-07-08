@@ -843,170 +843,176 @@ const FoodLog: React.FC = () => {
       <Grid container spacing={2.4} sx={{ mb: 3 }} alignItems="stretch">
         <Grid item xs={12} lg={7}>
           <AppPanel sx={{ height: '100%' }}>
-        <Tabs
-          value={lookupMode}
-          onChange={handleLookupModeChange}
-          variant="scrollable"
-          allowScrollButtonsMobile
-          sx={{
-            mb: 2.5,
-            minHeight: 40,
-            '& .MuiTabs-flexContainer': { gap: 1 },
-            '& .MuiTab-root': {
-              border: '1px solid var(--vv-line)',
-              borderRadius: 999,
-              color: 'var(--vv-primary-2)',
-              minHeight: 38,
-              px: 2,
-              textTransform: 'none',
-              fontWeight: 850,
-            },
-            '& .Mui-selected': {
-              bgcolor: 'var(--vv-primary)',
-              color: '#fff !important',
-            },
-            '& .MuiTabs-indicator': { display: 'none' },
-          }}
-        >
-          <Tab icon={<SearchIcon />} iconPosition="start" label="Search" value="search" />
-          <Tab icon={<QrCodeScannerIcon />} iconPosition="start" label="Barcode" value="barcode" />
-        </Tabs>
+            {/* Hidden element required as fallback target by html5-qrcode static image scanning */}
+            <div id="barcode-scan-fallback" style={{ display: 'none' }} />
 
-        {lookupMode === 'search' && (
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Search for a food item (e.g., 'avocado toast')..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: 'var(--color-primary)' }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              mb: 3,
-              '& .MuiOutlinedInput-root': {
-                bgcolor: 'var(--vv-surface)',
-                '& fieldset': { borderColor: 'var(--vv-line)' },
-              }
-            }}
-          />
-        )}
-
-        {lookupMode === 'barcode' && (
-          <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
-            <Grid item xs={12} md={7}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="Enter barcode"
-                value={barcodeInput}
-                onChange={(e) => setBarcodeInput(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <QrCodeScannerIcon sx={{ color: 'var(--vv-primary)' }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: 'var(--vv-surface)',
-                    '& fieldset': { borderColor: 'var(--vv-line)' },
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md="auto">
-              <Button
-                variant="contained"
-                startIcon={<QrCodeScannerIcon />}
-                onClick={handleBarcodeLookup}
-                disabled={isLoadingSearch}
-                disableElevation
-                sx={{ bgcolor: 'var(--vv-primary)', color: 'white', fontWeight: 'bold' }}
-              >
-                Find
-              </Button>
-            </Grid>
-            <Grid item xs={12} md="auto">
-              <Button
-                component="label"
-                variant="outlined"
-                startIcon={<PhotoCameraIcon />}
-                disabled={isLoadingSearch}
-                sx={{ borderColor: 'var(--vv-primary)', color: 'var(--vv-primary)', fontWeight: 'bold' }}
-              >
-                Scan Image
-                <input hidden accept="image/*" type="file" onChange={handleBarcodeImageScan} />
-              </Button>
-            </Grid>
-          </Grid>
-        )}
-        {isLoadingSearch && <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}><CircularProgress sx={{ color: 'var(--vv-primary)' }} /></Box>}
-        {searchError && <Alert severity="error" sx={{ mb: 2 }}>{searchError}</Alert>}
-        {!isLoadingSearch && searchResults.length > 0 && (
-          <Paper variant="outlined" sx={{ maxHeight: 330, overflow: 'auto', borderRadius: 2, borderColor: 'var(--vv-line)', bgcolor: 'var(--vv-surface-soft)', p: 1 }}>
-            <List dense>
-              {searchResults.map((food) => (
-                <ListItem
-                  key={food.id}
-                  divider
-                  sx={{ borderColor: 'var(--vv-line)', borderRadius: 1, mb: 0.5, '&:hover': { bgcolor: 'rgba(47, 70, 29, 0.05)' } }}
-                  secondaryAction={
-                    <Button
-                      variant="outlined"
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Search food by name or enter barcode..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: 'var(--vv-primary)' }} />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end" sx={{ gap: 0.5 }}>
+                    {searchQuery && (
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setSearchResults([]);
+                          setDetectedMode(null);
+                        }}
+                        aria-label="clear search"
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                    <IconButton
+                      color="primary"
                       size="small"
-                      onClick={() => handleOpenLogDialog(food)}
-                      sx={{
-                        borderColor: 'var(--vv-primary)',
-                        color: 'var(--vv-primary)',
-                        borderRadius: 2,
-                        '&:hover': {
-                          bgcolor: 'var(--vv-primary)',
-                          color: 'white',
-                          borderColor: 'var(--vv-primary)'
-                        }
-                      }}
+                      onClick={handleOpenCameraDialog}
+                      title="Scan barcode with camera"
+                      sx={{ color: 'var(--vv-primary)' }}
                     >
-                      Log
-                    </Button>
-                  }
-                >
-                  {food.imageUrl && (
-                    <ListItemAvatar>
-                      <Avatar
-                        variant="rounded"
-                        src={food.imageUrl}
-                        alt={food.name}
-                        sx={{ width: 48, height: 48, mr: 1, bgcolor: 'var(--color-bg)' }}
+                      <CameraAltIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      color="primary"
+                      size="small"
+                      component="label"
+                      title="Scan barcode from image file"
+                      sx={{ color: 'var(--vv-primary)' }}
+                    >
+                      <PhotoCameraIcon fontSize="small" />
+                      <input
+                        hidden
+                        accept="image/*"
+                        type="file"
+                        onChange={handleBarcodeImageScan}
                       />
-                    </ListItemAvatar>
-                  )}
-                  <ListItemText
-                    primary={(
-                      <Box sx={{ pr: 1 }}>
-                        <Typography sx={{ fontWeight: '700', color: 'var(--vv-ink)' }}>{food.name}</Typography>
-                        {renderFoodMetadataChips(food)}
-                      </Box>
-                    )}
-                    secondary={(
-                      <Typography variant="body2" sx={{ color: 'var(--vv-muted)', mt: 0.5 }}>
-                        {food.brandName ? `${food.brandName} - ` : ''}{food.calories} {food.calorieUnit || 'kcal'} per {food.servingSize}
-                      </Typography>
-                    )}
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </Paper>
-        )}
-        {!isLoadingSearch && lookupMode === 'search' && searchQuery.trim() !== '' && searchResults.length === 0 && !searchError && (
-          <Typography sx={{ my: 2, color: 'var(--vv-muted)', textAlign: 'center', fontStyle: 'italic' }}>No results found for "{searchQuery}".</Typography>
-        )}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+              sx={{
+                mb: 1.5,
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: 'var(--vv-surface)',
+                  '& fieldset': { borderColor: 'var(--vv-line)' },
+                }
+              }}
+            />
+
+            {detectedMode === 'barcode' && (
+              <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Chip 
+                  label="Barcode Detected" 
+                  size="small" 
+                  sx={{ 
+                    height: 20, 
+                    fontSize: '0.7rem', 
+                    fontWeight: 800, 
+                    bgcolor: 'rgba(47, 70, 29, 0.1)',
+                    color: 'var(--vv-primary)',
+                  }} 
+                />
+                <Typography variant="caption" sx={{ color: 'var(--vv-muted)' }}>
+                  Looking up code via database...
+                </Typography>
+              </Box>
+            )}
+
+            {searchError && <Alert severity="error" sx={{ mb: 2 }}>{searchError}</Alert>}
+
+            {isLoadingSearch && (
+              <Paper variant="outlined" sx={{ borderRadius: 2, borderColor: 'var(--vv-line)', bgcolor: 'var(--vv-surface-soft)', p: 1 }}>
+                <List dense>
+                  {[1, 2, 3].map((n) => (
+                    <ListItem key={n} divider={n !== 3} sx={{ borderColor: 'var(--vv-line)', py: 1.5 }}>
+                      <ListItemAvatar>
+                        <Skeleton variant="rounded" width={48} height={48} sx={{ mr: 1 }} />
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={<Skeleton variant="text" width="60%" height={24} />}
+                        secondary={<Skeleton variant="text" width="40%" height={20} />}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
+            )}
+
+            {!isLoadingSearch && searchResults.length > 0 && (
+              <Paper variant="outlined" sx={{ maxHeight: 330, overflow: 'auto', borderRadius: 2, borderColor: 'var(--vv-line)', bgcolor: 'var(--vv-surface-soft)', p: 1 }}>
+                <List dense>
+                  {searchResults.map((food) => (
+                    <ListItem
+                      key={food.id}
+                      divider
+                      sx={{ borderColor: 'var(--vv-line)', borderRadius: 1, mb: 0.5, '&:hover': { bgcolor: 'rgba(47, 70, 29, 0.05)' } }}
+                      secondaryAction={
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handleOpenLogDialog(food)}
+                          sx={{
+                            borderColor: 'var(--vv-primary)',
+                            color: 'var(--vv-primary)',
+                            borderRadius: 2,
+                            '&:hover': {
+                              bgcolor: 'var(--vv-primary)',
+                              color: 'white',
+                              borderColor: 'var(--vv-primary)'
+                            }
+                          }}
+                        >
+                          Log
+                        </Button>
+                      }
+                    >
+                      <ListItemAvatar>
+                        <Avatar
+                          variant="rounded"
+                          src={food.imageUrl || undefined}
+                          alt={food.name}
+                          sx={{ 
+                            width: 48, 
+                            height: 48, 
+                            mr: 1, 
+                            bgcolor: food.imageUrl ? 'var(--color-bg)' : 'var(--vv-surface-muted)',
+                            color: 'var(--vv-primary-2)'
+                          }}
+                        >
+                          {!food.imageUrl && <RestaurantIcon fontSize="small" />}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={(
+                          <Box sx={{ pr: 1 }}>
+                            <Typography sx={{ fontWeight: '700', color: 'var(--vv-ink)' }}>{food.name}</Typography>
+                            {renderFoodMetadataChips(food)}
+                          </Box>
+                        )}
+                        secondary={(
+                          <Typography variant="body2" sx={{ color: 'var(--vv-muted)', mt: 0.5 }}>
+                            {food.brandName ? `${food.brandName} - ` : ''}{food.calories} {food.calorieUnit || 'kcal'} per {food.servingSize}
+                          </Typography>
+                        )}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
+            )}
+            {!isLoadingSearch && searchQuery.trim() !== '' && searchResults.length === 0 && !searchError && (
+              <Typography sx={{ my: 2, color: 'var(--vv-muted)', textAlign: 'center', fontStyle: 'italic' }}>No results found for "{searchQuery}".</Typography>
+            )}
           </AppPanel>
         </Grid>
 
@@ -1515,6 +1521,53 @@ const FoodLog: React.FC = () => {
             {isSubmittingLog ? <CircularProgress size={24} sx={{ color: 'white' }} /> : "Save Log"}
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* Live Camera Scanner Dialog */}
+      <Dialog
+        open={cameraDialogOpen}
+        onClose={handleCloseCameraDialog}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { bgcolor: 'white', borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Scan Barcode</span>
+          <IconButton onClick={handleCloseCameraDialog} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2, textAlign: 'center', pb: 3 }}>
+          <DialogContentText sx={{ mb: 2 }}>
+            Align the product barcode within the frame to scan.
+          </DialogContentText>
+          <Box 
+            sx={{ 
+              position: 'relative', 
+              width: '100%', 
+              maxWidth: 320, 
+              aspectRatio: '1.5',
+              margin: '0 auto', 
+              borderRadius: 2,
+              overflow: 'hidden',
+              border: '2px solid var(--vv-primary)',
+              bgcolor: 'black'
+            }}
+          >
+            {isCameraScanning ? (
+              <div 
+                id="live-barcode-scanner" 
+                ref={scannerContainerRef} 
+                style={{ width: '100%', height: '100%' }} 
+              />
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'white', gap: 1 }}>
+                <CircularProgress color="inherit" size={32} />
+                <Typography variant="body2">Starting camera...</Typography>
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
       </Dialog>
 
       <Snackbar
