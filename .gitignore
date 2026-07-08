@@ -56,3 +56,4 @@ test_random_calories.ts
 
 GEMINI.md
 .vercel
+.env*
