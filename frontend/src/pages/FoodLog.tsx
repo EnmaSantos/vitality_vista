@@ -45,7 +45,6 @@ import {
   CameraAlt as CameraAltIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
-import { Html5Qrcode } from 'html5-qrcode';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -62,6 +61,17 @@ import {
   deleteFoodLogEntryAPI,
 } from '../services/foodLogApi';
 import { getAvailableConversions, ConvertedOption } from '../utils/unitConversions';
+import {
+  getCameraErrorMessage,
+  isSupportedBarcodeInput,
+  normalizeBarcodeInput,
+  scanBarcodeImage,
+  startBarcodeCamera,
+} from '../utils/barcodeScanner';
+import type {
+  BarcodeScannerControls,
+  ScannedBarcode,
+} from '../utils/barcodeScanner';
 import { logWaterAPI, getDailyWaterAPI } from '../services/waterApi';
 import { AppPanel, EmptyState, MacroBar, MetricCard, PageHeader } from '../components/VitalityUI';
 
@@ -101,11 +111,11 @@ const FoodLog: React.FC = () => {
 
   // Camera scanner state
   const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
-  const [isCameraScanning, setIsCameraScanning] = useState(false);
-  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
-  const scannerContainerRef = useRef<HTMLDivElement | null>(null);
-
-  const BARCODE_PATTERN = /^\d{8,13}$/;
+  const [cameraStatus, setCameraStatus] = useState<'idle' | 'starting' | 'scanning'>('idle');
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const cameraControlsRef = useRef<BarcodeScannerControls | null>(null);
+  const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
+  const cameraSessionRef = useRef(0);
 
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [selectedFoodForDialog, setSelectedFoodForDialog] = useState<NutritionData | null>(null);
