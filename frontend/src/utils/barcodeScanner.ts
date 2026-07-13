@@ -125,6 +125,9 @@ export const getCameraErrorMessage = (error: unknown): string => {
   if (errorName === 'OverconstrainedError') {
     return 'This camera cannot use the requested scan settings. Try another camera or scan a photo.';
   }
+  if (errorName === 'NotSupportedError') {
+    return 'Camera scanning is not supported in this browser. Upload a barcode photo instead.';
+  }
 
   return 'Could not start the camera. Camera scanning requires a secure HTTPS connection and browser permission.';
 };

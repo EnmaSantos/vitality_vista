@@ -39,10 +39,9 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Search as SearchIcon,
-  PhotoCamera as PhotoCameraIcon,
   QrCodeScanner as QrCodeScannerIcon,
   Restaurant as RestaurantIcon,
-  CameraAlt as CameraAltIcon,
+  UploadFile as UploadFileIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
 import { SelectChangeEvent } from '@mui/material/Select';
@@ -116,6 +115,7 @@ const FoodLog: React.FC = () => {
   const cameraControlsRef = useRef<BarcodeScannerControls | null>(null);
   const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
   const cameraSessionRef = useRef(0);
+  const [isScanningBarcodeImage, setIsScanningBarcodeImage] = useState(false);
 
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [selectedFoodForDialog, setSelectedFoodForDialog] = useState<NutritionData | null>(null);
@@ -179,16 +179,7 @@ const FoodLog: React.FC = () => {
       fetchDailyWater(); // Revert
     }
   };
-
-
-
-  const normalizeBarcodeInput = (value: string) => {
-    const digitsOnly = value.replace(/\D/g, '');
-    if (![8, 12, 13].includes(digitsOnly.length)) return digitsOnly;
-    return digitsOnly.length === 13 ? digitsOnly : digitsOnly.padStart(13, '0');
-  };
-
-  const lookupBarcode = async (barcodeValue: string) => {
+  const lookupBarcode = useCallback(async (barcodeValue: string) => {
     if (!auth.token) {
       setSearchError("Authentication token not found. Please log in.");
       return;
@@ -212,7 +203,7 @@ const FoodLog: React.FC = () => {
     } finally {
       setIsLoadingSearch(false);
     }
-  };
+  }, [auth]);
 
   const handleBarcodeImageScan = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -220,118 +211,100 @@ const FoodLog: React.FC = () => {
     if (!file) return;
 
     setIsLoadingSearch(true);
+    setIsScanningBarcodeImage(true);
     setSearchError(null);
+    setSearchResults([]);
+    setDetectedMode(null);
 
-    // Try native BarcodeDetector first (Chromium browsers)
-    const BarcodeDetectorClass = (window as any).BarcodeDetector;
-    if (BarcodeDetectorClass && 'createImageBitmap' in window) {
-      try {
-        const detector = new BarcodeDetectorClass({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
-        const imageBitmap = await createImageBitmap(file);
-        const detectedCodes = await detector.detect(imageBitmap);
-        const rawBarcode = detectedCodes?.[0]?.rawValue;
-        if (rawBarcode) {
-          await lookupBarcode(rawBarcode);
-          return;
-        }
-      } catch (_nativeErr) {
-        // Native detection failed, fall through to html5-qrcode
-      }
-    }
-
-    // Fallback: use html5-qrcode for all browsers (including iOS Safari, Firefox)
     try {
-      const html5QrCode = new Html5Qrcode('barcode-scan-fallback', /* verbose= */ false);
-      const result = await html5QrCode.scanFileV2(file, /* showImage= */ false);
-      const rawBarcode = result?.decodedText;
-      await html5QrCode.clear();
-      if (!rawBarcode) {
-        setSearchResults([]);
-        setSearchError("No barcode was detected in that image. Try a clearer photo.");
-        return;
-      }
-      await lookupBarcode(rawBarcode);
+      const barcode = await scanBarcodeImage(file);
+      setIsScanningBarcodeImage(false);
+      setDetectedMode('barcode');
+      await lookupBarcode(normalizeBarcodeInput(barcode.text, barcode.format));
     } catch (err) {
-      setSearchError("No barcode was detected in that image. Try a clearer photo or enter the number manually.");
+      setSearchError(
+        err instanceof Error
+          ? err.message
+          : 'The barcode photo could not be scanned. Try a clearer photo or enter the number manually.',
+      );
       setSearchResults([]);
     } finally {
+      setIsScanningBarcodeImage(false);
       setIsLoadingSearch(false);
     }
   };
 
   // --- Live Camera Scanner ---
-  const stopCameraScanner = useCallback(async () => {
-    if (html5QrCodeRef.current) {
-      try {
-        const state = html5QrCodeRef.current.getState();
-        if (state === 2) { // SCANNING
-          await html5QrCodeRef.current.stop();
-        }
-        await html5QrCodeRef.current.clear();
-      } catch (_e) { /* ignore cleanup errors */ }
-      html5QrCodeRef.current = null;
-    }
-    setIsCameraScanning(false);
+  const stopCameraScanner = useCallback(() => {
+    cameraSessionRef.current += 1;
+    cameraControlsRef.current?.stop();
+    cameraControlsRef.current = null;
+    setCameraStatus('idle');
   }, []);
 
   const startCameraScanner = useCallback(async () => {
-    await stopCameraScanner();
-    setIsCameraScanning(true);
-    setSearchError(null);
+    stopCameraScanner();
+    const session = cameraSessionRef.current;
+    const videoElement = cameraVideoRef.current;
 
-    // Give the DOM a tick to render the container
-    await new Promise(resolve => setTimeout(resolve, 300));
+    if (!videoElement) return;
+
+    setCameraStatus('starting');
+    setCameraError(null);
 
     try {
-      const scannerId = 'live-barcode-scanner';
-      const html5QrCode = new Html5Qrcode(scannerId, /* verbose= */ false);
-      html5QrCodeRef.current = html5QrCode;
+      const controls = await startBarcodeCamera(
+        videoElement,
+        (barcode: ScannedBarcode, activeControls) => {
+          if (cameraSessionRef.current !== session) return;
 
-      await html5QrCode.start(
-        { facingMode: 'environment' },
-        {
-          fps: 10,
-          qrbox: { width: 280, height: 160 },
-          aspectRatio: 1.5,
-        },
-        async (decodedText: string) => {
-          // Barcode detected — stop scanning and look it up
-          await stopCameraScanner();
+          cameraSessionRef.current += 1;
+          activeControls.stop();
+          cameraControlsRef.current = null;
+          setCameraStatus('idle');
           setCameraDialogOpen(false);
-          await lookupBarcode(decodedText);
+          setDetectedMode('barcode');
+          void lookupBarcode(normalizeBarcodeInput(barcode.text, barcode.format));
         },
-        () => {
-          // QR scanning frame — no-op for continuous scanning
-        }
+        (error) => {
+          if (cameraSessionRef.current !== session) return;
+          stopCameraScanner();
+          setCameraError(getCameraErrorMessage(error));
+        },
       );
-    } catch (err) {
-      setSearchError(
-        err instanceof Error && err.message.includes('Permission')
-          ? 'Camera access was denied. Please allow camera permissions and try again.'
-          : 'Could not start the camera. Make sure no other app is using it.'
-      );
-      setIsCameraScanning(false);
-    }
-  }, [stopCameraScanner]);
 
-  const handleCloseCameraDialog = useCallback(async () => {
-    await stopCameraScanner();
+      if (cameraSessionRef.current !== session) {
+        controls.stop();
+        return;
+      }
+
+      cameraControlsRef.current = controls;
+      setCameraStatus('scanning');
+    } catch (err) {
+      if (cameraSessionRef.current !== session) return;
+      setCameraStatus('idle');
+      setCameraError(getCameraErrorMessage(err));
+    }
+  }, [lookupBarcode, stopCameraScanner]);
+
+  const handleCloseCameraDialog = useCallback(() => {
+    stopCameraScanner();
     setCameraDialogOpen(false);
   }, [stopCameraScanner]);
 
   const handleOpenCameraDialog = () => {
+    setCameraStatus('starting');
+    setCameraError(null);
     setCameraDialogOpen(true);
   };
 
   // Start scanning when the camera dialog opens
   useEffect(() => {
-    if (cameraDialogOpen) {
-      startCameraScanner();
-    }
-    return () => {
-      stopCameraScanner();
-    };
-  }, [cameraDialogOpen]);
+    if (!cameraDialogOpen) return;
+
+    void startCameraScanner();
+    return stopCameraScanner;
+  }, [cameraDialogOpen, startCameraScanner, stopCameraScanner]);
 
 
   const fetchLoggedEntries = useCallback(async (date: string) => {
@@ -410,7 +383,7 @@ const FoodLog: React.FC = () => {
       }
 
       // Auto-detect barcode pattern
-      if (/^\d{8,13}$/.test(trimmed)) {
+      if (isSupportedBarcodeInput(trimmed)) {
         setDetectedMode('barcode');
         await lookupBarcode(trimmed);
         return;
@@ -435,7 +408,7 @@ const FoodLog: React.FC = () => {
         setIsLoadingSearch(false);
       }
     }, 300),
-    [auth]
+    [auth, lookupBarcode]
   );
 
   useEffect(() => {
@@ -853,9 +826,6 @@ const FoodLog: React.FC = () => {
       <Grid container spacing={2.4} sx={{ mb: 3 }} alignItems="stretch">
         <Grid item xs={12} lg={7}>
           <AppPanel sx={{ height: '100%' }}>
-            {/* Hidden element required as fallback target by html5-qrcode static image scanning */}
-            <div id="barcode-scan-fallback" style={{ display: 'none' }} />
-
             <TextField
               fullWidth
               variant="outlined"
@@ -869,7 +839,7 @@ const FoodLog: React.FC = () => {
                   </InputAdornment>
                 ),
                 endAdornment: (
-                  <InputAdornment position="end" sx={{ gap: 0.5 }}>
+                  <InputAdornment position="end">
                     {searchQuery && (
                       <IconButton
                         size="small"
@@ -883,30 +853,6 @@ const FoodLog: React.FC = () => {
                         <CloseIcon fontSize="small" />
                       </IconButton>
                     )}
-                    <IconButton
-                      color="primary"
-                      size="small"
-                      onClick={handleOpenCameraDialog}
-                      title="Scan barcode with camera"
-                      sx={{ color: 'var(--vv-primary)' }}
-                    >
-                      <CameraAltIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      color="primary"
-                      size="small"
-                      component="label"
-                      title="Scan barcode from image file"
-                      sx={{ color: 'var(--vv-primary)' }}
-                    >
-                      <PhotoCameraIcon fontSize="small" />
-                      <input
-                        hidden
-                        accept="image/*"
-                        type="file"
-                        onChange={handleBarcodeImageScan}
-                      />
-                    </IconButton>
                   </InputAdornment>
                 )
               }}
@@ -919,7 +865,52 @@ const FoodLog: React.FC = () => {
               }}
             />
 
-            {detectedMode === 'barcode' && (
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              sx={{ mb: 1.5 }}
+            >
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<QrCodeScannerIcon />}
+                onClick={handleOpenCameraDialog}
+                aria-label="Scan a product barcode with the camera"
+                sx={{ justifyContent: 'flex-start' }}
+              >
+                Scan with camera
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                component="label"
+                startIcon={<UploadFileIcon />}
+                disabled={isScanningBarcodeImage}
+                aria-label="Upload a photo containing a product barcode"
+                sx={{ justifyContent: 'flex-start' }}
+              >
+                {isScanningBarcodeImage ? 'Scanning photo…' : 'Upload barcode photo'}
+                <input
+                  hidden
+                  accept="image/*"
+                  type="file"
+                  onChange={handleBarcodeImageScan}
+                />
+              </Button>
+            </Stack>
+
+            {isScanningBarcodeImage && (
+              <Typography
+                variant="caption"
+                role="status"
+                aria-live="polite"
+                sx={{ display: 'block', color: 'var(--vv-muted)', mb: 1.5 }}
+              >
+                Checking the uploaded image for a UPC or EAN barcode…
+              </Typography>
+            )}
+
+            {detectedMode === 'barcode' && isLoadingSearch && !isScanningBarcodeImage && (
               <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Chip 
                   label="Barcode Detected" 
@@ -940,7 +931,7 @@ const FoodLog: React.FC = () => {
 
             {searchError && <Alert severity="error" sx={{ mb: 2 }}>{searchError}</Alert>}
 
-            {isLoadingSearch && (
+            {isLoadingSearch && !isScanningBarcodeImage && (
               <Paper variant="outlined" sx={{ borderRadius: 2, borderColor: 'var(--vv-line)', bgcolor: 'var(--vv-surface-soft)', p: 1 }}>
                 <List dense>
                   {[1, 2, 3].map((n) => (
@@ -1564,19 +1555,50 @@ const FoodLog: React.FC = () => {
               bgcolor: 'black'
             }}
           >
-            {isCameraScanning ? (
-              <div 
-                id="live-barcode-scanner" 
-                ref={scannerContainerRef} 
-                style={{ width: '100%', height: '100%' }} 
-              />
-            ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'white', gap: 1 }}>
+            <Box
+              component="video"
+              ref={cameraVideoRef}
+              muted
+              playsInline
+              sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+            {cameraStatus === 'starting' && (
+              <Box sx={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', bgcolor: 'rgba(0, 0, 0, 0.58)', gap: 1 }}>
                 <CircularProgress color="inherit" size={32} />
                 <Typography variant="body2">Starting camera...</Typography>
               </Box>
             )}
+            {cameraStatus === 'scanning' && (
+              <Box
+                aria-hidden="true"
+                sx={{
+                  position: 'absolute',
+                  inset: '22% 9%',
+                  border: '2px solid white',
+                  borderRadius: 1.5,
+                  boxShadow: '0 0 0 999px rgba(0, 0, 0, 0.18)',
+                }}
+              />
+            )}
           </Box>
+          {cameraStatus === 'scanning' && (
+            <Typography variant="caption" role="status" aria-live="polite" sx={{ display: 'block', mt: 1.25, color: 'var(--vv-muted)' }}>
+              Camera is active and looking for a UPC or EAN barcode…
+            </Typography>
+          )}
+          {cameraError && (
+            <Alert
+              severity="error"
+              sx={{ mt: 2, textAlign: 'left' }}
+              action={(
+                <Button color="inherit" size="small" onClick={() => void startCameraScanner()}>
+                  Retry
+                </Button>
+              )}
+            >
+              {cameraError}
+            </Alert>
+          )}
         </DialogContent>
       </Dialog>
 
