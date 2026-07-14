@@ -144,6 +144,7 @@ const routeThemes: Array<{ matches: string[]; theme: PageTheme }> = [
   { matches: ['/exercises', '/my-plans', '/workout-history', '/workout/session'], theme: themePalette.workouts },
   { matches: ['/recipes'], theme: themePalette.recipes },
   { matches: ['/progress'], theme: themePalette.progress },
+  { matches: ['/profile'], theme: { ...themePalette.progress, name: 'Profile & settings' } },
 ];
 
 const pathMatches = (pathname: string, match: string) => (

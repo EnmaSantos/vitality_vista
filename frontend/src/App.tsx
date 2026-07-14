@@ -22,6 +22,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const MyPlans = lazy(() => import('./pages/MyPlans'));
 const WorkoutHistory = lazy(() => import('./pages/WorkoutHistory'));
 const WorkoutSession = lazy(() => import('./pages/WorkoutSession'));
+const DataSourcesPage = lazy(() => import('./pages/DataSources'));
 
 function PageLoader() {
   return (
@@ -53,6 +54,7 @@ function AppLayout() {
         <Route path="/progress" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
         <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/profile/data-sources" element={<ProtectedRoute><DataSourcesPage /></ProtectedRoute>} />
         <Route path="/my-plans" element={<ProtectedRoute><MyPlans /></ProtectedRoute>} />
         <Route path="/workout-history" element={<ProtectedRoute><WorkoutHistory /></ProtectedRoute>} />
         <Route path="/workout/session/:planId" element={<ProtectedRoute><WorkoutSession /></ProtectedRoute>} />

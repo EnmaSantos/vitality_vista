@@ -37,10 +37,14 @@ export async function getUserMetricLogsHandler(ctx: RouterContext<any, any>) {
     console.log(`[progressController] Fetching metric logs for user: ${userId}, metric: ${metricType}`);
 
     const selectQuery = `
-      SELECT log_id, user_id, metric_type, value, unit, TO_CHAR(log_date, 'YYYY-MM-DD') as log_date, notes, created_at, updated_at
-      FROM user_body_metric_logs
-      WHERE user_id = $1 AND metric_type = $2
-      ORDER BY log_date ASC
+      SELECT id::text AS log_id, user_id,
+             CASE WHEN metric = 'body_fat_percentage' THEN 'body_fat' ELSE metric END AS metric_type,
+             value, unit, TO_CHAR(recorded_at, 'YYYY-MM-DD') AS log_date, notes, created_at, updated_at,
+             source, status, is_primary
+      FROM health_measurements
+      WHERE user_id = $1
+        AND (metric = $2 OR ($2 = 'body_fat' AND metric = 'body_fat_percentage'))
+      ORDER BY recorded_at ASC
     `; // Ordered ASC for charting (oldest to newest)
 
     const result = await dbClient.queryObject<UserBodyMetricLogSchema>(
@@ -343,11 +347,11 @@ export async function getProgressDataHandler(ctx: RouterContext<any, any>) {
     // Get weight data
     console.log("Fetching weight data...");
     const weightQuery = `
-      SELECT value, TO_CHAR(log_date, 'YYYY-MM-DD') as log_date
-      FROM user_body_metric_logs 
-      WHERE user_id = $1 AND metric_type = 'weight' 
-      AND log_date >= $2 AND log_date <= $3
-      ORDER BY log_date ASC
+      SELECT value, TO_CHAR(recorded_at, 'YYYY-MM-DD') AS log_date, source
+      FROM health_measurements
+      WHERE user_id = $1 AND metric = 'weight' AND is_primary = TRUE
+        AND recorded_at >= $2 AND recorded_at < ($3::date + INTERVAL '1 day')
+      ORDER BY recorded_at ASC
     `;
     const weightResult = await dbClient.queryObject<{ value: number; log_date: string }>(
       weightQuery, [userId, startDateStr, endDateStr]
@@ -357,11 +361,11 @@ export async function getProgressDataHandler(ctx: RouterContext<any, any>) {
     // Get body fat data
     console.log("Fetching body fat data...");
     const bodyFatQuery = `
-      SELECT value, TO_CHAR(log_date, 'YYYY-MM-DD') as log_date
-      FROM user_body_metric_logs 
-      WHERE user_id = $1 AND metric_type = 'body_fat' 
-      AND log_date >= $2 AND log_date <= $3
-      ORDER BY log_date ASC
+      SELECT value, TO_CHAR(recorded_at, 'YYYY-MM-DD') AS log_date, source
+      FROM health_measurements
+      WHERE user_id = $1 AND metric = 'body_fat_percentage' AND is_primary = TRUE
+        AND recorded_at >= $2 AND recorded_at < ($3::date + INTERVAL '1 day')
+      ORDER BY recorded_at ASC
     `;
     const bodyFatResult = await dbClient.queryObject<{ value: number; log_date: string }>(
       bodyFatQuery, [userId, startDateStr, endDateStr]
@@ -439,11 +443,13 @@ export async function getProgressDataHandler(ctx: RouterContext<any, any>) {
       charts: {
         weight: {
           labels: weightResult.rows.map((row: any) => row.log_date),
-          data: weightResult.rows.map((row: any) => Math.round(Number(row.value) * 2.20462 * 10) / 10) // Convert to lbs
+          data: weightResult.rows.map((row: any) => Math.round(Number(row.value) * 2.20462 * 10) / 10), // Convert to lbs
+          sources: weightResult.rows.map((row: any) => row.source),
         },
         bodyFat: {
           labels: bodyFatResult.rows.map((row: any) => row.log_date),
-          data: bodyFatResult.rows.map((row: any) => Math.round(Number(row.value) * 10) / 10)
+          data: bodyFatResult.rows.map((row: any) => Math.round(Number(row.value) * 10) / 10),
+          sources: bodyFatResult.rows.map((row: any) => row.source),
         },
         calories: {
           labels: calorieResult.rows.map((row: any) => row.log_date),

@@ -173,6 +173,10 @@ function AppShell({ children }: AppShellProps) {
               <SettingsIcon fontSize="small" />
               Profile & settings
             </MenuItem>
+            <MenuItem component={Link} to="/profile/data-sources" onClick={() => setAnchorEl(null)}>
+              <MonitorHeartIcon fontSize="small" />
+              Health data sources
+            </MenuItem>
             <MenuItem onClick={handleLogout}>
               <LogoutIcon fontSize="small" />
               Log out

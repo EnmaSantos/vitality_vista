@@ -118,6 +118,76 @@ async function runSetup() {
     `;
     await client.queryArray(createGoalsIndexQuery);
 
+    console.log("Creating health data profile and normalized measurement tables...");
+    await client.queryArray(`
+      CREATE TABLE IF NOT EXISTS health_data_profiles (
+        user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        active_external_source TEXT NULL CHECK (active_external_source IN ('apple_health', 'renpho')),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await client.queryArray(`
+      CREATE TABLE IF NOT EXISTS health_measurements (
+        id UUID PRIMARY KEY,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        metric TEXT NOT NULL,
+        value NUMERIC NOT NULL,
+        unit TEXT NOT NULL,
+        recorded_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        period_start TIMESTAMP WITH TIME ZONE,
+        period_end TIMESTAMP WITH TIME ZONE,
+        aggregation_type TEXT,
+        source TEXT NOT NULL CHECK (source IN ('manual', 'apple_health', 'renpho')),
+        source_record_id TEXT,
+        fingerprint TEXT NOT NULL,
+        duplicate_group_id UUID,
+        status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'duplicate', 'conflict')),
+        is_primary BOOLEAN NOT NULL DEFAULT TRUE,
+        imported_at TIMESTAMP WITH TIME ZONE,
+        notes TEXT,
+        measurement_kind TEXT NOT NULL DEFAULT 'direct' CHECK (measurement_kind IN ('direct', 'derived')),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT health_measurements_aggregate_interval CHECK (
+          (metric NOT IN ('steps', 'active_calories', 'distance', 'exercise_minutes')) OR
+          (period_start IS NOT NULL AND period_end IS NOT NULL AND aggregation_type IS NOT NULL AND period_end > period_start)
+        )
+      );
+    `);
+    await client.queryArray(`
+      ALTER TABLE health_measurements
+        ADD COLUMN IF NOT EXISTS measurement_kind TEXT NOT NULL DEFAULT 'direct';
+    `);
+    await client.queryArray(`
+      CREATE UNIQUE INDEX IF NOT EXISTS unique_health_measurement_fingerprint
+        ON health_measurements(user_id, fingerprint);
+    `);
+    await client.queryArray(`
+      CREATE INDEX IF NOT EXISTS idx_health_measurements_user_metric_time
+        ON health_measurements(user_id, metric, recorded_at DESC);
+    `);
+    await client.queryArray(`
+      CREATE INDEX IF NOT EXISTS idx_health_measurements_user_source
+        ON health_measurements(user_id, source);
+    `);
+    await client.queryArray(`
+      CREATE INDEX IF NOT EXISTS idx_health_measurements_duplicate_group
+        ON health_measurements(duplicate_group_id) WHERE duplicate_group_id IS NOT NULL;
+    `);
+    await client.queryArray(`
+      INSERT INTO health_measurements (
+        id, user_id, metric, value, unit, recorded_at, source, fingerprint,
+        status, is_primary, notes, created_at, updated_at, measurement_kind
+      )
+      SELECT md5('health-measurement|legacy|' || user_id::text || '|' || log_id::text)::uuid, user_id,
+        CASE WHEN metric_type = 'body_fat' THEN 'body_fat_percentage' ELSE metric_type END,
+        value, LOWER(unit), log_date, 'manual',
+        md5(user_id::text || '|legacy|' || log_id::text), 'active', TRUE, notes, created_at, updated_at, 'direct'
+      FROM user_body_metric_logs
+      ON CONFLICT (user_id, fingerprint) DO NOTHING;
+    `);
+
     console.log("Setup completed successfully.");
   } catch (err) {
     console.error("Error running setup:", err);

@@ -52,12 +52,14 @@ The landing page and this README now focus on actual app capabilities instead of
 - Charts weight, body fat, calories, macros, workout frequency, goals, and exercise performance.
 - Supports time range filters such as week, month, quarter, and year.
 - Connects profile, nutrition, and workout data into longer-term progress views.
+- Includes normalized manual, Apple Health, and RENPHO measurements in weight and body-fat trends.
 
 ### Account And Profile
 
 - Provides registration, login, logout, and protected routes.
 - Stores profile information used for personalization and TDEE calculations.
 - Uses JWT-backed authentication for API access.
+- Provides a Health Data Sources workspace for Apple Health XML/ZIP imports, RENPHO CSV imports, manual measurements, source filtering, duplicate previews, and conflict review.
 
 ## Tech Stack
 
@@ -165,7 +167,7 @@ Create a GitHub OAuth App with these production settings:
 
 The app requests `read:user user:email` so the backend can read the GitHub profile and a verified email address before issuing the app JWT. GitHub OAuth Apps allow one callback URL per app, so use a second local OAuth App for development with callback URL `http://localhost:3000/auth/github/callback`.
 
-The repo includes `backend/scripts/run_setup.ts` for the Google auth identity table, nullable Google-only user fields, water logs, and daily goals tables. Run it after the base user/profile/workout/food schema exists:
+The repo includes `backend/scripts/run_setup.ts` for the Google auth identity table, nullable Google-only user fields, water logs, daily goals, health data profiles, normalized measurements, indexes, and legacy body-metric migration. Run it after the base user/profile/workout/food schema exists:
 
 ```bash
 cd backend
@@ -187,6 +189,7 @@ deno run --allow-net --allow-env --allow-read scripts/run_setup.ts
 - `/recipes` - recipe discovery
 - `/progress` - charts and analytics
 - `/profile` - profile and preference management
+- `/profile/data-sources` - manual measurements and Apple Health/RENPHO import management
 
 ### Backend API Areas
 
@@ -199,6 +202,7 @@ deno run --allow-net --allow-env --allow-read scripts/run_setup.ts
 - `/api/fatsecret/recipes` - recipe search and details
 - `/api/users/me/profile` - profile management
 - `/api/progress` - progress analytics
+- `/api/health-data` - source settings, normalized measurements, import previews/confirmation, and conflict resolution
 
 ## Current Status
 
@@ -214,13 +218,14 @@ Implemented:
 - Recipe discovery
 - Progress charts
 - Profile management and TDEE-related data
+- Manual, Apple Health, and RENPHO health-data imports with duplicate/conflict handling
 - Responsive landing page with screenshot-led capability sections
 
 Planned or still evolving:
 
 - More advanced workout analytics
 - Recipe saving and meal planning
-- Broader device or wearable integrations
+- Additional device or wearable integrations beyond Apple Health and RENPHO
 - More complete database setup documentation
 
 ## Developer

@@ -50,6 +50,7 @@ import waterRouter from "./routes/water.ts";
 import setupRouter from "./routes/setup.ts";
 import goalsRouter from "./routes/goals.ts";
 import exercisesRouter from "./routes/exercises.ts";
+import healthDataRouter from "./routes/healthData.ts";
 
 // Initialize the app
 const app = new Application();
@@ -110,6 +111,9 @@ apiRouter.use("/goals", goalsRouter.routes(), goalsRouter.allowedMethods());
 
 // Mount Exercises proxy routes
 apiRouter.use("/exercises", exercisesRouter.routes(), exercisesRouter.allowedMethods());
+
+// Mount normalized manual, Apple Health, and RENPHO health data routes
+apiRouter.use("/health-data", healthDataRouter.routes(), healthDataRouter.allowedMethods());
 
 // Mount Setup routes (Temporary)
 apiRouter.use("/setup-db", setupRouter.routes(), setupRouter.allowedMethods());

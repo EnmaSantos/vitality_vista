@@ -25,10 +25,12 @@ import {
   ListItemText,
   ToggleButton,
   ToggleButtonGroup,
+  Stack,
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useAuth } from '../context/AuthContext';
 import { getUserProfile, updateUserProfile, UserProfileData } from '../services/profileApi';
+import { Link } from 'react-router-dom';
 
 interface ProfileFormState {
   date_of_birth: string;
@@ -364,9 +366,10 @@ const ProfilePage: React.FC = () => {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 } }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#283618ff', fontWeight: 'bold' }}>
-          User Profile
-        </Typography>
+        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} gap={1} mb={2}>
+          <Typography variant="h4" component="h1" sx={{ color: '#283618ff', fontWeight: 'bold' }}>User Profile</Typography>
+          <Button component={Link} to="/profile/data-sources" variant="outlined">Health data sources</Button>
+        </Stack>
 
         {/* Basic User Info (Read-Only from AuthContext) */}
         <Grid container spacing={2} sx={{ mb: 2 }}>
