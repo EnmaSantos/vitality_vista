@@ -1,80 +1,78 @@
-// frontend/src/App.tsx corrected
+import { lazy, Suspense } from 'react';
+import { Box, CircularProgress, CssBaseline, Typography } from '@mui/material';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import AppShell from './components/AppShell';
+import ProtectedRoute from './components/ProtectedRoute';
+import { ThemeProvider } from './context/ThemeContext';
+import { muiTheme } from './muiTheme';
+import './App.css';
 
-import React from "react";
-// BrowserRouter as Router REMOVED from here
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import AppShell from "./components/AppShell";
-import ProtectedRoute from "./components/ProtectedRoute"; // Import the ProtectedRoute component
-import {
-  Dashboard,
-  ExercisesPage,
-  FoodLogPage,
-  ProgressPage,
-  RecipesPage,
-  Landing,
-  Login,
-  Signup,
-  GitHubOAuthCallback,
-  ForgotPassword,
-  ProfilePage,
-  MyPlans,
-  WorkoutHistory,
-  WorkoutSession,
-} from "./pages"; // Import from index.ts
-import { ThemeProvider } from './context/ThemeContext'; // Assuming you also have ThemeProvider
-import "./App.css";
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const ExercisesPage = lazy(() => import('./pages/Exercises'));
+const FoodLogPage = lazy(() => import('./pages/FoodLog'));
+const ProgressPage = lazy(() => import('./pages/Progress'));
+const RecipesPage = lazy(() => import('./pages/Recipes'));
+const Landing = lazy(() => import('./pages/Landing'));
+const Login = lazy(() => import('./pages/Login'));
+const Signup = lazy(() => import('./pages/Signup'));
+const GitHubOAuthCallback = lazy(() => import('./pages/GitHubOAuthCallback'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const MyPlans = lazy(() => import('./pages/MyPlans'));
+const WorkoutHistory = lazy(() => import('./pages/WorkoutHistory'));
+const WorkoutSession = lazy(() => import('./pages/WorkoutSession'));
 
-// AppLayout component remains the same
-const AppLayout = () => {
-  const location = useLocation();
-  const noNavbarRoutes = ['/login', '/signup', '/forgot-password', '/landing', '/auth/github/callback'];
-  const hideNavbar = noNavbarRoutes.includes(location.pathname);
-  const routes = (
-    <Routes>
-      {/* --- Public Routes (Remain Unchanged) --- */}
-      <Route path="/landing" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/auth/github/callback" element={<GitHubOAuthCallback />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-
-      {/* --- Protected Routes (Wrap element with ProtectedRoute) --- */}
-      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/exercises" element={<ProtectedRoute><ExercisesPage /></ProtectedRoute>} />
-      <Route path="/food-log" element={<ProtectedRoute><FoodLogPage /></ProtectedRoute>} />
-      <Route path="/progress" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
-      <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />
-      {/* Added Profile Page Route */}
-      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-      <Route path="/my-plans" element={<ProtectedRoute><MyPlans /></ProtectedRoute>} />
-      <Route path="/workout-history" element={<ProtectedRoute><WorkoutHistory /></ProtectedRoute>} />
-      <Route path="/workout/session/:planId" element={<ProtectedRoute><WorkoutSession /></ProtectedRoute>} />
-      <Route path="/workout/session/exercise/:exerciseId" element={<ProtectedRoute><WorkoutSession /></ProtectedRoute>} />
-      
-      {/* --- Fallback Route (Remains Unchanged) --- */}
-      <Route path="*" element={<Navigate to="/landing" replace />} />
-    </Routes>
-  );
-
+function PageLoader() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {hideNavbar ? (
-        <main className="min-h-screen">{routes}</main>
-      ) : (
-        <AppShell>{routes}</AppShell>
-      )}
-    </div>
+    <Box className="vv-page-loader" role="status" aria-live="polite">
+      <CircularProgress size={28} thickness={4.5} />
+      <Typography>Loading your workspace…</Typography>
+    </Box>
   );
-};
+}
 
-// App component NOW ONLY returns ThemeProvider and AppLayout
+function AppLayout() {
+  const location = useLocation();
+  const noShellRoutes = ['/login', '/signup', '/forgot-password', '/landing', '/auth/github/callback'];
+  const hideShell = noShellRoutes.includes(location.pathname);
+
+  const routes = (
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/landing" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/auth/github/callback" element={<GitHubOAuthCallback />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/exercises" element={<ProtectedRoute><ExercisesPage /></ProtectedRoute>} />
+        <Route path="/food-log" element={<ProtectedRoute><FoodLogPage /></ProtectedRoute>} />
+        <Route path="/progress" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
+        <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/my-plans" element={<ProtectedRoute><MyPlans /></ProtectedRoute>} />
+        <Route path="/workout-history" element={<ProtectedRoute><WorkoutHistory /></ProtectedRoute>} />
+        <Route path="/workout/session/:planId" element={<ProtectedRoute><WorkoutSession /></ProtectedRoute>} />
+        <Route path="/workout/session/exercise/:exerciseId" element={<ProtectedRoute><WorkoutSession /></ProtectedRoute>} />
+        <Route path="*" element={<Navigate to="/landing" replace />} />
+      </Routes>
+    </Suspense>
+  );
+
+  return hideShell ? <main className="vv-public-main">{routes}</main> : <AppShell>{routes}</AppShell>;
+}
+
 function App() {
   return (
-    <ThemeProvider>
-      {/* No <Router> here anymore! It's in index.tsx */}
-      <AppLayout />
-    </ThemeProvider>
+    <MuiThemeProvider theme={muiTheme}>
+      <CssBaseline />
+      <ThemeProvider>
+        <AppLayout />
+      </ThemeProvider>
+    </MuiThemeProvider>
   );
 }
 

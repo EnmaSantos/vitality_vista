@@ -1,27 +1,23 @@
-import React, { ReactNode, useState } from 'react';
-import {
-  Box,
-  Button,
-  Drawer,
-  IconButton,
-  Menu,
-  MenuItem,
-  Stack,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
+import { CSSProperties, ReactNode, useState } from 'react';
 import {
   AccountCircle as AccountCircleIcon,
   FitnessCenter as FitnessCenterIcon,
   Insights as InsightsIcon,
   LocalDining as LocalDiningIcon,
   Logout as LogoutIcon,
-  Menu as MenuIcon,
-  MonitorHeart as MonitorHeartIcon,
   MenuBook as MenuBookIcon,
+  MonitorHeart as MonitorHeartIcon,
   Settings as SettingsIcon,
 } from '@mui/icons-material';
+import {
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  Paper,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getPageThemeForPath, getThemeVariables, themePalette, usePageTheme } from '../hooks/usePageTheme';
@@ -33,7 +29,8 @@ interface AppShellProps {
 const navItems = [
   {
     path: '/',
-    label: 'Dashboard',
+    label: 'Home',
+    desktopLabel: 'Dashboard',
     icon: <MonitorHeartIcon fontSize="small" />,
     match: ['/', '/dashboard'],
     color: themePalette.dashboard.navColor,
@@ -42,7 +39,8 @@ const navItems = [
   },
   {
     path: '/food-log',
-    label: 'Food Log',
+    label: 'Food',
+    desktopLabel: 'Food log',
     icon: <LocalDiningIcon fontSize="small" />,
     match: ['/food-log'],
     color: themePalette.foodLog.navColor,
@@ -51,7 +49,8 @@ const navItems = [
   },
   {
     path: '/exercises',
-    label: 'Workouts',
+    label: 'Train',
+    desktopLabel: 'Workouts',
     icon: <FitnessCenterIcon fontSize="small" />,
     match: ['/exercises', '/my-plans', '/workout-history', '/workout/session'],
     color: themePalette.workouts.navColor,
@@ -61,6 +60,7 @@ const navItems = [
   {
     path: '/recipes',
     label: 'Recipes',
+    desktopLabel: 'Recipes',
     icon: <MenuBookIcon fontSize="small" />,
     match: ['/recipes'],
     color: themePalette.recipes.navColor,
@@ -70,27 +70,25 @@ const navItems = [
   {
     path: '/progress',
     label: 'Progress',
+    desktopLabel: 'Progress',
     icon: <InsightsIcon fontSize="small" />,
     match: ['/progress'],
     color: themePalette.progress.navColor,
     activeColor: themePalette.progress.navActive,
     tint: themePalette.progress.navTint,
   },
-];
+] as const;
 
-const isNavActive = (pathname: string, matches: string[]) => {
+function isNavActive(pathname: string, matches: readonly string[]) {
   return matches.some((match) => (
     match === '/'
       ? pathname === '/' || pathname === '/dashboard'
       : pathname === match || pathname.startsWith(`${match}/`)
   ));
-};
+}
 
-const AppShell: React.FC<AppShellProps> = ({ children }) => {
-  const [mobileOpen, setMobileOpen] = useState(false);
+function AppShell({ children }: AppShellProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -104,56 +102,38 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
     navigate('/landing');
   };
 
-  const rail = (
-    <Box className="vv-shell-rail">
-      <Typography className="vv-shell-rail-title">Workspace</Typography>
-      <Stack component="nav" spacing={0.75} aria-label="Primary workspace navigation">
-        {navItems.map((item) => {
-          const active = isNavActive(location.pathname, item.match);
-          return (
-            <Box
-              key={item.path}
-              component={Link}
-              to={item.path}
-              onClick={() => setMobileOpen(false)}
-              className={`vv-shell-nav-item${active ? ' is-active' : ''}`}
-              style={{
-                '--vv-nav-color': item.color,
-                '--vv-nav-active': item.activeColor,
-                '--vv-nav-tint': item.tint,
-              } as React.CSSProperties}
-            >
-              <Box className="vv-shell-nav-icon" aria-hidden="true">
-                {item.icon}
-              </Box>
-              <Typography component="span">{item.label}</Typography>
+  const primaryNavigation = (
+    <Stack component="nav" spacing={0.75} aria-label="Primary workspace navigation">
+      {navItems.map((item) => {
+        const active = isNavActive(location.pathname, item.match);
+
+        return (
+          <Box
+            key={item.path}
+            component={Link}
+            to={item.path}
+            className={`vv-shell-nav-item${active ? ' is-active' : ''}`}
+            aria-current={active ? 'page' : undefined}
+            style={{
+              '--vv-nav-color': item.color,
+              '--vv-nav-active': item.activeColor,
+              '--vv-nav-tint': item.tint,
+            } as CSSProperties}
+          >
+            <Box className="vv-shell-nav-icon" aria-hidden="true">
+              {item.icon}
             </Box>
-          );
-        })}
-      </Stack>
-    </Box>
+            <Typography component="span">{item.desktopLabel}</Typography>
+          </Box>
+        );
+      })}
+    </Stack>
   );
 
   return (
-    <Box className="vv-app-shell" style={getThemeVariables(pageTheme) as React.CSSProperties}>
+    <Box className="vv-app-shell" style={getThemeVariables(pageTheme) as CSSProperties}>
       <Box className="vv-shell-window">
-        <Box className="vv-shell-topbar">
-          <Stack direction="row" alignItems="center" spacing={1.25} className="vv-window-dots" aria-hidden="true">
-            <Box />
-            <Box />
-            <Box />
-          </Stack>
-
-          {!isDesktop && (
-            <IconButton
-              aria-label="Open workspace navigation"
-              onClick={() => setMobileOpen(true)}
-              sx={{ color: 'var(--vv-ink)', mr: 1 }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-
+        <Box component="header" className="vv-shell-topbar">
           <Stack direction="row" alignItems="center" spacing={1.25} className="vv-shell-brand">
             <Box className="vv-shell-brand-mark">
               <MonitorHeartIcon fontSize="small" />
@@ -163,68 +143,84 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
             </Typography>
           </Stack>
 
-          <Stack direction="row" alignItems="center" spacing={{ xs: 0.5, sm: 1.5 }} className="vv-shell-actions">
-            <Box component={Link} to="/profile" className="vv-shell-action-link">
-              Profile
+          <Stack direction="row" alignItems="center" spacing={1} className="vv-shell-context">
+            <Box className="vv-shell-context-dot" aria-hidden="true" />
+            <Box>
+              <Typography className="vv-shell-context-label">Current space</Typography>
+              <Typography className="vv-shell-context-name">{pageTheme.name}</Typography>
             </Box>
-            <Box component={Link} to="/profile" className="vv-shell-action-link">
-              Settings
-            </Box>
-            <Button
-              type="button"
-              aria-label="Log out"
-              onClick={handleLogout}
-              startIcon={<LogoutIcon fontSize="small" />}
-              className="vv-shell-logout-button"
-            >
-              <Box component="span" className="vv-shell-logout-label">
-                Log out
-              </Box>
-            </Button>
-            <IconButton
-              aria-label="Account menu"
-              onClick={(event) => setAnchorEl(event.currentTarget)}
-              sx={{ color: 'var(--vv-ink)', display: { xs: 'inline-flex', sm: 'none' } }}
-            >
-              <AccountCircleIcon />
-            </IconButton>
           </Stack>
 
+          <IconButton
+            aria-label="Open account menu"
+            aria-controls={anchorEl ? 'vv-account-menu' : undefined}
+            aria-expanded={anchorEl ? 'true' : undefined}
+            aria-haspopup="menu"
+            onClick={(event) => setAnchorEl(event.currentTarget)}
+            className="vv-account-button"
+          >
+            <AccountCircleIcon />
+          </IconButton>
+
           <Menu
+            id="vv-account-menu"
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
             onClose={() => setAnchorEl(null)}
             PaperProps={{ className: 'vv-menu-paper' }}
           >
             <MenuItem component={Link} to="/profile" onClick={() => setAnchorEl(null)}>
-              <SettingsIcon fontSize="small" style={{ marginRight: 8 }} />
-              Profile
+              <SettingsIcon fontSize="small" />
+              Profile & settings
             </MenuItem>
             <MenuItem onClick={handleLogout}>
-              <LogoutIcon fontSize="small" style={{ marginRight: 8 }} />
-              Logout
+              <LogoutIcon fontSize="small" />
+              Log out
             </MenuItem>
           </Menu>
         </Box>
 
         <Box className="vv-shell-body">
-          {isDesktop && rail}
-          <Box component="main" className="vv-shell-content">
+          <Box component="aside" className="vv-shell-rail">
+            <Typography className="vv-shell-rail-title">Health workspace</Typography>
+            {primaryNavigation}
+
+            <Box className="vv-shell-rail-note">
+              <Typography className="vv-shell-rail-note-kicker">Small steps, daily</Typography>
+              <Typography>Log one choice now to make today’s picture clearer.</Typography>
+            </Box>
+          </Box>
+
+          <Box component="main" className="vv-shell-content" id="main-content">
             {children}
           </Box>
         </Box>
       </Box>
 
-      <Drawer
-        open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-        ModalProps={{ keepMounted: true }}
-        PaperProps={{ className: 'vv-mobile-drawer' }}
-      >
-        {rail}
-      </Drawer>
+      <Paper component="nav" elevation={0} className="vv-mobile-nav" aria-label="Mobile workspace navigation">
+        {navItems.map((item) => {
+          const active = isNavActive(location.pathname, item.match);
+
+          return (
+            <Box
+              key={item.path}
+              component={Link}
+              to={item.path}
+              className={`vv-mobile-nav-item${active ? ' is-active' : ''}`}
+              aria-current={active ? 'page' : undefined}
+              style={{
+                '--vv-nav-active': item.activeColor,
+                '--vv-nav-tint': item.tint,
+              } as CSSProperties}
+            >
+              <Box className="vv-mobile-nav-icon" aria-hidden="true">{item.icon}</Box>
+              <Typography component="span">{item.label}</Typography>
+            </Box>
+          );
+        })}
+      </Paper>
     </Box>
   );
-};
+}
 
 export default AppShell;

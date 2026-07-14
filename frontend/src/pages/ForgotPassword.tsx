@@ -10,6 +10,7 @@ import {
   Alert
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
+import { AuthLayout } from '../components/AuthLayout';
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -23,18 +24,10 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        minHeight: 'calc(100vh - 64px)',
-        padding: 3,
-        backgroundColor: '#f5f7fa'
-      }}
-    >
+    <AuthLayout>
       <Paper 
-        elevation={3} 
+        className="vv-auth-card"
+        elevation={0} 
         sx={{ 
           p: 4, 
           width: '100%', 
@@ -43,7 +36,7 @@ const ForgotPassword: React.FC = () => {
         }}
       >
         <Box sx={{ mb: 4, textAlign: 'center' }}>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#3c6e71' }}>
+          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: 'var(--vv-ink)' }}>
             Reset Password
           </Typography>
           <Typography variant="body1" color="textSecondary">
@@ -129,7 +122,7 @@ const ForgotPassword: React.FC = () => {
           </form>
         )}
       </Paper>
-    </Box>
+    </AuthLayout>
   );
 };
 

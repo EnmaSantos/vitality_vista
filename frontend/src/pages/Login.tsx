@@ -21,6 +21,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext'; // <-- Import useAuth
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import GitHubSignInButton from '../components/GitHubSignInButton';
+import { AuthLayout } from '../components/AuthLayout';
 import { GOOGLE_CLIENT_ID } from '../config';
 
 const Login: React.FC = () => {
@@ -105,17 +106,9 @@ const Login: React.FC = () => {
 
   // Render the login form
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: 'calc(100vh - 64px)',
-        padding: 3,
-        backgroundColor: 'var(--color-bg)' // Updated background color
-      }}
-    >
+    <AuthLayout>
       <Paper
+        className="vv-auth-card"
         elevation={0} // Removed elevation for flatter look
         sx={{
           p: { xs: 3, sm: 5 },
@@ -289,7 +282,7 @@ const Login: React.FC = () => {
           </Grid>
         </form>
       </Paper>
-    </Box>
+    </AuthLayout>
   );
 };
 

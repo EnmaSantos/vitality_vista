@@ -17,11 +17,12 @@ interface PageHeaderProps {
 
 export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, action }) => (
   <Stack
+    component="header"
     direction={{ xs: 'column', sm: 'row' }}
-    alignItems={{ xs: 'flex-start', sm: 'center' }}
+    alignItems={{ xs: 'stretch', sm: 'flex-end' }}
     justifyContent="space-between"
-    spacing={2}
-    sx={{ mb: 3 }}
+    spacing={2.5}
+    sx={{ mb: { xs: 3, md: 4 } }}
   >
     <Box>
       <Typography component="h1" className="vv-page-title">
@@ -47,7 +48,7 @@ export const AppPanel: React.FC<AppPanelProps> = ({ children, sx }) => (
     elevation={0}
     className="vv-panel"
     sx={{
-      p: { xs: 2, sm: 2.4 },
+      p: { xs: 2, sm: 2.6, md: 3 },
       ...sx,
     }}
   >
@@ -71,13 +72,13 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   accent = 'var(--vv-accent)',
 }) => (
   <Card elevation={0} className="vv-kpi-card" sx={{ height: '100%' }}>
-    <CardContent sx={{ p: 2.2, '&:last-child': { pb: 2.2 } }}>
+    <CardContent sx={{ p: { xs: 2.2, sm: 2.5 }, '&:last-child': { pb: { xs: 2.2, sm: 2.5 } } }}>
       <Typography
         sx={{
           color: 'var(--vv-muted)',
-          fontSize: '0.75rem',
-          fontWeight: 950,
-          letterSpacing: '0.06em',
+          fontSize: '0.72rem',
+          fontWeight: 800,
+          letterSpacing: '0.08em',
           textTransform: 'uppercase',
         }}
       >
@@ -87,8 +88,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         component="div"
         sx={{
           color: 'var(--vv-ink)',
-          fontSize: '1.8rem',
-          fontWeight: 950,
+          fontSize: 'clamp(1.65rem, 4vw, 2rem)',
+          fontWeight: 850,
           lineHeight: 1.1,
           mt: 0.8,
         }}
@@ -96,7 +97,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         {value}
       </Typography>
       {detail && (
-        <Typography sx={{ color: accent, fontSize: '0.78rem', fontWeight: 850, mt: 0.4 }}>
+        <Typography sx={{ color: accent, fontSize: '0.78rem', fontWeight: 700, mt: 0.5 }}>
           {detail}
         </Typography>
       )}
@@ -168,13 +169,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ children }) => (
     elevation={0}
     sx={{
       border: '1px dashed var(--vv-line-strong)',
-      borderRadius: 2,
-      bgcolor: 'rgba(247, 248, 235, 0.74)',
+      borderRadius: 3,
+      bgcolor: 'var(--vv-surface-soft)',
       p: 3,
       textAlign: 'center',
     }}
   >
-    <Typography sx={{ color: 'var(--vv-muted)', fontWeight: 750 }}>
+    <Typography sx={{ color: 'var(--vv-muted)', fontWeight: 600, lineHeight: 1.6 }}>
       {children}
     </Typography>
   </Paper>

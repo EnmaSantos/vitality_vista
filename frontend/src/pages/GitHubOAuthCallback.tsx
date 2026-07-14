@@ -8,6 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import { AuthLayout } from '../components/AuthLayout';
 import { useAuth } from '../context/AuthContext';
 import {
   clearStoredGitHubOAuthRequest,
@@ -75,17 +76,9 @@ const GitHubOAuthCallback: React.FC = () => {
   }, [isAuthLoading, location.search, loginWithGitHub, navigate]);
 
   return (
-    <Box
-      sx={{
-        alignItems: 'center',
-        backgroundColor: 'var(--color-bg)',
-        display: 'flex',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        p: 3,
-      }}
-    >
+    <AuthLayout>
       <Paper
+        className="vv-auth-card"
         elevation={0}
         sx={{
           border: '1px solid rgba(96, 108, 56, 0.1)',
@@ -136,7 +129,7 @@ const GitHubOAuthCallback: React.FC = () => {
           </>
         )}
       </Paper>
-    </Box>
+    </AuthLayout>
   );
 };
 
