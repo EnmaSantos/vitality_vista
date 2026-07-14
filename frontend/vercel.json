@@ -8,10 +8,32 @@
       "has": [
         {
           "type": "host",
+          "value": "vitality-vista.enmasantos.dev"
+        }
+      ],
+      "destination": "https://vitalityvista.enmasantos.dev/",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "vitality-vista.enmasantos.dev"
+        }
+      ],
+      "destination": "https://vitalityvista.enmasantos.dev/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
           "value": "vitality-vista.vercel.app"
         }
       ],
-      "destination": "https://vitality-vista.enmasantos.dev/",
+      "destination": "https://vitalityvista.enmasantos.dev/",
       "permanent": true
     },
     {
@@ -22,7 +44,7 @@
           "value": "vitality-vista.vercel.app"
         }
       ],
-      "destination": "https://vitality-vista.enmasantos.dev/:path*",
+      "destination": "https://vitalityvista.enmasantos.dev/:path*",
       "permanent": true
     }
   ],

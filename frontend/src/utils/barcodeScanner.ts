@@ -28,6 +28,87 @@ const SUPPORTED_PRODUCT_FORMATS = [
 
 const MAX_IMAGE_DIMENSION = 2200;
 const IMAGE_ROTATIONS = [0, 90] as const;
+const CAMERA_PREVIEW_TIMEOUT_MS = 8000;
+
+const createCameraAbortError = (): DOMException =>
+  new DOMException('Camera startup was cancelled.', 'AbortError');
+
+const createCameraPreviewError = (): DOMException =>
+  new DOMException('The camera did not provide a usable video frame.', 'CameraPreviewError');
+
+const hasUsableCameraFrame = (videoElement: HTMLVideoElement): boolean =>
+  videoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+  && videoElement.videoWidth > 0
+  && videoElement.videoHeight > 0
+  && !videoElement.paused
+  && !videoElement.ended;
+
+const waitForCameraPreview = (
+  videoElement: HTMLVideoElement,
+  signal?: AbortSignal,
+): Promise<void> => new Promise((resolve, reject) => {
+  let settled = false;
+
+  const cleanup = () => {
+    clearTimeout(timeoutId);
+    clearInterval(pollId);
+    videoElement.removeEventListener('loadeddata', checkFrame);
+    videoElement.removeEventListener('canplay', checkFrame);
+    videoElement.removeEventListener('playing', checkFrame);
+    videoElement.removeEventListener('resize', checkFrame);
+    signal?.removeEventListener('abort', handleAbort);
+  };
+
+  const finish = (error?: unknown) => {
+    if (settled) return;
+    settled = true;
+    cleanup();
+    if (error) reject(error);
+    else resolve();
+  };
+
+  function checkFrame() {
+    if (hasUsableCameraFrame(videoElement)) finish();
+  }
+
+  function handleAbort() {
+    finish(createCameraAbortError());
+  }
+
+  const timeoutId = setTimeout(
+    () => finish(createCameraPreviewError()),
+    CAMERA_PREVIEW_TIMEOUT_MS,
+  );
+  const pollId = setInterval(checkFrame, 100);
+
+  videoElement.addEventListener('loadeddata', checkFrame);
+  videoElement.addEventListener('canplay', checkFrame);
+  videoElement.addEventListener('playing', checkFrame);
+  videoElement.addEventListener('resize', checkFrame);
+  signal?.addEventListener('abort', handleAbort, { once: true });
+
+  if (signal?.aborted) {
+    handleAbort();
+    return;
+  }
+
+  void videoElement.play().then(checkFrame).catch(finish);
+  checkFrame();
+});
+
+const releaseCamera = (
+  videoElement: HTMLVideoElement,
+  stream: MediaStream,
+): void => {
+  stream.getTracks().forEach((track) => track.stop());
+
+  if (videoElement.srcObject === stream) {
+    videoElement.pause();
+    videoElement.srcObject = null;
+    videoElement.removeAttribute('src');
+    videoElement.load();
+  }
+};
 
 // @zxing/library 0.21.3 has a bad appendChars loop condition that never
 // advances for UPC-E conversion. Override that small utility until the
@@ -122,6 +203,9 @@ export const getCameraErrorMessage = (error: unknown): string => {
   if (errorName === 'NotReadableError' || errorName === 'TrackStartError') {
     return 'The camera is already in use by another app. Close it there and try again.';
   }
+  if (errorName === 'CameraPreviewError') {
+    return 'The camera opened, but no video preview was received. Close other camera apps and try again, or upload a barcode photo.';
+  }
   if (errorName === 'OverconstrainedError') {
     return 'This camera cannot use the requested scan settings. Try another camera or scan a photo.';
   }
@@ -141,30 +225,77 @@ export const startBarcodeCamera = async (
   videoElement: HTMLVideoElement,
   onDetected: (barcode: ScannedBarcode, controls: IScannerControls) => void,
   onFatalError: (error: unknown) => void,
+  signal?: AbortSignal,
 ): Promise<IScannerControls> => {
   if (!navigator.mediaDevices?.getUserMedia) {
     throw new DOMException('Camera access is not supported in this browser.', 'NotSupportedError');
   }
 
+  if (signal?.aborted) throw createCameraAbortError();
+
   const reader = createReader();
-  return reader.decodeFromConstraints(
-    {
-      audio: false,
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: {
+      facingMode: { ideal: 'environment' },
+      width: { ideal: 1280 },
+      height: { ideal: 720 },
+    },
+  });
+
+  if (signal?.aborted) {
+    releaseCamera(videoElement, stream);
+    throw createCameraAbortError();
+  }
+
+  videoElement.autoplay = true;
+  videoElement.muted = true;
+  videoElement.playsInline = true;
+  videoElement.setAttribute('autoplay', 'true');
+  videoElement.setAttribute('muted', 'true');
+  videoElement.setAttribute('playsinline', 'true');
+  videoElement.srcObject = stream;
+
+  let scannerControls: IScannerControls | null = null;
+  let stopped = false;
+  const controls: IScannerControls = {
+    stop: () => {
+      if (stopped) return;
+      stopped = true;
+      signal?.removeEventListener('abort', controls.stop);
+      scannerControls?.stop();
+      releaseCamera(videoElement, stream);
+    },
+  };
+
+  signal?.addEventListener('abort', controls.stop, { once: true });
+
+  try {
+    // A resolved play() call does not guarantee that mobile browsers are
+    // actually delivering frames. Do not report "scanning" until one exists.
+    await waitForCameraPreview(videoElement, signal);
+
+    scannerControls = await reader.decodeFromVideoElement(
+      videoElement,
+      (result, error) => {
+        if (result) {
+          onDetected(toScannedBarcode(result), controls);
+        } else if (error && !isExpectedDecodeMiss(error)) {
+          onFatalError(error);
+        }
       },
-    },
-    videoElement,
-    (result, error, controls) => {
-      if (result) {
-        onDetected(toScannedBarcode(result), controls);
-      } else if (error && !isExpectedDecodeMiss(error)) {
-        onFatalError(error);
-      }
-    },
-  );
+    );
+
+    if (stopped || signal?.aborted) {
+      scannerControls.stop();
+      throw createCameraAbortError();
+    }
+
+    return controls;
+  } catch (error) {
+    controls.stop();
+    throw error;
+  }
 };
 
 const loadImage = (file: File): Promise<{ image: HTMLImageElement; objectUrl: string }> =>

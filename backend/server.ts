@@ -64,7 +64,7 @@ app.use(oakCors({
       "http://localhost:3000",
       "http://localhost:5173",
       "https://vitality-vista.vercel.app",
-      "https://vitality-vista.enmasantos.dev",
+      "https://vitalityvista.enmasantos.dev",
       "https://vitality-vista.enmasantos.deno.net",
     ];
     if (!origin || allowed.includes(origin)) return origin ?? "*";

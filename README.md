@@ -160,8 +160,8 @@ FATSECRET_CLIENT_SECRET=replace-with-fatsecret-client-secret
 
 Create a GitHub OAuth App with these production settings:
 
-- Homepage URL: `https://vitality-vista.enmasantos.dev`
-- Authorization callback URL: `https://vitality-vista.enmasantos.dev/auth/github/callback`
+- Homepage URL: `https://vitalityvista.enmasantos.dev`
+- Authorization callback URL: `https://vitalityvista.enmasantos.dev/auth/github/callback`
 
 The app requests `read:user user:email` so the backend can read the GitHub profile and a verified email address before issuing the app JWT. GitHub OAuth Apps allow one callback URL per app, so use a second local OAuth App for development with callback URL `http://localhost:3000/auth/github/callback`.
 

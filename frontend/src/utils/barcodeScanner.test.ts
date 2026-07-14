@@ -27,4 +27,9 @@ describe('barcodeScanner helpers', () => {
     expect(getCameraErrorMessage(new DOMException('', 'NotSupportedError')))
       .toBe('Camera scanning is not supported in this browser. Upload a barcode photo instead.');
   });
+
+  it('explains when permission succeeds but the camera preview has no frames', () => {
+    expect(getCameraErrorMessage(new DOMException('', 'CameraPreviewError')))
+      .toBe('The camera opened, but no video preview was received. Close other camera apps and try again, or upload a barcode photo.');
+  });
 });

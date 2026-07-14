@@ -26,6 +26,8 @@ export interface NutritionData {
   source: string; // e.g., "FatSecret"
   sourceUrl?: string;
   imageUrl?: string;
+  imageSource?: 'FatSecret' | 'Open Food Facts' | 'TheMealDB';
+  imageSourceUrl?: string;
   foodImages?: { image_url: string; image_type?: string }[];
   foodAttributes?: FoodAttributes;
   allergens?: FoodAttributeFlag[];

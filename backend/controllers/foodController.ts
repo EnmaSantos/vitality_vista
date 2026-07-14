@@ -13,6 +13,7 @@ import {
   normalizeFatSecretFood,
   normalizeFatSecretFoodsFromResponse,
 } from "../services/nutritionService.ts"; // Your existing service
+import { findBarcodeImage } from "../services/foodImageService.ts";
 import dbClient from "../services/db.ts"; // Import the database client
 
 // Interface for simplified autocomplete suggestions
@@ -299,7 +300,10 @@ export async function handleFindFoodByBarcode(ctx: RouterContext<string, { barco
       return sendError(ctx, "Barcode must be a UPC-A, EAN-13, EAN-8, or GTIN-13 compatible value.", 400);
     }
 
-    const result = await findFatSecretFoodByBarcode(barcode, getQueryParams(ctx));
+    const [result, fallbackImage] = await Promise.all([
+      findFatSecretFoodByBarcode(barcode, getQueryParams(ctx)),
+      findBarcodeImage(barcode),
+    ]);
     const normalizedFood = normalizeFatSecretFood(result?.food)
       ?? normalizeFatSecretFoodsFromResponse(result)[0]
       ?? null;
@@ -308,8 +312,12 @@ export async function handleFindFoodByBarcode(ctx: RouterContext<string, { barco
       return sendError(ctx, "No food found for that barcode.", 404);
     }
 
+    const foodWithImage = !normalizedFood.imageUrl && fallbackImage
+      ? { ...normalizedFood, ...fallbackImage }
+      : normalizedFood;
+
     sendSuccess(ctx, {
-      food: normalizedFood,
+      food: foodWithImage,
       raw: result,
     });
   } catch (error) {

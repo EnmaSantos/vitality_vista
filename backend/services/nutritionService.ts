@@ -1,5 +1,6 @@
 import { load } from "https://deno.land/std@0.208.0/dotenv/mod.ts";
 import { dirname, fromFileUrl, join, normalize } from "https://deno.land/std@0.208.0/path/mod.ts";
+import { addIngredientImages } from "./foodImageService.ts";
 
 type EnvMap = Record<string, string>;
 
@@ -186,6 +187,8 @@ export interface NutritionData {
     source: string; // "FatSecret"
     sourceUrl?: string;
     imageUrl?: string;
+    imageSource?: "FatSecret" | "Open Food Facts" | "TheMealDB";
+    imageSourceUrl?: string;
     foodImages?: FatSecretFoodImage[];
     foodAttributes?: FoodAttributes;
     allergens?: FoodAttributeFlag[];
@@ -498,6 +501,8 @@ export function normalizeFatSecretFood(foodFromApi: any): NutritionData | null {
         source: "FatSecret",
         sourceUrl: foodFromApi.food_url,
         imageUrl: foodImages[0]?.image_url,
+        imageSource: foodImages.length > 0 ? "FatSecret" : undefined,
+        imageSourceUrl: foodImages.length > 0 ? foodFromApi.food_url : undefined,
         foodImages,
         foodAttributes,
         allergens: foodAttributes.allergens,
@@ -557,6 +562,8 @@ function normalizeFatSecretFoodResponseItem(item: any): NutritionData | null {
         source: "FatSecret",
         sourceUrl: food.food_url,
         imageUrl: foodImages[0]?.image_url,
+        imageSource: foodImages.length > 0 ? "FatSecret" : undefined,
+        imageSourceUrl: foodImages.length > 0 ? food.food_url : undefined,
         foodImages,
         foodAttributes,
         allergens: foodAttributes.allergens,
@@ -684,7 +691,7 @@ export async function searchFoodNutrition(
             .map(normalizeFatSecretFood)
             .filter((food): food is NutritionData => Boolean(food));
         // console.log("Processed Nutrition Data:", JSON.stringify(processedFoods, null, 2)); // For debugging processed data
-        return processedFoods;
+        return await addIngredientImages(processedFoods);
 
     } catch (error) {
         console.error(`Error searching for "${ingredient}":`, error);
@@ -714,7 +721,8 @@ export async function getFoodNutritionById(foodId: string): Promise<NutritionDat
         if (!normalizedFood) {
             console.warn(`Could not extract serving nutrition data for food ID ${foodId}`);
         }
-        return normalizedFood;
+        if (!normalizedFood) return null;
+        return (await addIngredientImages([normalizedFood]))[0] ?? normalizedFood;
     } catch (error) {
         console.error(`Error getting food nutrition by ID ${foodId}:`, error);
         return null;

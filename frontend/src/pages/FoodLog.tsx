@@ -115,6 +115,7 @@ const FoodLog: React.FC = () => {
   const cameraControlsRef = useRef<BarcodeScannerControls | null>(null);
   const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
   const cameraSessionRef = useRef(0);
+  const cameraAbortControllerRef = useRef<AbortController | null>(null);
   const [isScanningBarcodeImage, setIsScanningBarcodeImage] = useState(false);
 
   const [openAddDialog, setOpenAddDialog] = useState(false);
@@ -237,6 +238,8 @@ const FoodLog: React.FC = () => {
   // --- Live Camera Scanner ---
   const stopCameraScanner = useCallback(() => {
     cameraSessionRef.current += 1;
+    cameraAbortControllerRef.current?.abort();
+    cameraAbortControllerRef.current = null;
     cameraControlsRef.current?.stop();
     cameraControlsRef.current = null;
     setCameraStatus('idle');
@@ -247,7 +250,14 @@ const FoodLog: React.FC = () => {
     const session = cameraSessionRef.current;
     const videoElement = cameraVideoRef.current;
 
-    if (!videoElement) return;
+    if (!videoElement) {
+      setCameraStatus('idle');
+      setCameraError('The camera preview could not be initialized. Close the scanner and try again.');
+      return;
+    }
+
+    const abortController = new AbortController();
+    cameraAbortControllerRef.current = abortController;
 
     setCameraStatus('starting');
     setCameraError(null);
@@ -259,6 +269,7 @@ const FoodLog: React.FC = () => {
           if (cameraSessionRef.current !== session) return;
 
           cameraSessionRef.current += 1;
+          cameraAbortControllerRef.current = null;
           activeControls.stop();
           cameraControlsRef.current = null;
           setCameraStatus('idle');
@@ -271,6 +282,7 @@ const FoodLog: React.FC = () => {
           stopCameraScanner();
           setCameraError(getCameraErrorMessage(error));
         },
+        abortController.signal,
       );
 
       if (cameraSessionRef.current !== session) {
@@ -282,6 +294,9 @@ const FoodLog: React.FC = () => {
       setCameraStatus('scanning');
     } catch (err) {
       if (cameraSessionRef.current !== session) return;
+      if (cameraAbortControllerRef.current === abortController) {
+        cameraAbortControllerRef.current = null;
+      }
       setCameraStatus('idle');
       setCameraError(getCameraErrorMessage(err));
     }
@@ -298,13 +313,13 @@ const FoodLog: React.FC = () => {
     setCameraDialogOpen(true);
   };
 
-  // Start scanning when the camera dialog opens
-  useEffect(() => {
-    if (!cameraDialogOpen) return;
+  const handleCameraDialogEntered = useCallback(() => {
+    if (cameraDialogOpen) void startCameraScanner();
+  }, [cameraDialogOpen, startCameraScanner]);
 
-    void startCameraScanner();
-    return stopCameraScanner;
-  }, [cameraDialogOpen, startCameraScanner, stopCameraScanner]);
+  // The dialog uses a transition, so its video ref can be unavailable during
+  // the parent's open-state effect. Start only after the preview is mounted.
+  useEffect(() => () => stopCameraScanner(), [stopCameraScanner]);
 
 
   const fetchLoggedEntries = useCallback(async (date: string) => {
@@ -982,15 +997,16 @@ const FoodLog: React.FC = () => {
                           variant="rounded"
                           src={food.imageUrl || undefined}
                           alt={food.name}
+                          title={food.imageSource ? `Photo from ${food.imageSource}` : undefined}
                           sx={{ 
                             width: 48, 
                             height: 48, 
                             mr: 1, 
-                            bgcolor: food.imageUrl ? 'var(--color-bg)' : 'var(--vv-surface-muted)',
+                            bgcolor: 'var(--vv-surface-muted)',
                             color: 'var(--vv-primary-2)'
                           }}
                         >
-                          {!food.imageUrl && <RestaurantIcon fontSize="small" />}
+                          <RestaurantIcon fontSize="small" />
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
@@ -1528,6 +1544,7 @@ const FoodLog: React.FC = () => {
       <Dialog
         open={cameraDialogOpen}
         onClose={handleCloseCameraDialog}
+        TransitionProps={{ onEntered: handleCameraDialogEntered }}
         maxWidth="xs"
         fullWidth
         PaperProps={{ sx: { bgcolor: 'white', borderRadius: 3 } }}
@@ -1558,6 +1575,7 @@ const FoodLog: React.FC = () => {
             <Box
               component="video"
               ref={cameraVideoRef}
+              autoPlay
               muted
               playsInline
               sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
