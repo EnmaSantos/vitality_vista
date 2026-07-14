@@ -205,7 +205,7 @@ export async function getDailyCalorieSummaryHandler(ctx: RouterContext<any, any>
     const foodLogQuery = `
       SELECT meal_type, calories_consumed, protein_consumed, carbs_consumed, fat_consumed
       FROM food_log_entries 
-      WHERE user_id = $1 AND log_date = $2
+      WHERE user_id = $1 AND DATE(log_date) = $2::date
     `;
     const foodLogResult = await dbClient.queryObject<{
       meal_type: string;

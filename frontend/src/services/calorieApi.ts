@@ -1,4 +1,5 @@
 // frontend/src/services/calorieApi.ts
+import { getLocalDateString } from '../utils/localDate';
 
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
@@ -41,7 +42,7 @@ export async function getDailyCalorieSummary(
   token?: string
 ): Promise<DailyCalorieSummary> {
   try {
-    const dateParam = date || new Date().toISOString().split('T')[0];
+    const dateParam = date || getLocalDateString();
     const url = `${API_BASE_URL}/progress/daily-calories?date=${dateParam}`;
     
     const response = await fetch(url, {
@@ -81,4 +82,4 @@ export async function getDailyCalorieSummaryWithAuth(
   }
   
   return getDailyCalorieSummary(date, auth.token);
-} 
+}

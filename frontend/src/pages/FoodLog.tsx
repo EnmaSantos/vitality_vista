@@ -71,6 +71,7 @@ import type {
   BarcodeScannerControls,
   ScannedBarcode,
 } from '../utils/barcodeScanner';
+import { getLocalDateString } from '../utils/localDate';
 import { logWaterAPI, getDailyWaterAPI } from '../services/waterApi';
 import { AppPanel, EmptyState, MacroBar, MetricCard, PageHeader } from '../components/VitalityUI';
 
@@ -128,14 +129,14 @@ const FoodLog: React.FC = () => {
   const [formDataForDialog, setFormDataForDialog] = useState<Partial<CreateFoodLogEntryPayload>>({
     logged_quantity: 1.0,
     meal_type: 'breakfast',
-    log_date: new Date().toISOString().split('T')[0],
+    log_date: getLocalDateString(),
     notes: ''
   });
   const [isSubmittingLog, setIsSubmittingLog] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
 
   const [currentDate, setCurrentDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    getLocalDateString()
   );
   const [loggedEntries, setLoggedEntries] = useState<FoodLogEntry[]>([]);
   const [foodDetailsById, setFoodDetailsById] = useState<Record<string, NutritionData>>({});
@@ -460,7 +461,6 @@ const FoodLog: React.FC = () => {
     const newDate = event.target.value;
     setCurrentDate(newDate);
     setFormDataForDialog((prev: Partial<CreateFoodLogEntryPayload>) => ({ ...prev, log_date: newDate }));
-    fetchLoggedEntries(newDate);
   };
 
   const handleOpenLogDialog = (food: NutritionData) => {

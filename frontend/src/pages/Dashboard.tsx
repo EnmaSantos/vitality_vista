@@ -14,12 +14,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getUserProfile, UserProfileData } from '../services/profileApi';
 import { getDailyCalorieSummaryWithAuth, DailyCalorieSummary } from '../services/calorieApi';
+import { getLocalDateString } from '../utils/localDate';
 import { getDailyWaterAPI } from '../services/waterApi';
 import { getDailyGoalsAPI, addGoalAPI, updateGoalAPI, deleteGoalAPI, DailyGoal } from '../services/goalsApi';
 import { PageHeader } from '../components/VitalityUI';
 
 // Helper to get today's date in YYYY-MM-DD format
-const getTodayDateString = () => new Date().toISOString().split('T')[0];
+const getTodayDateString = getLocalDateString;
 
 const Dashboard: React.FC = () => {
   const auth = useAuth(); // Use the full auth context

@@ -542,7 +542,7 @@ export async function getFoodLogEntriesHandler(ctx: RouterContext<string, any, A
         notes, food_name,
         created_at, updated_at
       FROM public.food_log_entries
-      WHERE user_id = $1 AND log_date = $2
+      WHERE user_id = $1 AND DATE(log_date) = $2::date
       ORDER BY 
         CASE meal_type
           WHEN 'breakfast' THEN 1
