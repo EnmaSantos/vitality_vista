@@ -1,5 +1,5 @@
 // server.ts
-import { Application, oakCors, loadEnv, Router, Context } from "./deps.ts";
+import { Application, Context, loadEnv, oakCors, Router } from "./deps.ts";
 
 // Load environment variables for the server itself (e.g., PORT)
 // Load environment variables for the server itself (e.g., PORT)
@@ -20,7 +20,6 @@ globalThis.addEventListener("unhandledrejection", (evt) => {
   evt.preventDefault();
 });
 
-
 // Remove the temporary import for db.ts - it's no longer needed here
 // import "./services/db.ts"; // <-- REMOVE OR COMMENT OUT THIS LINE
 import { initDB } from "./services/db.ts"; // Import the init function
@@ -31,11 +30,15 @@ try {
 } catch (e) {
   console.error("Failed to initialize database:", e);
   // We might want to exit here, or continue and let individual requests fail
-  // Deno.exit(1); 
+  // Deno.exit(1);
 }
 
 // Import controllers directly for this approach
-import { handleSearchFatSecretRecipes, handleGetFatSecretRecipeById, handleGetFatSecretRecipeTypes } from "./controllers/recipeController.ts";
+import {
+  handleGetFatSecretRecipeById,
+  handleGetFatSecretRecipeTypes,
+  handleSearchFatSecretRecipes,
+} from "./controllers/recipeController.ts";
 // Food controller handlers are now imported by the specific routers
 import authRouter from "./routes/auth.ts";
 import workoutRouter from "./routes/workout.ts";
@@ -47,7 +50,6 @@ import progressRouter from "./routes/progress.ts"; // Import the progress router
 import fatsecretProxyRouter from "./routes/fatsecretProxy.ts";
 import foodLogRouter from "./routes/foodLogRoutes.ts";
 import waterRouter from "./routes/water.ts";
-import setupRouter from "./routes/setup.ts";
 import goalsRouter from "./routes/goals.ts";
 import exercisesRouter from "./routes/exercises.ts";
 import healthDataRouter from "./routes/healthData.ts";
@@ -56,7 +58,6 @@ import healthDataRouter from "./routes/healthData.ts";
 const app = new Application();
 // Access environment variables for Deno deployment
 const port = parseInt((globalThis as any).Deno?.env.get("PORT") || "8000");
-
 
 // Basic middleware with improved CORS configuration
 app.use(oakCors({
@@ -80,10 +81,12 @@ app.use(async (ctx: Context, next: () => Promise<unknown>) => {
   const start = Date.now();
   await next();
   const ms = Date.now() - start;
-  console.log(`${ctx.request.method} ${ctx.request.url.pathname} - ${ctx.response.status} - ${ms}ms`);
+  console.log(
+    `${ctx.request.method} ${ctx.request.url.pathname} - ${ctx.response.status} - ${ms}ms`,
+  );
 });
 
-// --- Set up API Routing --- 
+// --- Set up API Routing ---
 
 const apiRouter = new Router({ prefix: "/api" });
 
@@ -98,25 +101,42 @@ apiRouter
   .get("/fatsecret/recipes/:id", handleGetFatSecretRecipeById);
 
 // Mount FatSecret Food Search/Details proxy routes
-apiRouter.use("/fatsecret/foods", fatsecretProxyRouter.routes(), fatsecretProxyRouter.allowedMethods());
+apiRouter.use(
+  "/fatsecret/foods",
+  fatsecretProxyRouter.routes(),
+  fatsecretProxyRouter.allowedMethods(),
+);
 
 // Mount Food Logging routes
-apiRouter.use("/food-logs", foodLogRouter.routes(), foodLogRouter.allowedMethods());
+apiRouter.use(
+  "/food-logs",
+  foodLogRouter.routes(),
+  foodLogRouter.allowedMethods(),
+);
 
 // Mount Water Logging routes
-apiRouter.use("/water-logs", waterRouter.routes(), waterRouter.allowedMethods());
+apiRouter.use(
+  "/water-logs",
+  waterRouter.routes(),
+  waterRouter.allowedMethods(),
+);
 
 // Mount Daily Goals routes
 apiRouter.use("/goals", goalsRouter.routes(), goalsRouter.allowedMethods());
 
 // Mount Exercises proxy routes
-apiRouter.use("/exercises", exercisesRouter.routes(), exercisesRouter.allowedMethods());
+apiRouter.use(
+  "/exercises",
+  exercisesRouter.routes(),
+  exercisesRouter.allowedMethods(),
+);
 
 // Mount normalized manual, Apple Health, and RENPHO health data routes
-apiRouter.use("/health-data", healthDataRouter.routes(), healthDataRouter.allowedMethods());
-
-// Mount Setup routes (Temporary)
-apiRouter.use("/setup-db", setupRouter.routes(), setupRouter.allowedMethods());
+apiRouter.use(
+  "/health-data",
+  healthDataRouter.routes(),
+  healthDataRouter.allowedMethods(),
+);
 
 // Mount Workout routes
 apiRouter.use(workoutRouter.routes(), workoutRouter.allowedMethods());
@@ -138,15 +158,23 @@ app.use(apiRouter.allowedMethods());
 // Default route (Handles requests that don't match any api routes)
 app.use((ctx) => {
   // Log the path that made it here to understand why it wasn't routed.
-  console.log(`Default handler reached for path: ${ctx.request.method} ${ctx.request.url.pathname}`);
+  console.log(
+    `Default handler reached for path: ${ctx.request.method} ${ctx.request.url.pathname}`,
+  );
 
   // For any unhandled request, it's effectively a 404.
   ctx.response.status = 404;
-  if (ctx.request.url.pathname.startsWith('/api/')) {
-    ctx.response.body = { success: false, message: `API endpoint ${ctx.request.url.pathname} not found.` };
+  if (ctx.request.url.pathname.startsWith("/api/")) {
+    ctx.response.body = {
+      success: false,
+      message: `API endpoint ${ctx.request.url.pathname} not found.`,
+    };
   } else {
     // For non-API paths, a simpler message or different 404 page.
-    ctx.response.body = { success: false, message: `Resource ${ctx.request.url.pathname} not found.` };
+    ctx.response.body = {
+      success: false,
+      message: `Resource ${ctx.request.url.pathname} not found.`,
+    };
   }
 });
 

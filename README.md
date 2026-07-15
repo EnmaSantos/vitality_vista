@@ -114,7 +114,7 @@ The landing page and this README now focus on actual app capabilities instead of
 - Node.js 16 or newer
 - npm
 - Deno 1.30 or newer
-- PostgreSQL database
+- PostgreSQL database (or Docker Desktop)
 - Google OAuth Web client ID for Sign in with Google
 - GitHub OAuth App client ID and secret for Sign in with GitHub
 - FatSecret API credentials
@@ -140,17 +140,26 @@ VITE_GITHUB_CLIENT_ID=your-github-oauth-app-client-id
 ### Backend
 
 ```bash
+docker compose up -d postgres
 cd backend
+cp .env.example .env
+deno task migrate
+deno task seed
 deno task start
 ```
 
 The backend defaults to `http://localhost:8000/api`.
 
+Migrations are applied in filename order and recorded in the `schema_migrations`
+table. Re-running `deno task migrate` is safe: previously applied versions are
+skipped. To undo a schema change, add a new forward migration that reverses it;
+do not edit a migration that may already have run in another environment.
+
 Create a backend `.env` file with the values your local environment needs:
 
 ```bash
 DATABASE_URL=postgres://user:password@localhost:5432/vitality_vista
-JWT_SECRET=replace-with-a-secret
+JWT_SECRET=replace-with-at-least-32-random-characters
 GOOGLE_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
 GITHUB_CLIENT_ID=your-github-oauth-app-client-id
 GITHUB_CLIENT_SECRET=your-github-oauth-app-client-secret
@@ -167,12 +176,10 @@ Create a GitHub OAuth App with these production settings:
 
 The app requests `read:user user:email` so the backend can read the GitHub profile and a verified email address before issuing the app JWT. GitHub OAuth Apps allow one callback URL per app, so use a second local OAuth App for development with callback URL `http://localhost:3000/auth/github/callback`.
 
-The repo includes `backend/scripts/run_setup.ts` for the Google auth identity table, nullable Google-only user fields, water logs, daily goals, health data profiles, normalized measurements, indexes, and legacy body-metric migration. Run it after the base user/profile/workout/food schema exists:
-
-```bash
-cd backend
-deno run --allow-net --allow-env --allow-read scripts/run_setup.ts
-```
+The checked-in baseline migration creates the complete application schema,
+including auth identities, workouts, nutrition logs, goals, and normalized
+health measurements. `deno task seed` creates an idempotent local demo user;
+override `DEMO_EMAIL` and `DEMO_PASSWORD` in `.env` if desired.
 
 ## Main Routes
 

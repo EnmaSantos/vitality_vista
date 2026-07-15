@@ -1,12 +1,13 @@
 // backend/controllers/authController.ts
 import { Context, createJwt, getNumericDate } from "../deps.ts"; // Import needed functions directly
 import dbClient, { ensureConnection } from "../services/db.ts"; // Import the database client and ensureConnection
-import { UserSchema, USER_TABLE_NAME } from "../models/user.model.ts"; // Import the schema and table name [cite: backend/models/user.model.ts]
-import { hash, compare } from "../services/password.ts"; // Import hash and compare from our custom password service
+import { USER_TABLE_NAME, UserSchema } from "../models/user.model.ts"; // Import the schema and table name [cite: backend/models/user.model.ts]
+import { compare, hash } from "../services/password.ts"; // Import hash and compare from our custom password service
 import { verifyGoogleIdToken } from "../services/googleAuth.ts";
 import type { VerifiedGoogleProfile } from "../services/googleAuth.ts";
 import { verifyGitHubCode } from "../services/githubAuth.ts";
 import type { VerifiedGitHubProfile } from "../services/githubAuth.ts";
+import { jwtKey } from "../utils/jwt.ts";
 
 // --- Interfaces (DTOs and API Response) ---
 // UserSchema from user.model.ts now represents the DB/internal user structure
@@ -64,7 +65,7 @@ function sanitizeUser(user: UserSchema): UserResponse {
     id: user.id,
     email: user.email,
     firstName: user.first_name, // Map snake_case to camelCase
-    lastName: user.last_name,   // Map snake_case to camelCase
+    lastName: user.last_name, // Map snake_case to camelCase
   };
 }
 
@@ -82,7 +83,10 @@ async function findUserByEmail(email: string): Promise<UserSchema | undefined> {
   }
 }
 
-async function findUserByAuthIdentity(provider: string, providerUserId: string): Promise<UserSchema | undefined> {
+async function findUserByAuthIdentity(
+  provider: string,
+  providerUserId: string,
+): Promise<UserSchema | undefined> {
   try {
     const result = await dbClient.queryObject<UserSchema>(
       `SELECT u.*
@@ -103,52 +107,69 @@ async function findUserByAuthIdentity(provider: string, providerUserId: string):
 
 // Finds a user by ID in the database
 async function findUserById(id: string): Promise<UserSchema | undefined> {
-   try {
-     const result = await dbClient.queryObject<UserSchema>(
-       `SELECT * FROM ${USER_TABLE_NAME} WHERE id = $1 LIMIT 1`,
-       [id],
-     );
-     return result.rows[0]; // Returns the user object or undefined if not found
-   } catch (dbError) {
-     console.error("Error in findUserById:", dbError);
-     throw dbError;
-   }
+  try {
+    const result = await dbClient.queryObject<UserSchema>(
+      `SELECT * FROM ${USER_TABLE_NAME} WHERE id = $1 LIMIT 1`,
+      [id],
+    );
+    return result.rows[0]; // Returns the user object or undefined if not found
+  } catch (dbError) {
+    console.error("Error in findUserById:", dbError);
+    throw dbError;
+  }
 }
 
 // Creates a new user in the database
-async function createUser(data: RegisterDTO, passwordHash: string): Promise<UserSchema> {
+async function createUser(
+  data: RegisterDTO,
+  passwordHash: string,
+): Promise<UserSchema> {
   try {
     // Use INSERT ... RETURNING * to get the created user data back
     const result = await dbClient.queryObject<UserSchema>(
       `INSERT INTO ${USER_TABLE_NAME} (email, password_hash, first_name, last_name, weight_kg)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [data.email.toLowerCase(), passwordHash, data.firstName, data.lastName, data.weight],
+      [
+        data.email.toLowerCase(),
+        passwordHash,
+        data.firstName,
+        data.lastName,
+        data.weight,
+      ],
     );
     // Assuming the insert was successful, return the first row (the new user)
     if (!result.rows[0]) {
-       throw new Error("User creation failed, no data returned.");
+      throw new Error("User creation failed, no data returned.");
     }
     return result.rows[0];
   } catch (dbError) {
-     console.error("Error in createUser:", dbError);
-     // Handle potential unique constraint violation (email already exists) more gracefully?
-     // For now, just re-throw
-     throw dbError;
+    console.error("Error in createUser:", dbError);
+    // Handle potential unique constraint violation (email already exists) more gracefully?
+    // For now, just re-throw
+    throw dbError;
   }
 }
 
-function getExternalUserNames(profile: ExternalAuthUserProfile): { firstName: string; lastName: string } {
-  const fallbackName = profile.name?.trim() || profile.username?.trim() || profile.email.split("@")[0];
-  const [fallbackFirstName, ...fallbackLastNameParts] = fallbackName.split(/\s+/);
+function getExternalUserNames(
+  profile: ExternalAuthUserProfile,
+): { firstName: string; lastName: string } {
+  const fallbackName = profile.name?.trim() || profile.username?.trim() ||
+    profile.email.split("@")[0];
+  const [fallbackFirstName, ...fallbackLastNameParts] = fallbackName.split(
+    /\s+/,
+  );
 
   return {
-    firstName: profile.givenName?.trim() || fallbackFirstName || profile.providerName,
+    firstName: profile.givenName?.trim() || fallbackFirstName ||
+      profile.providerName,
     lastName: profile.familyName?.trim() || fallbackLastNameParts.join(" "),
   };
 }
 
-async function createExternalUser(profile: ExternalAuthUserProfile): Promise<UserSchema> {
+async function createExternalUser(
+  profile: ExternalAuthUserProfile,
+): Promise<UserSchema> {
   try {
     const names = getExternalUserNames(profile);
     const result = await dbClient.queryObject<UserSchema>(
@@ -159,7 +180,9 @@ async function createExternalUser(profile: ExternalAuthUserProfile): Promise<Use
     );
 
     if (!result.rows[0]) {
-      throw new Error(`${profile.providerName} user creation failed, no data returned.`);
+      throw new Error(
+        `${profile.providerName} user creation failed, no data returned.`,
+      );
     }
 
     return result.rows[0];
@@ -193,7 +216,9 @@ async function linkAuthIdentity(
   }
 }
 
-function toExternalGoogleProfile(profile: VerifiedGoogleProfile): ExternalAuthUserProfile {
+function toExternalGoogleProfile(
+  profile: VerifiedGoogleProfile,
+): ExternalAuthUserProfile {
   return {
     providerName: "Google",
     email: profile.email,
@@ -203,7 +228,9 @@ function toExternalGoogleProfile(profile: VerifiedGoogleProfile): ExternalAuthUs
   };
 }
 
-function toExternalGitHubProfile(profile: VerifiedGitHubProfile): ExternalAuthUserProfile {
+function toExternalGitHubProfile(
+  profile: VerifiedGitHubProfile,
+): ExternalAuthUserProfile {
   return {
     providerName: "GitHub",
     email: profile.email,
@@ -212,7 +239,13 @@ function toExternalGitHubProfile(profile: VerifiedGitHubProfile): ExternalAuthUs
   };
 }
 
-function sendAuthSuccess(ctx: Context, user: UserSchema, token: string, message: string, status = 200) {
+function sendAuthSuccess(
+  ctx: Context,
+  user: UserSchema,
+  token: string,
+  message: string,
+  status = 200,
+) {
   ctx.response.status = status;
   ctx.response.body = {
     success: true,
@@ -224,33 +257,16 @@ function sendAuthSuccess(ctx: Context, user: UserSchema, token: string, message:
   };
 }
 
-// --- JWT Helper Functions (remain the same) ---
-async function generateJwtKey(secret: string): Promise<CryptoKey> {
-  // ... (implementation unchanged)
-   const encoder = new TextEncoder();
-   return await crypto.subtle.importKey(
-       "raw",
-       encoder.encode(secret),
-       { name: "HMAC", hash: "SHA-512" },
-       false,
-       ["sign", "verify"]
-   );
-}
-
 async function generateToken(userId: string): Promise<string> {
-  // ... (implementation unchanged)
-   const jwtSecret = Deno.env.get("JWT_SECRET") || "";
-   const key = await generateJwtKey(jwtSecret);
-   
-   return await createJwt(
-       { alg: "HS512", typ: "JWT" },
-       { 
-           sub: userId,
-           exp: getNumericDate(60 * 60 * 24), // 24 hours
-           iat: getNumericDate(0)
-       },
-       key
-   );
+  return await createJwt(
+    { alg: "HS512", typ: "JWT" },
+    {
+      sub: userId,
+      exp: getNumericDate(60 * 60 * 24), // 24 hours
+      iat: getNumericDate(0),
+    },
+    jwtKey,
+  );
 }
 
 // --- Route Handlers (Refactored) ---
@@ -260,13 +276,19 @@ export async function register(ctx: Context) {
   try {
     // Ensure database connection is alive
     await ensureConnection();
-    
+
     const result = ctx.request.body({ type: "json" });
     const body: RegisterDTO = await result.value;
 
-    if (!body.email || !body.password || !body.firstName || !body.lastName || !body.weight) {
+    if (
+      !body.email || !body.password || !body.firstName || !body.lastName ||
+      !body.weight
+    ) {
       ctx.response.status = 400;
-      ctx.response.body = { success: false, message: "Missing required fields" };
+      ctx.response.body = {
+        success: false,
+        message: "Missing required fields",
+      };
       return;
     }
 
@@ -274,7 +296,10 @@ export async function register(ctx: Context) {
     const existingUser = await findUserByEmail(body.email);
     if (existingUser) {
       ctx.response.status = 400; // Changed from 400 to 409 Conflict might be better
-      ctx.response.body = { success: false, message: "User with this email already exists" };
+      ctx.response.body = {
+        success: false,
+        message: "User with this email already exists",
+      };
       return;
     }
 
@@ -306,13 +331,16 @@ export async function login(ctx: Context) {
   try {
     // Ensure database connection is alive
     await ensureConnection();
-    
+
     const result = ctx.request.body({ type: "json" });
     const body: LoginDTO = await result.value;
 
     if (!body.email || !body.password) {
       ctx.response.status = 400;
-      ctx.response.body = { success: false, message: "Email and password are required" };
+      ctx.response.body = {
+        success: false,
+        message: "Email and password are required",
+      };
       return;
     }
 
@@ -362,7 +390,10 @@ export async function googleLogin(ctx: Context) {
 
     if (!body.credential) {
       ctx.response.status = 400;
-      ctx.response.body = { success: false, message: "Google credential is required" };
+      ctx.response.body = {
+        success: false,
+        message: "Google credential is required",
+      };
       return;
     }
 
@@ -373,10 +404,20 @@ export async function googleLogin(ctx: Context) {
       user = await findUserByEmail(googleProfile.email);
 
       if (user) {
-        await linkAuthIdentity("google", googleProfile.sub, user.id, googleProfile.email);
+        await linkAuthIdentity(
+          "google",
+          googleProfile.sub,
+          user.id,
+          googleProfile.email,
+        );
       } else {
         user = await createExternalUser(toExternalGoogleProfile(googleProfile));
-        await linkAuthIdentity("google", googleProfile.sub, user.id, googleProfile.email);
+        await linkAuthIdentity(
+          "google",
+          googleProfile.sub,
+          user.id,
+          googleProfile.email,
+        );
       }
     }
 
@@ -390,7 +431,9 @@ export async function googleLogin(ctx: Context) {
     ctx.response.status = isConfigError ? 500 : 401;
     ctx.response.body = {
       success: false,
-      message: isConfigError ? "Google login is not configured" : "Google login failed",
+      message: isConfigError
+        ? "Google login is not configured"
+        : "Google login failed",
       error: message,
     };
   }
@@ -405,7 +448,10 @@ export async function githubLogin(ctx: Context) {
 
     if (!body.code) {
       ctx.response.status = 400;
-      ctx.response.body = { success: false, message: "GitHub authorization code is required" };
+      ctx.response.body = {
+        success: false,
+        message: "GitHub authorization code is required",
+      };
       return;
     }
 
@@ -419,10 +465,20 @@ export async function githubLogin(ctx: Context) {
       user = await findUserByEmail(githubProfile.email);
 
       if (user) {
-        await linkAuthIdentity("github", githubProfile.id, user.id, githubProfile.email);
+        await linkAuthIdentity(
+          "github",
+          githubProfile.id,
+          user.id,
+          githubProfile.email,
+        );
       } else {
         user = await createExternalUser(toExternalGitHubProfile(githubProfile));
-        await linkAuthIdentity("github", githubProfile.id, user.id, githubProfile.email);
+        await linkAuthIdentity(
+          "github",
+          githubProfile.id,
+          user.id,
+          githubProfile.email,
+        );
       }
     }
 
@@ -436,7 +492,9 @@ export async function githubLogin(ctx: Context) {
     ctx.response.status = isConfigError ? 500 : 401;
     ctx.response.body = {
       success: false,
-      message: isConfigError ? "GitHub login is not configured" : "GitHub login failed",
+      message: isConfigError
+        ? "GitHub login is not configured"
+        : "GitHub login failed",
       error: message,
     };
   }
