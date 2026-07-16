@@ -80,6 +80,7 @@ The landing page and this README now focus on actual app capabilities instead of
 - PostgreSQL
 - JWT authentication
 - FatSecret API integration
+- A pinned local snapshot of `hasaneyldrm/exercises-dataset`
 
 ## Project Structure
 
@@ -87,6 +88,7 @@ The landing page and this README now focus on actual app capabilities instead of
 .
 |-- backend
 |   |-- controllers
+|   |-- data
 |   |-- middleware
 |   |-- models
 |   |-- routes
@@ -158,6 +160,26 @@ FATSECRET_CLIENT_ID=replace-with-fatsecret-client-id
 FATSECRET_CLIENT_SECRET=replace-with-fatsecret-client-secret
 ```
 
+### Exercise Dataset
+
+Exercise browsing is served locally by the backend from a normalized snapshot of
+[`hasaneyldrm/exercises-dataset`](https://github.com/hasaneyldrm/exercises-dataset),
+so it no longer depends on the former hosted exercise API or an exercise API environment variable.
+The snapshot contains 1,324 exercises, English instruction steps, categories, body parts,
+equipment, targets, and muscle data.
+
+To refresh the snapshot from a reviewed upstream commit, pass its full commit SHA:
+
+```bash
+cd backend
+deno run --allow-net=raw.githubusercontent.com --allow-write=data scripts/sync_exercise_dataset.ts <commit-sha>
+```
+
+The upstream data and instructions are MIT-licensed; its images and GIFs have separate
+Gym visual licensing terms. Those media files are intentionally not copied or served by
+Vitality Vista. The included third-party license is at
+`backend/data/exercises-dataset.LICENSE.txt`.
+
 ### GitHub Login
 
 Create a GitHub OAuth App with these production settings:
@@ -195,6 +217,7 @@ deno run --allow-net --allow-env --allow-read scripts/run_setup.ts
 
 - `/api/auth` - registration, login, logout, token verification, password reset
 - `/api/workout-plans` - workout plan and exercise management
+- `/api/exercises` - local exercise search, filtering, metadata, and details
 - `/api/food-logs` - food log CRUD
 - `/api/water-logs` - hydration logging
 - `/api/goals` - daily goals

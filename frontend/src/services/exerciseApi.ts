@@ -1,30 +1,26 @@
 import { API_BASE_URL } from "../config";
 
-export interface Exercise {
-  name: string;
-  force: string | null;
-  level: string;
-  mechanic: string | null;
-  equipment: string | null;
-  primaryMuscles: string[];
-  secondaryMuscles: string[];
-  instructions: string[];
-  category: string;
-  images: string[];
+export interface ExerciseSummary {
   id: number;
-  calories_per_hour: number | null;
-  duration_minutes: number | null;
-  total_calories: number | null;
+  sourceId: string;
+  name: string;
+  category: string;
+  bodyPart: string;
+  equipment: string;
+  target: string;
+  muscleGroup: string;
+  secondaryMuscles: string[];
 }
 
-export type ExerciseSummary = Omit<Exercise, "instructions">;
+export interface Exercise extends ExerciseSummary {
+  instructions: string[];
+}
 
 export interface ExerciseQueryParams {
   page?: number;
   limit?: number;
   q?: string;
   category?: string;
-  level?: string;
   equipment?: string;
   muscle?: string;
 }
@@ -39,13 +35,19 @@ export interface PaginatedExercisesResponse {
 
 export interface ExerciseMeta {
   categories: string[];
-  levels: string[];
   equipment: string[];
   muscles: string[];
   totalCount: number;
+  source: {
+    repository: string;
+    revision: string;
+    license: string;
+    mediaIncluded: boolean;
+    exerciseCount: number;
+  };
 }
 
-const CACHE_KEY = "vitality_exercises_cache";
+const CACHE_KEY = "vitality_exercises_cache_dataset_v1";
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 const EXERCISES_URL = `${API_BASE_URL}/exercises`;
@@ -90,7 +92,6 @@ export async function getExercises(params: ExerciseQueryParams = {}): Promise<Pa
     limit: params.limit,
     q: params.q,
     category: params.category,
-    level: params.level,
     equipment: params.equipment,
     muscle: params.muscle,
   });
@@ -125,8 +126,8 @@ export async function getAllExercises(): Promise<Exercise[]> {
     }
   }
 
-  console.log(`getAllExercises - Fetching all exercises from: ${EXERCISES_URL}`);
-  const data = await fetchJson<Exercise[]>(EXERCISES_URL, "Fetching all exercises");
+  console.log(`getAllExercises - Fetching all exercises from: ${EXERCISES_URL}/all`);
+  const data = await fetchJson<Exercise[]>(`${EXERCISES_URL}/all`, "Fetching all exercises");
 
   // 2. Save to cache
   try {

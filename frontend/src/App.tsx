@@ -6,6 +6,7 @@ import AppShell from './components/AppShell';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ThemeProvider } from './context/ThemeContext';
 import { muiTheme } from './muiTheme';
+import Landing from './pages/Landing';
 import './App.css';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -13,7 +14,6 @@ const ExercisesPage = lazy(() => import('./pages/Exercises'));
 const FoodLogPage = lazy(() => import('./pages/FoodLog'));
 const ProgressPage = lazy(() => import('./pages/Progress'));
 const RecipesPage = lazy(() => import('./pages/Recipes'));
-const Landing = lazy(() => import('./pages/Landing'));
 const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
 const GitHubOAuthCallback = lazy(() => import('./pages/GitHubOAuthCallback'));

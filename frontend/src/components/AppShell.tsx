@@ -96,10 +96,10 @@ function AppShell({ children }: AppShellProps) {
 
   usePageTheme(pageTheme);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     setAnchorEl(null);
-    await logout();
-    navigate('/landing');
+    logout();
+    navigate('/landing', { replace: true });
   };
 
   const primaryNavigation = (

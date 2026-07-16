@@ -90,8 +90,8 @@ Core tables include:
 
 ### API Integration Patterns
 - **FatSecret API**: Nutrition and recipe data via proxy endpoints at `/api/fatsecret/`
-- **Exercise Database**: Exercise information and instructions
-- All external API calls are proxied through the backend to avoid CORS issues
+- **Exercise Database**: A pinned, normalized `hasaneyldrm/exercises-dataset` snapshot served by `/api/exercises`
+- External nutrition and recipe API calls are proxied through the backend to avoid CORS issues
 - API keys are managed via environment variables on the backend
 
 ### Authentication Flow

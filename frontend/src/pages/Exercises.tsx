@@ -790,7 +790,7 @@ const ExercisesPage: React.FC = () => {
                             {exercise.name}
                           </Typography>
                           <Chip
-                            label={exercise.level || 'General'}
+                            label={exercise.equipment}
                             size="small"
                             sx={{
                               bgcolor: 'rgba(182, 214, 204, 0.30)',
@@ -810,39 +810,12 @@ const ExercisesPage: React.FC = () => {
 
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                            <strong style={{ color: 'var(--color-primary-dark)' }}>Target:</strong> {exercise.primaryMuscles?.join(', ') || 'N/A'}
+                            <strong style={{ color: 'var(--color-primary-dark)' }}>Target:</strong> {exercise.target}
                           </Typography>
-                          {exercise.equipment && (
-                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                              <strong style={{ color: 'var(--color-primary-dark)' }}>Equipment:</strong> {exercise.equipment}
-                            </Typography>
-                          )}
+                          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                            <strong style={{ color: 'var(--color-primary-dark)' }}>Muscle group:</strong> {exercise.muscleGroup}
+                          </Typography>
                         </Box>
-
-                        {exercise.images && exercise.images.length > 0 && (
-                          <Box
-                            sx={{
-                              mt: 2,
-                              borderRadius: 2,
-                              overflow: 'hidden',
-                              height: 140,
-                              display: 'flex',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              bgcolor: 'var(--color-bg)'
-                            }}
-                          >
-                            <img
-                              src={exercise.images[0].startsWith('http') ? exercise.images[0] : `${process.env.PUBLIC_URL}${exercise.images[0]}`}
-                              alt={exercise.name}
-                              style={{
-                                maxWidth: '100%',
-                                height: '100%',
-                                objectFit: 'contain'
-                              }}
-                            />
-                          </Box>
-                        )}
                       </CardContent>
 
                       <Box sx={{ p: 3, pt: 0, mt: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -969,7 +942,7 @@ const ExercisesPage: React.FC = () => {
             </DialogTitle>
             <DialogContent dividers sx={{ p: 4, borderColor: 'rgba(0,0,0,0.05)' }}>
               <Grid container spacing={4}>
-                <Grid item xs={12} md={selectedExerciseForModal.images && selectedExerciseForModal.images.length > 0 ? 6 : 12}>
+                <Grid item xs={12}>
                   <Box sx={{ mb: 3 }}>
                     <Chip
                       label={selectedExerciseForModal.category}
@@ -981,7 +954,7 @@ const ExercisesPage: React.FC = () => {
                       }}
                     />
                     <Chip
-                      label={selectedExerciseForModal.level}
+                      label={selectedExerciseForModal.equipment}
                       variant="outlined"
                       sx={{
                         borderColor: 'var(--color-primary)',
@@ -993,32 +966,29 @@ const ExercisesPage: React.FC = () => {
 
                   <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 3 }}>
                     <Paper elevation={0} sx={{ p: 2, bgcolor: 'var(--color-bg)', borderRadius: 3 }}>
-                      <Typography variant="caption" sx={{ color: 'var(--color-secondary)', display: 'block', mb: 0.5 }}>Force</Typography>
+                      <Typography variant="caption" sx={{ color: 'var(--color-secondary)', display: 'block', mb: 0.5 }}>Body Part</Typography>
                       <Typography variant="body1" sx={{ fontWeight: 600, color: 'var(--color-primary-dark)', textTransform: 'capitalize' }}>
-                        {selectedExerciseForModal.force || '-'}
+                        {selectedExerciseForModal.bodyPart}
                       </Typography>
                     </Paper>
                     <Paper elevation={0} sx={{ p: 2, bgcolor: 'var(--color-bg)', borderRadius: 3 }}>
-                      <Typography variant="caption" sx={{ color: 'var(--color-secondary)', display: 'block', mb: 0.5 }}>Mechanic</Typography>
+                      <Typography variant="caption" sx={{ color: 'var(--color-secondary)', display: 'block', mb: 0.5 }}>Target</Typography>
                       <Typography variant="body1" sx={{ fontWeight: 600, color: 'var(--color-primary-dark)', textTransform: 'capitalize' }}>
-                        {selectedExerciseForModal.mechanic || '-'}
+                        {selectedExerciseForModal.target}
                       </Typography>
                     </Paper>
                     <Paper elevation={0} sx={{ p: 2, bgcolor: 'var(--color-bg)', borderRadius: 3 }}>
-                      <Typography variant="caption" sx={{ color: 'var(--color-secondary)', display: 'block', mb: 0.5 }}>Equipment</Typography>
+                      <Typography variant="caption" sx={{ color: 'var(--color-secondary)', display: 'block', mb: 0.5 }}>Muscle Group</Typography>
                       <Typography variant="body1" sx={{ fontWeight: 600, color: 'var(--color-primary-dark)', textTransform: 'capitalize' }}>
-                        {selectedExerciseForModal.equipment || '-'}
+                        {selectedExerciseForModal.muscleGroup}
                       </Typography>
                     </Paper>
-                  </Box>
-
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle2" sx={{ color: 'var(--color-secondary)', mb: 1 }}>Primary Muscles</Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {selectedExerciseForModal.primaryMuscles?.map(muscle => (
-                        <Chip key={muscle} label={muscle} size="small" sx={{ bgcolor: 'rgba(182, 214, 204, 0.30)', color: 'var(--color-primary-dark)' }} />
-                      ))}
-                    </Box>
+                    <Paper elevation={0} sx={{ p: 2, bgcolor: 'var(--color-bg)', borderRadius: 3 }}>
+                      <Typography variant="caption" sx={{ color: 'var(--color-secondary)', display: 'block', mb: 0.5 }}>Source ID</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600, color: 'var(--color-primary-dark)' }}>
+                        {selectedExerciseForModal.sourceId}
+                      </Typography>
+                    </Paper>
                   </Box>
 
                   {selectedExerciseForModal.secondaryMuscles && selectedExerciseForModal.secondaryMuscles.length > 0 && (
@@ -1032,34 +1002,6 @@ const ExercisesPage: React.FC = () => {
                     </Box>
                   )}
                 </Grid>
-
-                {selectedExerciseForModal.images && selectedExerciseForModal.images.length > 0 && (
-                  <Grid item xs={12} md={6}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {selectedExerciseForModal.images.slice(0, 2).map((imgSrc, index) => (
-                        <Box
-                          key={index}
-                          sx={{
-                            borderRadius: 4,
-                            overflow: 'hidden',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                            border: '1px solid rgba(0,0,0,0.05)'
-                          }}
-                        >
-                          <img
-                            src={imgSrc.startsWith('http') ? imgSrc : `${process.env.PUBLIC_URL}${imgSrc}`}
-                            alt={`${selectedExerciseForModal.name} - view ${index + 1}`}
-                            style={{
-                              width: '100%',
-                              height: 'auto',
-                              display: 'block'
-                            }}
-                          />
-                        </Box>
-                      ))}
-                    </Box>
-                  </Grid>
-                )}
               </Grid>
 
               <Box sx={{ mt: 4 }}>

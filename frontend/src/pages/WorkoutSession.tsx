@@ -62,7 +62,7 @@ const WorkoutSession = () => {
             sets: 3, // Default sets
             reps: "10", // Default reps
             weight_kg: undefined,
-            duration_minutes: exercise.duration_minutes || undefined,
+            duration_minutes: undefined,
             rest_period_seconds: 60, // Default rest
             notes: `Single exercise session: ${exercise.name}`
         };
@@ -314,4 +314,4 @@ const WorkoutSession = () => {
     );
 };
 
-export default WorkoutSession; 
+export default WorkoutSession;
