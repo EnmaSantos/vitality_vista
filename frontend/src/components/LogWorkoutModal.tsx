@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Stack, Typography, TextField, IconButton, Button, CircularProgress, Snackbar, Alert, Box, Checkbox, FormControlLabel } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
@@ -74,6 +74,25 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
   const exerciseType = exercise ? getExerciseType(exercise.category, exercise.name) : 'strength';
   const cardioSubType = exerciseType === 'cardio' ? getCardioSubType(exercise?.name) : '';
 
+  useEffect(() => {
+    if (!open || !exercise) return;
+
+    const isTimedExercise = exerciseType === 'cardio' || exerciseType === 'stretching';
+    setForm({
+      sets: isTimedExercise ? '' : '3',
+      reps: isTimedExercise ? '' : '10',
+      weight: '',
+      duration: isTimedExercise ? '30' : '',
+      distance: '',
+      intensity: '',
+      heartRate: '',
+      pace: '',
+      calories: '',
+      notes: ''
+    });
+    setUseBodyWeight(exercise.equipment.toLowerCase() === 'body weight');
+  }, [open, exercise?.id, exerciseType]);
+
   const resetState = () => {
     setForm({ 
       sets: '', 
@@ -88,6 +107,7 @@ const LogWorkoutModal: React.FC<LogWorkoutModalProps> = ({ open, exercise, token
       notes: '' 
     });
     setCurrentWorkoutLog(null);
+    setUseBodyWeight(false);
   };
 
   const handleClose = () => {
