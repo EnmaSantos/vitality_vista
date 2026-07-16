@@ -2,7 +2,9 @@
   "tasks": {
     "start": "deno run --allow-net --allow-env --allow-read --watch server.ts",
     "test": "deno test",
-    "sync-exercises": "deno run --allow-net=raw.githubusercontent.com --allow-write=data scripts/sync_exercise_dataset.ts"
+    "sync-exercises": "deno run --allow-net=raw.githubusercontent.com --allow-write=data scripts/sync_exercise_dataset.ts",
+    "migrate": "deno run --allow-net --allow-env --allow-read scripts/migrate.ts",
+    "seed": "deno run --allow-net --allow-env --allow-read scripts/seed.ts"
   },
   "deploy": {
     "org": "enmasantos",

@@ -18,6 +18,7 @@ node_modules/
 .env.production.local
 .env.*.local
 .env.example
+!backend/.env.example
 
 # Debug logs
 npm-debug.log*
@@ -47,6 +48,8 @@ logs
 *.sqlite
 *.sqlite3
 *.sql
+!backend/migrations/
+!backend/migrations/*.sql
 
 # Deno
 test_random_calories.ts
@@ -57,3 +60,4 @@ test_random_calories.ts
 GEMINI.md
 .vercel
 .env*
+!backend/.env.example
