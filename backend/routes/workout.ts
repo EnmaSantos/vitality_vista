@@ -7,6 +7,7 @@ import {
   getUserWorkoutPlansHandler,
   addExerciseToPlanHandler,
   createWorkoutLogHandler,
+  deleteWorkoutLogHandler,
   getUserWorkoutLogsHandler,
   logExerciseDetailsHandler,
   getPlanExercisesHandler,
@@ -61,6 +62,10 @@ workoutRouter.put("/workout-plans/:planId/exercises/:planExerciseId", authMiddle
 // POST /api/workout-logs
 // Creates a new workout log (actual workout session)
 workoutRouter.post("/workout-logs", authMiddleware, createWorkoutLogHandler);
+
+// DELETE /api/workout-logs/:logId
+// Cancels an incomplete workout session owned by the authenticated user.
+workoutRouter.delete("/workout-logs/:logId", authMiddleware, deleteWorkoutLogHandler);
 
 // GET /api/workout-logs
 // Gets all workout logs for the authenticated user

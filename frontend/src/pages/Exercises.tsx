@@ -32,10 +32,8 @@ import {
   Chip
 } from '@mui/material';
 import {
-  AccessibilityNew as AccessibilityNewIcon,
   Add as AddIcon,
   Close as CloseIcon,
-  DirectionsRun as DirectionsRunIcon,
   FitnessCenter as FitnessCenterIcon,
   PlayCircleOutline as PlayCircleOutlineIcon,
   Search as SearchIcon
@@ -53,6 +51,7 @@ import { useAuth } from '../context/AuthContext';
 import { createWorkoutLog, logExerciseDetail } from '../services/workoutLogApi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LogWorkoutModal from '../components/LogWorkoutModal';
+import ExerciseMedia from '../components/ExerciseMedia';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -70,70 +69,6 @@ interface NewWorkoutPlanForm {
   name: string;
   description: string;
 }
-
-interface ExerciseVisualProps {
-  exercise: ExerciseSummary;
-  compact?: boolean;
-}
-
-const ExerciseVisual: React.FC<ExerciseVisualProps> = ({ exercise, compact = false }) => {
-  const category = exercise.category.toLowerCase();
-  const equipment = exercise.equipment.toLowerCase();
-  const isCardio = category === 'cardio';
-  const isBodyWeight = equipment === 'body weight';
-
-  return (
-    <Box
-      role="img"
-      aria-label={`${exercise.name} exercise visual`}
-      sx={{
-        position: 'relative',
-        minHeight: compact ? 150 : 240,
-        overflow: 'hidden',
-        display: 'grid',
-        placeItems: 'center',
-        color: 'white',
-        background: 'linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 58%, var(--color-secondary) 140%)',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          width: compact ? 150 : 230,
-          height: compact ? 150 : 230,
-          borderRadius: '50%',
-          top: compact ? -74 : -112,
-          right: compact ? -42 : -62,
-          bgcolor: 'rgba(255,255,255,0.14)'
-        },
-        '&::after': {
-          content: '""',
-          position: 'absolute',
-          width: compact ? 96 : 150,
-          height: compact ? 96 : 150,
-          borderRadius: '50%',
-          bottom: compact ? -52 : -82,
-          left: compact ? -22 : -34,
-          bgcolor: 'rgba(255,255,255,0.10)'
-        }
-      }}
-    >
-      <Stack alignItems="center" spacing={0.75} sx={{ position: 'relative', zIndex: 1, px: 2, textAlign: 'center' }}>
-        {isCardio ? (
-          <DirectionsRunIcon sx={{ fontSize: compact ? 58 : 82 }} />
-        ) : isBodyWeight ? (
-          <AccessibilityNewIcon sx={{ fontSize: compact ? 58 : 82 }} />
-        ) : (
-          <FitnessCenterIcon sx={{ fontSize: compact ? 58 : 82 }} />
-        )}
-        <Typography variant={compact ? 'caption' : 'subtitle1'} sx={{ fontWeight: 700, textTransform: 'capitalize' }}>
-          {exercise.target || exercise.bodyPart || exercise.category}
-        </Typography>
-        <Typography variant="caption" sx={{ opacity: 0.82, textTransform: 'capitalize' }}>
-          {exercise.equipment}
-        </Typography>
-      </Stack>
-    </Box>
-  );
-};
 
 const ExercisesPage: React.FC = () => {
   // --- State Variables ---
@@ -856,7 +791,7 @@ const ExercisesPage: React.FC = () => {
                         }
                       }}
                     >
-                      <ExerciseVisual exercise={exercise} compact />
+                      <ExerciseMedia exercise={exercise} compact />
                       <CardContent sx={{ flexGrow: 1, p: 3 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                           <Typography variant="h6" component="div" sx={{ color: 'var(--color-primary-dark)', fontWeight: 600, fontFamily: 'Outfit, sans-serif', lineHeight: 1.2 }}>
@@ -1019,7 +954,7 @@ const ExercisesPage: React.FC = () => {
               <Grid container spacing={4}>
                 <Grid item xs={12} md={4}>
                   <Box sx={{ borderRadius: 4, overflow: 'hidden', height: '100%' }}>
-                    <ExerciseVisual exercise={selectedExerciseForModal} />
+                    <ExerciseMedia exercise={selectedExerciseForModal} />
                   </Box>
                 </Grid>
                 <Grid item xs={12} md={8}>

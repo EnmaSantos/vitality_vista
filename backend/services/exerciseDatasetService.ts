@@ -13,6 +13,8 @@ export interface ExerciseSummary {
   target: string;
   muscleGroup: string;
   secondaryMuscles: string[];
+  imageUrl: string;
+  gifUrl: string;
 }
 
 export interface Exercise extends ExerciseSummary {
@@ -41,6 +43,8 @@ export interface ExerciseDatasetMetadata {
   revision: string;
   license: string;
   mediaIncluded: boolean;
+  mediaAvailable: boolean;
+  mediaLicense: string;
   exerciseCount: number;
 }
 

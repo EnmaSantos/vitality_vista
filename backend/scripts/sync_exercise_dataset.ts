@@ -12,6 +12,8 @@ interface SourceExercise {
   muscle_group: string;
   secondary_muscles: string[];
   target: string;
+  image: string;
+  gif_url: string;
 }
 
 interface ExerciseDatasetRecord {
@@ -25,6 +27,8 @@ interface ExerciseDatasetRecord {
   muscleGroup: string;
   secondaryMuscles: string[];
   instructions: string[];
+  imageUrl: string;
+  gifUrl: string;
 }
 
 function requireText(value: unknown, field: string, sourceId: string): string {
@@ -41,7 +45,38 @@ function splitInstructions(instructions: string): string[] {
     .filter(Boolean);
 }
 
-function normalizeExercise(source: SourceExercise): ExerciseDatasetRecord {
+function buildMediaUrl(
+  path: string,
+  expectedDirectory: "images" | "videos",
+  expectedExtension: ".jpg" | ".gif",
+  sourceId: string,
+  revision: string,
+): string {
+  const normalizedPath = requireText(
+    path,
+    `${expectedDirectory} media path`,
+    sourceId,
+  )
+    .replaceAll("\\", "/");
+  const expectedPrefix = `${expectedDirectory}/`;
+
+  if (
+    !normalizedPath.startsWith(expectedPrefix) ||
+    !normalizedPath.toLowerCase().endsWith(expectedExtension) ||
+    normalizedPath.includes("..")
+  ) {
+    throw new Error(
+      `Exercise ${sourceId} has an invalid ${expectedDirectory} media path`,
+    );
+  }
+
+  return `https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/${revision}/${normalizedPath}`;
+}
+
+function normalizeExercise(
+  source: SourceExercise,
+  revision: string,
+): ExerciseDatasetRecord {
   const sourceId = requireText(source.id, "id", "unknown");
   if (!/^\d+$/.test(sourceId)) {
     throw new Error(`Exercise ${sourceId} does not have a numeric source ID`);
@@ -80,6 +115,8 @@ function normalizeExercise(source: SourceExercise): ExerciseDatasetRecord {
       )
       : [],
     instructions,
+    imageUrl: buildMediaUrl(source.image, "images", ".jpg", sourceId, revision),
+    gifUrl: buildMediaUrl(source.gif_url, "videos", ".gif", sourceId, revision),
   };
 }
 
@@ -105,7 +142,7 @@ if (!Array.isArray(sourceData)) {
 }
 
 const exercises = (sourceData as SourceExercise[])
-  .map(normalizeExercise)
+  .map((exercise) => normalizeExercise(exercise, revision))
   .sort((left, right) => left.id - right.id);
 
 const ids = new Set<number>();
@@ -129,8 +166,10 @@ await Deno.writeTextFile(
       {
         repository: REPOSITORY_URL,
         revision,
-        license: "MIT",
+        license: "Educational and non-commercial use only",
         mediaIncluded: false,
+        mediaAvailable: true,
+        mediaLicense: "Educational and non-commercial use only",
         exerciseCount: exercises.length,
       },
       null,
@@ -141,5 +180,5 @@ await Deno.writeTextFile(
 
 console.log(`Wrote ${exercises.length} exercises from ${revision}`);
 console.log(
-  "Media files were intentionally excluded because they use a separate, restricted license.",
+  "Media files were not bundled; records contain pinned upstream URLs for educational and non-commercial use.",
 );

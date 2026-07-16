@@ -21,7 +21,19 @@ Deno.test("exercise dataset exposes the complete pinned snapshot", () => {
   );
   assert(
     metadata.source.mediaIncluded === false,
-    "Restricted upstream media must not be included",
+    "Restricted upstream media must not be bundled",
+  );
+  assert(
+    metadata.source.mediaAvailable === true,
+    "Expected pinned upstream media URLs to be available",
+  );
+  assert(
+    metadata.source.mediaLicense.includes("non-commercial"),
+    "Expected the upstream media usage restriction in metadata",
+  );
+  assert(
+    metadata.source.license.includes("non-commercial"),
+    "Expected the dataset usage restriction in metadata",
   );
   assert(
     metadata.categories.includes("chest"),
@@ -44,6 +56,14 @@ Deno.test("exercise lookup accepts numeric and zero-padded source IDs", () => {
   assert(
     (numeric?.instructions.length || 0) > 0,
     "Expected English instruction steps",
+  );
+  assert(
+    numeric?.imageUrl.includes("/images/0001-") === true,
+    "Expected a pinned static exercise image URL",
+  );
+  assert(
+    numeric?.gifUrl.includes("/videos/0001-") === true,
+    "Expected a pinned animated exercise GIF URL",
   );
 });
 

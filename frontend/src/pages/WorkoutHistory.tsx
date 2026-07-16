@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   CircularProgress,
+  Button,
   Alert,
   Accordion,
   AccordionSummary,
@@ -29,10 +30,13 @@ import {
   Save as SaveIcon,
   Cancel as CancelIcon
 } from '@mui/icons-material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ListAltIcon from '@mui/icons-material/ListAlt';
 import { useAuth } from '../context/AuthContext';
 import { getUserWorkoutLogs, getWorkoutLogDetails, WorkoutLog, LogExerciseDetail } from '../services/workoutLogApi';
 import { format, formatDistanceToNow } from 'date-fns';
 import { API_BASE_URL } from '../config';
+import { useNavigate } from 'react-router-dom';
 
 // Helper interface to group exercises by name
 interface ExerciseGroup {
@@ -43,6 +47,7 @@ interface ExerciseGroup {
 
 const WorkoutHistory: React.FC = () => {
   const { token } = useAuth();
+  const navigate = useNavigate();
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
   const [exerciseDetails, setExerciseDetails] = useState<Record<number, LogExerciseDetail[]>>({});
@@ -285,9 +290,35 @@ const WorkoutHistory: React.FC = () => {
     fetchWorkoutLogs();
   }, [token]);
 
+  const workoutNavigation = (
+    <Stack
+      direction={{ xs: 'column', sm: 'row' }}
+      spacing={1}
+      justifyContent="space-between"
+      sx={{ mb: 3 }}
+    >
+      <Button
+        variant="outlined"
+        startIcon={<ArrowBackIcon />}
+        onClick={() => navigate('/exercises')}
+      >
+        Exercise Library
+      </Button>
+      <Button startIcon={<ListAltIcon />} onClick={() => navigate('/my-plans')}>
+        My Plans
+      </Button>
+    </Stack>
+  );
+
   if (loadingLogs) {
     return (
       <Box sx={{ padding: 4, backgroundColor: 'var(--color-bg)', minHeight: '100vh' }}>
+        <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+          {workoutNavigation}
+          <Typography variant="h3" component="h1" sx={{ color: 'var(--color-primary-dark)', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>
+            Workout History
+          </Typography>
+        </Box>
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <CircularProgress sx={{ color: 'var(--color-primary)' }} />
         </Box>
@@ -298,6 +329,7 @@ const WorkoutHistory: React.FC = () => {
   return (
     <Box sx={{ padding: { xs: 2, md: 4 }, backgroundColor: 'var(--color-bg)', minHeight: '100vh', pb: 8 }}>
       <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+        {workoutNavigation}
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box>
@@ -419,6 +451,13 @@ const WorkoutHistory: React.FC = () => {
             <Typography sx={{ color: 'var(--color-secondary)' }}>
               Start logging your workouts to see your progress here.
             </Typography>
+            <Button
+              variant="contained"
+              onClick={() => navigate('/exercises')}
+              sx={{ mt: 3 }}
+            >
+              Start a Workout
+            </Button>
           </Paper>
         ) : (
           <Stack spacing={2}>

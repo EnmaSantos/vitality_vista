@@ -1,7 +1,9 @@
 {
   "repository": "https://github.com/hasaneyldrm/exercises-dataset",
   "revision": "7455efae41b330c265e7cd4b78dfa848e7ce5ebd",
-  "license": "MIT",
+  "license": "Educational and non-commercial use only",
   "mediaIncluded": false,
+  "mediaAvailable": true,
+  "mediaLicense": "Educational and non-commercial use only",
   "exerciseCount": 1324
 }

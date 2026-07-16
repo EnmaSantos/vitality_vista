@@ -13,11 +13,13 @@ import {
   updateWorkoutPlan,
   UpdateWorkoutPlanPayload,
 } from '../api/workoutApi';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, Button, List, ListItem, ListItemText, IconButton, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Stack } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Alert, Typography, Button, List, ListItem, ListItemText, IconButton, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Stack } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import HistoryIcon from '@mui/icons-material/History';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import LogWorkoutModal from '../components/LogWorkoutModal';
 import { ExerciseSummary } from '../services/exerciseApi';
@@ -70,8 +72,9 @@ const MyPlans: React.FC = () => {
       setError('An unexpected error occurred while fetching plans.');
       console.error(err);
       setPlans([]); // Ensure plans is empty on error
+    } finally {
+      setLoadingPlans(false);
     }
-    setLoadingPlans(false);
   }, [token]);
 
   useEffect(() => {
@@ -277,43 +280,101 @@ const MyPlans: React.FC = () => {
   const handleNavigateToCreatePlan = () => {
     navigate('/exercises', { state: { openCreatePlanModal: true } });
   };
+
+  const workoutNavigation = (
+    <Stack
+      direction={{ xs: 'column', sm: 'row' }}
+      spacing={1}
+      justifyContent="space-between"
+      sx={{ mb: 3 }}
+    >
+      <Button
+        variant="outlined"
+        startIcon={<ArrowBackIcon />}
+        onClick={() => navigate('/exercises')}
+      >
+        Exercise Library
+      </Button>
+      <Button
+        startIcon={<HistoryIcon />}
+        onClick={() => navigate('/workout-history')}
+      >
+        Workout History
+      </Button>
+    </Stack>
+  );
   
   if (loadingPlans) {
-    return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
+    return (
+      <Box sx={{ maxWidth: 800, mx: 'auto', px: 2, py: 5 }}>
+        {workoutNavigation}
+        <Typography variant="h4" component="h1" gutterBottom>
+          My Workout Plans
+        </Typography>
+        <Box role="status" aria-live="polite" sx={{ mt: 5, textAlign: 'center' }}>
+          <CircularProgress size={32} />
+          <Typography color="text.secondary" sx={{ mt: 2 }}>
+            Loading your workout plans...
+          </Typography>
+        </Box>
+      </Box>
+    );
   }
 
   if (error) {
-    return <Typography color="error" sx={{ textAlign: 'center', mt: 4 }}>Error: {error}</Typography>;
+    return (
+      <Box sx={{ maxWidth: 720, mx: 'auto', px: 2, py: 5 }}>
+        {workoutNavigation}
+        <Typography variant="h4" component="h1" gutterBottom>
+          My Workout Plans
+        </Typography>
+        <Alert
+          severity="error"
+          action={(
+            <Button color="inherit" size="small" onClick={fetchUserPlans}>
+              Try again
+            </Button>
+          )}
+        >
+          {error}
+        </Alert>
+      </Box>
+    );
   }
 
   if (plans.length === 0) {
     return (
-      <Box sx={{ textAlign: 'center', mt: 4 }}>
-        <Typography variant="h6">No workout plans created yet.</Typography>
-        <Typography variant="subtitle1" sx={{ mb: 2, color: 'text.secondary' }}>
-          Let's create your first one!
+      <Box sx={{ maxWidth: 720, mx: 'auto', px: 2, py: 5, textAlign: 'center' }}>
+        {workoutNavigation}
+        <Typography variant="h4" component="h1" gutterBottom>
+          My Workout Plans
         </Typography>
-        <Button variant="contained" sx={{ mt: 2 }} onClick={handleNavigateToCreatePlan}>
-          Create Your First Plan
-        </Button>
+        <Box sx={{ mt: 4, p: { xs: 3, sm: 5 }, border: 1, borderColor: 'divider', borderRadius: 3 }}>
+          <Typography variant="h6">No workout plans yet</Typography>
+          <Typography sx={{ mt: 1, mb: 3, color: 'text.secondary' }}>
+            Build your first plan from the exercise library, then return here to start it.
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="center">
+            <Button variant="contained" onClick={handleNavigateToCreatePlan}>
+              Create Your First Plan
+            </Button>
+            <Button variant="outlined" onClick={() => navigate('/exercises')}>
+              Browse Exercises
+            </Button>
+          </Stack>
+        </Box>
       </Box>
     );
   }
 
   return (
     <Box sx={{ maxWidth: 800, margin: 'auto', padding: 2 }}>
+      {workoutNavigation}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
         <Typography variant="h4" gutterBottom sx={{ textAlign: 'left', flexGrow: 1 }}>
             My Workout Plans
         </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button 
-              variant="outlined" 
-              onClick={() => navigate('/workout-history')}
-              sx={{ color: '#606c38ff', borderColor: '#606c38ff', '&:hover': { bgcolor: 'rgba(96,108,56,0.05)' } }}
-          >
-              View History
-          </Button>
           <Button 
               variant="contained" 
               color="primary" 

@@ -520,6 +520,68 @@ export async function createWorkoutLogHandler(ctx: RouterContext<any, any>) {
 }
 
 /**
+ * Cancels a workout session and removes its incomplete workout log.
+ */
+export async function deleteWorkoutLogHandler(ctx: RouterContext<any, any>) {
+  const response: ApiResponse<null> = { success: false };
+
+  try {
+    const userId = ctx.state.userId as string;
+    if (!userId) {
+      ctx.response.status = 401;
+      response.error = "User not authenticated";
+      ctx.response.body = response;
+      return;
+    }
+
+    const logId = Number(ctx.params.logId);
+    if (!Number.isInteger(logId) || logId <= 0) {
+      ctx.response.status = 400;
+      response.error = "Invalid workout log ID";
+      ctx.response.body = response;
+      return;
+    }
+
+    const result = await dbClient.queryObject<{ log_id: number }>(
+      `DELETE FROM workout_logs
+       WHERE log_id = $1
+         AND user_id = $2
+         AND NOT EXISTS (
+           SELECT 1 FROM log_exercise_details
+           WHERE log_exercise_details.log_id = workout_logs.log_id
+         )
+       RETURNING log_id`,
+      [logId, userId],
+    );
+
+    if (result.rows.length === 0) {
+      const ownershipResult = await dbClient.queryObject<{ log_id: number }>(
+        "SELECT log_id FROM workout_logs WHERE log_id = $1 AND user_id = $2",
+        [logId, userId],
+      );
+      const completedWorkout = ownershipResult.rows.length > 0;
+      ctx.response.status = completedWorkout ? 409 : 404;
+      response.error = completedWorkout
+        ? "Completed workouts cannot be cancelled"
+        : "Workout log not found or access denied";
+      ctx.response.body = response;
+      return;
+    }
+
+    response.success = true;
+    response.data = null;
+    response.message = "Workout cancelled";
+    ctx.response.status = 200;
+    ctx.response.body = response;
+  } catch (error) {
+    console.error("Error in deleteWorkoutLogHandler:", error);
+    response.error = error instanceof Error ? error.message : "Unknown error occurred";
+    ctx.response.status = 500;
+    ctx.response.body = response;
+  }
+}
+
+/**
  * Logs exercise details for a workout session
  */
 export async function logExerciseDetailsHandler(ctx: RouterContext<any, any>) {
