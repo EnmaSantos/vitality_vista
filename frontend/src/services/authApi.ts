@@ -292,16 +292,10 @@ export async function logout(): Promise<void> {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/logout`, {
       method: 'POST',
-      credentials: 'include',
       keepalive: true,
       headers: {
-        // Include credentials if your backend expects cookies to be sent
-        // This might be necessary for the backend to identify the session to clear
-        // However, for a simple JWT cookie clearing, the backend might not need this.
-        // 'Content-Type': 'application/json', // No body being sent usually for logout
         'Accept': 'application/json',
       },
-      // No body is typically sent for a logout request that just clears a cookie
     });
 
     const responseData = await response.json();
