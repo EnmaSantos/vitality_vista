@@ -76,6 +76,10 @@ const WorkoutHistory: React.FC = () => {
     const timeOfDay = getTimeOfDay(date);
     const dateStr = format(date, 'MMM d');
 
+    if (log.routine_name_snapshot) {
+      return `${log.routine_name_snapshot} • ${dateStr} • ${timeOfDay}`;
+    }
+
     if (details && details.length > 0) {
       // Get unique exercise names
       const exerciseNames = [...new Set(details.map(d => d.exercise_name))];
@@ -300,7 +304,7 @@ const WorkoutHistory: React.FC = () => {
       <Button
         variant="outlined"
         startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/exercises')}
+        onClick={() => navigate('/workouts')}
       >
         Exercise Library
       </Button>
@@ -453,7 +457,7 @@ const WorkoutHistory: React.FC = () => {
             </Typography>
             <Button
               variant="contained"
-              onClick={() => navigate('/exercises')}
+              onClick={() => navigate('/workouts')}
               sx={{ mt: 3 }}
             >
               Start a Workout

@@ -48,11 +48,11 @@ const navItems = [
     tint: themePalette.foodLog.navTint,
   },
   {
-    path: '/exercises',
+    path: '/workouts',
     label: 'Train',
     desktopLabel: 'Workouts',
     icon: <FitnessCenterIcon fontSize="small" />,
-    match: ['/exercises', '/my-plans', '/workout-history', '/workout/session'],
+    match: ['/workouts', '/my-plans', '/workout-history', '/workout/session'],
     color: themePalette.workouts.navColor,
     activeColor: themePalette.workouts.navActive,
     tint: themePalette.workouts.navTint,

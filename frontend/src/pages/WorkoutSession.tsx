@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getPlanExercises, PlanExercise, createWorkoutLog, deleteWorkoutLog, WorkoutLog, logExerciseDetails, LogExerciseDetailPayload } from '../api/workoutApi';
+import { getPlanExercises, getUserWorkoutPlans, PlanExercise, createWorkoutLog, deleteWorkoutLog, WorkoutLog, logExerciseDetails, LogExerciseDetailPayload } from '../api/workoutApi';
 import { getExerciseById, Exercise } from '../services/exerciseApi';
+import { getRoutine, Routine } from '../services/catalogApi';
+import { buildRoutineSessionQueue, orderSessionQueue } from '../utils/routineQueue';
 import { ArrowBack as ArrowBackIcon, Close as CloseIcon, History as HistoryIcon, ListAlt as ListAltIcon, StopCircle as StopCircleIcon } from '@mui/icons-material';
 import { Alert, Box, Typography, CircularProgress, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Stack, TextField } from '@mui/material';
 import Timer from '../components/Timer';
@@ -18,7 +20,7 @@ type SetData = {
 };
 
 const WorkoutSession = () => {
-    const { planId, exerciseId } = useParams<{ planId?: string; exerciseId?: string }>();
+    const { planId, exerciseId, routineSlug } = useParams<{ planId?: string; exerciseId?: string; routineSlug?: string }>();
     const { token } = useAuth();
     const navigate = useNavigate();
 
@@ -35,6 +37,8 @@ const WorkoutSession = () => {
     const [isCancelling, setIsCancelling] = useState(false);
     const [cancelError, setCancelError] = useState<string | null>(null);
     const [cancelDestination, setCancelDestination] = useState('/exercises');
+    const [routine, setRoutine] = useState<Routine>();
+    const [restAdvance, setRestAdvance] = useState<'set' | 'exercise'>('set');
 
     // State for logging
     const [workoutLog, setWorkoutLog] = useState<WorkoutLog | null>(null);
@@ -55,7 +59,7 @@ const WorkoutSession = () => {
             const restSeconds = currentExercise.rest_period_seconds || 60;
             setRestTime(restSeconds);
             setRestTimeInput(restSeconds.toString());
-            setCurrentReps(currentExercise.reps || '');
+            setCurrentReps(currentExercise.reps && /^\d+$/.test(currentExercise.reps) ? currentExercise.reps : '');
             setCurrentWeight(currentExercise.weight_kg || '');
         }
     }, [currentExerciseIndex, currentSet, exercises]);
@@ -87,14 +91,37 @@ const WorkoutSession = () => {
 
             if (planId) {
                 try {
-                    const response = await getPlanExercises(Number(planId), token);
+                    const [response, plansResponse] = await Promise.all([
+                        getPlanExercises(Number(planId), token),
+                        getUserWorkoutPlans(token),
+                    ]);
                     if (response.success && response.data) {
-                        setExercises(response.data);
+                        const plan = plansResponse.data?.find((item) => item.plan_id === Number(planId));
+                        setExercises(orderSessionQueue(
+                            response.data,
+                            plan?.session_format ?? 'straight_sets',
+                            plan?.rounds ?? 1,
+                        ));
                     } else {
                         setError(response.error || 'Failed to fetch plan exercises');
                     }
                 } catch (err) {
                     setError('An unexpected error occurred while fetching exercises.');
+                    console.error(err);
+                }
+            } else if (routineSlug) {
+                try {
+                    const routineData = await getRoutine(routineSlug);
+                    const queue = buildRoutineSessionQueue(routineData);
+                    setRoutine(routineData);
+                    setExercises(queue);
+                    setExerciseDetailsById(Object.fromEntries(
+                        routineData.exercises
+                            .filter((item) => item.exercise)
+                            .map((item) => [item.exercise!.id, { ...item.exercise!, instructions: [] } as Exercise]),
+                    ));
+                } catch (err) {
+                    setError('Failed to load this routine.');
                     console.error(err);
                 }
             } else if (exerciseId) {
@@ -116,7 +143,7 @@ const WorkoutSession = () => {
         };
 
         fetchExercises();
-    }, [planId, exerciseId, token, navigate]);
+    }, [planId, exerciseId, routineSlug, token, navigate]);
 
     useEffect(() => {
         const currentExercise = exercises[currentExerciseIndex];
@@ -169,7 +196,11 @@ const WorkoutSession = () => {
         try {
             const response = await createWorkoutLog({ 
                 plan_id: planId ? Number(planId) : undefined, 
-                workout_date: new Date().toISOString().split('T')[0] 
+                workout_date: new Date().toISOString().split('T')[0],
+                duration_minutes: routine?.estimatedDurationMinutes,
+                routine_slug: routine?.slug,
+                routine_version: routine?.catalogVersion,
+                routine_name_snapshot: routine?.name,
             }, token);
 
             if (response.success && response.data) {
@@ -201,13 +232,12 @@ const WorkoutSession = () => {
         setCompletedSets(updatedCompletedSets);
 
         if (currentSet < (currentExercise.sets || 1)) {
+            setRestAdvance('set');
             setWorkoutState('resting');
         } else {
             if (currentExerciseIndex < exercises.length - 1) {
-                setCurrentExerciseIndex(currentExerciseIndex + 1);
-                setCurrentSet(1);
-                setWorkoutState('active');
-                setActiveSetTime(0);
+                setRestAdvance('exercise');
+                setWorkoutState('resting');
             } else {
                 finishWorkout(updatedCompletedSets);
             }
@@ -233,12 +263,18 @@ const WorkoutSession = () => {
     };
 
     const handleStartNextSet = () => {
-        setCurrentSet(currentSet + 1);
+        if (restAdvance === 'exercise') {
+            setCurrentExerciseIndex((index) => index + 1);
+            setCurrentSet(1);
+        } else {
+            setCurrentSet((set) => set + 1);
+        }
         setWorkoutState('active');
         setActiveSetTime(0);
     };
 
-    const defaultExitDestination = planId ? '/my-plans' : '/exercises';
+    const defaultExitDestination = planId ? '/my-plans' : routineSlug ? `/workouts/routines/${routineSlug}` : '/workouts/exercises';
+    const backLabel = planId ? 'Back to My Plans' : routineSlug ? 'Back to Routine' : 'Back to Exercises';
     const workoutIsInProgress = workoutState === 'active' || workoutState === 'resting';
     const navigationDisabled = workoutState === 'saving' || isCancelling;
 
@@ -292,7 +328,7 @@ const WorkoutSession = () => {
                     startIcon={<ArrowBackIcon />}
                     onClick={() => navigate(defaultExitDestination)}
                 >
-                    {planId ? 'Back to My Plans' : 'Back to Exercises'}
+                    {backLabel}
                 </Button>
                 <Box role="status" sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
                     <CircularProgress />
@@ -310,7 +346,7 @@ const WorkoutSession = () => {
                     onClick={() => navigate(defaultExitDestination)}
                     sx={{ mb: 3 }}
                 >
-                    {planId ? 'Back to My Plans' : 'Back to Exercises'}
+                    {backLabel}
                 </Button>
                 <Alert severity="error">{error}</Alert>
             </Box>
@@ -349,7 +385,7 @@ const WorkoutSession = () => {
                     onClick={() => handleNavigationRequest(defaultExitDestination)}
                     disabled={navigationDisabled}
                 >
-                    {planId ? 'Back to My Plans' : 'Back to Exercises'}
+                    {backLabel}
                 </Button>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                     <Button
@@ -392,7 +428,7 @@ const WorkoutSession = () => {
             </Stack>
 
             <Typography variant="h4" component="h1" gutterBottom>
-                {exerciseId ? 'Single Exercise Workout' : 'Workout Session'}
+                {routine?.name ?? (exerciseId ? 'Single Exercise Workout' : 'Workout Session')}
             </Typography>
 
             {currentExerciseMedia && (
@@ -434,33 +470,56 @@ const WorkoutSession = () => {
                 <Box>
                     <Typography variant="h5">{currentExercise.exercise_name}</Typography>
                     <Typography variant="h6">
+                        {currentExercise.phase ? `${currentExercise.phase.replace(/^./, (letter) => letter.toUpperCase())} · ` : ''}
                         Set {currentSet} of {currentExercise.sets || 1}
                     </Typography>
-                    <Typography>Target Reps: {currentExercise.reps || 'N/A'}</Typography>
-                    <Typography>Target Weight: {currentExercise.weight_kg ? `${currentExercise.weight_kg} kg` : 'N/A'}</Typography>
+                    <Typography>
+                        {currentExercise.duration_seconds
+                            ? `Target time: ${currentExercise.duration_seconds} seconds`
+                            : `Target reps: ${currentExercise.reps || 'Choose a comfortable number with controlled form'}`}
+                    </Typography>
+                    <Typography>
+                        {currentExercise.weight_kg
+                            ? `Planned resistance: ${currentExercise.weight_kg} kg`
+                            : 'Resistance: bodyweight or a self-selected appropriate load'}
+                    </Typography>
                     
-                    <TextField
-                        label="Reps Achieved"
-                        type="number"
-                        value={currentReps}
-                        onChange={(e) => setCurrentReps(e.target.value)}
-                        sx={{ mt: 2, mr: 2 }}
-                    />
-                    <TextField
-                        label="Weight (kg)"
-                        type="number"
-                        value={currentWeight}
-                        onChange={(e) => setCurrentWeight(e.target.value)}
-                        sx={{ mt: 2 }}
-                    />
+                    {!currentExercise.duration_seconds && (
+                        <TextField
+                            label="Reps Achieved"
+                            type="number"
+                            value={currentReps}
+                            onChange={(e) => setCurrentReps(e.target.value)}
+                            sx={{ mt: 2, mr: 2 }}
+                        />
+                    )}
+                    {currentExercise.weight_kg !== undefined && currentExercise.weight_kg !== null && (
+                        <TextField
+                            label="Weight (kg)"
+                            type="number"
+                            value={currentWeight}
+                            onChange={(e) => setCurrentWeight(e.target.value)}
+                            sx={{ mt: 2 }}
+                        />
+                    )}
 
                     {workoutState === 'active' && (
                         <Box sx={{ my: 2 }}>
-                            <Typography variant="h4">{formatTime(activeSetTime)}</Typography>
-                            <Typography variant="caption">Active Set Time</Typography>
-                            <Button variant="contained" color="secondary" onClick={handleFinishSet} sx={{ mt: 2, display: 'block' }}>
-                                Finish Set
-                            </Button>
+                            {currentExercise.duration_seconds ? (
+                                <>
+                                    <Typography sx={{ mb: 1 }}>Timed movement</Typography>
+                                    <Timer key={`${currentExerciseIndex}-${currentSet}`} duration={currentExercise.duration_seconds} onFinish={handleFinishSet} />
+                                    <Button variant="outlined" onClick={handleFinishSet} sx={{ mt: 2 }}>Finish Early</Button>
+                                </>
+                            ) : (
+                                <>
+                                    <Typography variant="h4">{formatTime(activeSetTime)}</Typography>
+                                    <Typography variant="caption">Active Set Time</Typography>
+                                    <Button variant="contained" color="secondary" onClick={handleFinishSet} sx={{ mt: 2, display: 'block' }}>
+                                        Finish Set
+                                    </Button>
+                                </>
+                            )}
                         </Box>
                     )}
 

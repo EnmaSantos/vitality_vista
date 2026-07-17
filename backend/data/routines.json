@@ -1,0 +1,4808 @@
+[
+  {
+    "slug": "first-steps-full-body",
+    "name": "First Steps Full Body",
+    "summary": "A welcoming full-body session built around fundamental movement patterns.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 20,
+    "goals": [
+      "general fitness",
+      "strength"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "chest",
+      "abdominals",
+      "glutes",
+      "quadriceps"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "straight_sets",
+    "rounds": 2,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": 2,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Incline_Push-Up",
+        "phase": "work",
+        "order": 3,
+        "sets": 2,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Butt_Lift_Bridge",
+        "phase": "work",
+        "order": 4,
+        "sets": 2,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dead_Bug",
+        "phase": "work",
+        "order": 5,
+        "sets": 2,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "low-impact-full-body",
+    "name": "Low-Impact Full Body",
+    "summary": "Steady full-body training without jumping.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 25,
+    "goals": [
+      "general fitness",
+      "low impact"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "chest",
+      "abdominals",
+      "glutes",
+      "quadriceps"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "circuit",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Incline_Push-Up_Medium",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Butt_Lift_Bridge",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Plank",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Seated_Floor_Hamstring_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "ten-minute-energy",
+    "name": "Ten-Minute Energy",
+    "summary": "A short circuit for moving the whole body when time is limited.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 10,
+    "goals": [
+      "general fitness",
+      "conditioning"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "chest",
+      "abdominals",
+      "quadriceps"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "interval",
+    "rounds": 2,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 40,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Incline_Push-Up",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 40,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Front_Leg_Raises",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 40,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dead_Bug",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 40,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dynamic_Chest_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "bodyweight-strength-i",
+    "name": "Bodyweight Strength I",
+    "summary": "A balanced introduction to progressive bodyweight strength.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 25,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "chest",
+      "triceps",
+      "abdominals",
+      "glutes",
+      "quadriceps"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Walking_Lunge",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Push-Up_Wide",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Single_Leg_Glute_Bridge",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Plank",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "bodyweight-strength-ii",
+    "name": "Bodyweight Strength II",
+    "summary": "A demanding bodyweight session with more challenging variations.",
+    "difficulty": "advanced",
+    "estimatedDurationMinutes": 35,
+    "goals": [
+      "strength",
+      "endurance"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "chest",
+      "triceps",
+      "abdominals",
+      "quadriceps"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "straight_sets",
+    "rounds": 4,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Decline_Push-Up",
+        "phase": "work",
+        "order": 2,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Body_Tricep_Press",
+        "phase": "work",
+        "order": 3,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Bodyweight_Walking_Lunge",
+        "phase": "work",
+        "order": 4,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Side_Bridge",
+        "phase": "work",
+        "order": 5,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Hamstring_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "full-body-circuit",
+    "name": "Full-Body Circuit",
+    "summary": "A multi-round strength circuit covering upper body, lower body, and trunk.",
+    "difficulty": "advanced",
+    "estimatedDurationMinutes": 35,
+    "goals": [
+      "strength",
+      "conditioning"
+    ],
+    "bodyRegions": [
+      "chest",
+      "middle back",
+      "abdominals",
+      "glutes",
+      "quadriceps"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only",
+      "other"
+    ],
+    "format": "circuit",
+    "rounds": 5,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Push-Up_Wide",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Bodyweight_Mid_Row",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Single_Leg_Glute_Bridge",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "morning-movement",
+    "name": "Morning Movement",
+    "summary": "A gentle sequence to start the day with comfortable whole-body movement.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 15,
+    "goals": [
+      "mobility",
+      "general fitness"
+    ],
+    "bodyRegions": [
+      "neck",
+      "shoulders",
+      "lower back",
+      "glutes",
+      "hamstrings"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "mobility_flow",
+    "rounds": 1,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Chin_To_Chest_Stretch",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Cat_Stretch",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "One_Knee_To_Chest",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "90_90_Hamstring",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "no-jump-conditioning",
+    "name": "No-Jump Conditioning",
+    "summary": "Low-impact intervals that raise effort without jumping.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 20,
+    "goals": [
+      "conditioning",
+      "low impact"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "abdominals",
+      "glutes",
+      "quadriceps",
+      "hamstrings"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "interval",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 40,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Front_Leg_Raises",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 40,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Rear_Leg_Raises",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 40,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Plank",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 40,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Standing_Hamstring_and_Calf_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "core-foundations",
+    "name": "Core Foundations",
+    "summary": "Foundational trunk work emphasizing controlled positions.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 20,
+    "goals": [
+      "core stability"
+    ],
+    "bodyRegions": [
+      "abdominals",
+      "lower back",
+      "glutes"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Cat_Stretch",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Dead_Bug",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Plank",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Butt_Lift_Bridge",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Superman",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "bodyweight-upper-body",
+    "name": "Bodyweight Upper Body",
+    "summary": "Upper-body bodyweight strength for pushing, pulling, and trunk control.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 25,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "chest",
+      "lats",
+      "middle back",
+      "triceps",
+      "abdominals"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only",
+      "other"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Push-Up_Wide",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Bodyweight_Mid_Row",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Body_Tricep_Press",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Plank",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Shoulder_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "bodyweight-lower-body",
+    "name": "Bodyweight Lower Body",
+    "summary": "Lower-body strength for the hips, thighs, and calves.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 25,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "glutes",
+      "quadriceps",
+      "hamstrings",
+      "calves",
+      "adductors",
+      "abductors"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Hip_Circles_prone",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Bodyweight_Walking_Lunge",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Side_Leg_Raises",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Single_Leg_Glute_Bridge",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Standing_Hamstring_and_Calf_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "full-body-endurance",
+    "name": "Full-Body Endurance",
+    "summary": "Higher-volume bodyweight work for sustained muscular effort.",
+    "difficulty": "advanced",
+    "estimatedDurationMinutes": 40,
+    "goals": [
+      "endurance",
+      "conditioning"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "chest",
+      "abdominals",
+      "glutes",
+      "quadriceps",
+      "hamstrings"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "circuit",
+    "rounds": 5,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Walking_Lunge",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Push-Up_Wide",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Front_Leg_Raises",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Plank",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Seated_Floor_Hamstring_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "dumbbell-full-body",
+    "name": "Dumbbell Full Body",
+    "summary": "A balanced dumbbell session for major movement patterns.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 35,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "chest",
+      "middle back",
+      "quadriceps",
+      "hamstrings"
+    ],
+    "sports": [],
+    "equipment": [
+      "dumbbell"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Dumbbell_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dumbbell_Bench_Press",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Bent_Over_Two-Dumbbell_Row",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Stiff-Legged_Dumbbell_Deadlift",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Hamstring_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "dumbbell-upper-body",
+    "name": "Dumbbell Upper Body",
+    "summary": "Dumbbell pushing and pulling for the upper body.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "chest",
+      "middle back",
+      "biceps",
+      "triceps"
+    ],
+    "sports": [],
+    "equipment": [
+      "dumbbell"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Dumbbell_Bench_Press",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Bent_Over_Two-Dumbbell_Row",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dumbbell_Shoulder_Press",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dumbbell_Alternate_Bicep_Curl",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Shoulder_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "dumbbell-lower-body",
+    "name": "Dumbbell Lower Body",
+    "summary": "Dumbbell strength for the hips and legs.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "glutes",
+      "quadriceps",
+      "hamstrings",
+      "calves"
+    ],
+    "sports": [],
+    "equipment": [
+      "dumbbell"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Hip_Circles_prone",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Dumbbell_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dumbbell_Lunges",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Stiff-Legged_Dumbbell_Deadlift",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Standing_Dumbbell_Calf_Raise",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Hamstring_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "dumbbell-push",
+    "name": "Dumbbell Push",
+    "summary": "Advanced dumbbell pressing volume for chest, shoulders, and triceps.",
+    "difficulty": "advanced",
+    "estimatedDurationMinutes": 35,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "chest",
+      "triceps"
+    ],
+    "sports": [],
+    "equipment": [
+      "dumbbell"
+    ],
+    "format": "straight_sets",
+    "rounds": 4,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Dumbbell_Bench_Press",
+        "phase": "work",
+        "order": 2,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Arnold_Dumbbell_Press",
+        "phase": "work",
+        "order": 3,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Decline_Dumbbell_Bench_Press",
+        "phase": "work",
+        "order": 4,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Standing_Dumbbell_Triceps_Extension",
+        "phase": "work",
+        "order": 5,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dynamic_Chest_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "dumbbell-pull",
+    "name": "Dumbbell Pull",
+    "summary": "Advanced dumbbell pulling volume for the back, biceps, and forearms.",
+    "difficulty": "advanced",
+    "estimatedDurationMinutes": 35,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "traps",
+      "lats",
+      "middle back",
+      "biceps",
+      "forearms"
+    ],
+    "sports": [],
+    "equipment": [
+      "dumbbell"
+    ],
+    "format": "straight_sets",
+    "rounds": 4,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bent_Over_Two-Dumbbell_Row",
+        "phase": "work",
+        "order": 2,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dumbbell_Incline_Row",
+        "phase": "work",
+        "order": 3,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Reverse_Flyes",
+        "phase": "work",
+        "order": 4,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Alternate_Hammer_Curl",
+        "phase": "work",
+        "order": 5,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Shoulder_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "kettlebell-fundamentals",
+    "name": "Kettlebell Fundamentals",
+    "summary": "Foundational kettlebell strength with controlled, repeatable movements.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "strength",
+      "conditioning"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "middle back",
+      "abdominals",
+      "glutes",
+      "hamstrings"
+    ],
+    "sports": [],
+    "equipment": [
+      "kettlebells"
+    ],
+    "format": "circuit",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "One-Arm_Kettlebell_Swings",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Alternating_Kettlebell_Row",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Alternating_Kettlebell_Press",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Lunge_Pass_Through",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Hamstring_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "resistance-band-full-body",
+    "name": "Resistance Band Full Body",
+    "summary": "Accessible band training for the upper body, hips, and calves.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 25,
+    "goals": [
+      "strength",
+      "low impact"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "middle back",
+      "glutes",
+      "calves",
+      "adductors"
+    ],
+    "sports": [],
+    "equipment": [
+      "bands"
+    ],
+    "format": "circuit",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Band_Pull_Apart",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Hip_Extension_with_Bands",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Band_Hip_Adductions",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Calf_Raises_-_With_Bands",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Shoulder_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "barbell-foundations",
+    "name": "Barbell Foundations",
+    "summary": "A focused barbell session for experienced lifters with sound technique.",
+    "difficulty": "advanced",
+    "estimatedDurationMinutes": 40,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "chest",
+      "middle back",
+      "lower back",
+      "quadriceps",
+      "hamstrings"
+    ],
+    "sports": [],
+    "equipment": [
+      "barbell"
+    ],
+    "format": "straight_sets",
+    "rounds": 4,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Bodyweight_Squat",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Barbell_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Barbell_Bench_Press_-_Medium_Grip",
+        "phase": "work",
+        "order": 3,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Bent_Over_Barbell_Row",
+        "phase": "work",
+        "order": 4,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Romanian_Deadlift",
+        "phase": "work",
+        "order": 5,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "cable-machine-full-body",
+    "name": "Cable Machine Full Body",
+    "summary": "A challenging cable session spanning upper and lower body.",
+    "difficulty": "advanced",
+    "estimatedDurationMinutes": 35,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "chest",
+      "lats",
+      "biceps",
+      "triceps",
+      "quadriceps"
+    ],
+    "sports": [],
+    "equipment": [
+      "cable"
+    ],
+    "format": "straight_sets",
+    "rounds": 4,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Cable_Chest_Press",
+        "phase": "work",
+        "order": 2,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Wide-Grip_Lat_Pulldown",
+        "phase": "work",
+        "order": 3,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Cable_Deadlifts",
+        "phase": "work",
+        "order": 4,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Cable_Rope_Overhead_Triceps_Extension",
+        "phase": "work",
+        "order": 5,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Shoulder_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "stability-ball-strength",
+    "name": "Stability Ball Strength",
+    "summary": "Controlled stability-ball work for trunk and posterior-chain strength.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 25,
+    "goals": [
+      "strength",
+      "core stability"
+    ],
+    "bodyRegions": [
+      "chest",
+      "abdominals",
+      "lower back",
+      "glutes",
+      "hamstrings"
+    ],
+    "sports": [],
+    "equipment": [
+      "exercise ball"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Cat_Stretch",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Ball_Leg_Curl",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Exercise_Ball_Crunch",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Physioball_Hip_Bridge",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Chest_Stretch_on_Stability_Ball",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "chest-and-triceps",
+    "name": "Chest & Triceps",
+    "summary": "Pressing strength for the chest and triceps.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only",
+      "dumbbell"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Dumbbell_Bench_Press",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Push-Ups_-_Close_Triceps_Position",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dumbbell_Flyes",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dumbbell_One-Arm_Triceps_Extension",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dynamic_Chest_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "back-and-biceps",
+    "name": "Back & Biceps",
+    "summary": "Pulling strength for the back and biceps.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "traps",
+      "lats",
+      "middle back",
+      "biceps",
+      "forearms"
+    ],
+    "sports": [],
+    "equipment": [
+      "dumbbell",
+      "other"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Dumbbell_Incline_Row",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Bodyweight_Mid_Row",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dumbbell_Bicep_Curl",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Reverse_Flyes",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "shoulder-strength",
+    "name": "Shoulder Strength",
+    "summary": "Balanced shoulder work across pressing, raising, and rotation.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 25,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "traps",
+      "triceps"
+    ],
+    "sports": [],
+    "equipment": [
+      "dumbbell",
+      "bands"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Dumbbell_Shoulder_Press",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Side_Lateral_Raise",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Reverse_Flyes",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "External_Rotation_with_Band",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Shoulder_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "arm-builder",
+    "name": "Arm Builder",
+    "summary": "Direct biceps, triceps, and forearm training.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "biceps",
+      "triceps",
+      "forearms"
+    ],
+    "sports": [],
+    "equipment": [
+      "dumbbell"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Dumbbell_Alternate_Bicep_Curl",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Standing_Dumbbell_Triceps_Extension",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Alternate_Hammer_Curl",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Triceps_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "core-stability",
+    "name": "Core Stability",
+    "summary": "Controlled trunk work for bracing and position changes.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 25,
+    "goals": [
+      "core stability"
+    ],
+    "bodyRegions": [
+      "abdominals",
+      "lower back",
+      "glutes"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Cat_Stretch",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Dead_Bug",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Side_Bridge",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Plank",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Superman",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "quad-strength",
+    "name": "Quad Strength",
+    "summary": "Knee-dominant strength for the front of the thighs.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "quadriceps",
+      "glutes",
+      "adductors"
+    ],
+    "sports": [],
+    "equipment": [
+      "dumbbell",
+      "body only"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "All_Fours_Quad_Stretch",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Dumbbell_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dumbbell_Lunges",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dumbbell_Step_Ups",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Side_Leg_Raises",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Kneeling_Hip_Flexor",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "posterior-chain",
+    "name": "Posterior Chain",
+    "summary": "Advanced strength for the hamstrings, glutes, and back.",
+    "difficulty": "advanced",
+    "estimatedDurationMinutes": 35,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "traps",
+      "lower back",
+      "glutes",
+      "hamstrings"
+    ],
+    "sports": [],
+    "equipment": [
+      "barbell",
+      "body only"
+    ],
+    "format": "straight_sets",
+    "rounds": 4,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Cat_Stretch",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Romanian_Deadlift",
+        "phase": "work",
+        "order": 2,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Barbell_Deadlift",
+        "phase": "work",
+        "order": 3,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Single_Leg_Glute_Bridge",
+        "phase": "work",
+        "order": 4,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Superman",
+        "phase": "work",
+        "order": 5,
+        "sets": 4,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Hamstring_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "glute-strength",
+    "name": "Glute Strength",
+    "summary": "Glute-focused strength with hip extension and single-leg work.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "strength"
+    ],
+    "bodyRegions": [
+      "glutes",
+      "hamstrings",
+      "abductors"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only",
+      "bands"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Hip_Circles_prone",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Single_Leg_Glute_Bridge",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Glute_Kickback",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Hip_Extension_with_Bands",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Crossover_Reverse_Lunge",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Lying_Glute",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "calf-and-ankle-strength",
+    "name": "Calf & Ankle Strength",
+    "summary": "Lower-leg strength and mobility for the calves and ankles.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 20,
+    "goals": [
+      "strength",
+      "mobility"
+    ],
+    "bodyRegions": [
+      "calves",
+      "quadriceps",
+      "hamstrings"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only",
+      "bands"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Seated_Calf_Stretch",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Calf_Raises_-_With_Bands",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Front_Leg_Raises",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Rear_Leg_Raises",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Bodyweight_Squat",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Standing_Gastrocnemius_Calf_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "back-strength-and-posture-support",
+    "name": "Back Strength & Posture Support",
+    "summary": "General back and shoulder strength for everyday upright movement.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 25,
+    "goals": [
+      "strength",
+      "mobility"
+    ],
+    "bodyRegions": [
+      "neck",
+      "shoulders",
+      "traps",
+      "lats",
+      "middle back",
+      "lower back"
+    ],
+    "sports": [],
+    "equipment": [
+      "bands",
+      "body only"
+    ],
+    "format": "straight_sets",
+    "rounds": 3,
+    "wellness": true,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Chin_To_Chest_Stretch",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Band_Pull_Apart",
+        "phase": "work",
+        "order": 2,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "External_Rotation_with_Band",
+        "phase": "work",
+        "order": 3,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Superman",
+        "phase": "work",
+        "order": 4,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Scapular_Pull-Up",
+        "phase": "work",
+        "order": 5,
+        "sets": 3,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "running-support",
+    "name": "Running Support",
+    "summary": "General strength and mobility that complements recreational running.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 25,
+    "goals": [
+      "sports support",
+      "strength"
+    ],
+    "bodyRegions": [
+      "glutes",
+      "quadriceps",
+      "hamstrings",
+      "calves"
+    ],
+    "sports": [
+      "running"
+    ],
+    "equipment": [
+      "body only"
+    ],
+    "format": "circuit",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Hip_Circles_prone",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Bodyweight_Walking_Lunge",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Single_Leg_Glute_Bridge",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Front_Leg_Raises",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Standing_Hamstring_and_Calf_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "cycling-support",
+    "name": "Cycling Support",
+    "summary": "General trunk and lower-body fitness that complements recreational cycling.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "sports support",
+      "strength"
+    ],
+    "bodyRegions": [
+      "abdominals",
+      "glutes",
+      "quadriceps",
+      "hamstrings",
+      "calves"
+    ],
+    "sports": [
+      "cycling"
+    ],
+    "equipment": [
+      "body only"
+    ],
+    "format": "circuit",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Kneeling_Hip_Flexor",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Single_Leg_Glute_Bridge",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dead_Bug",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Calf_Raises_-_With_Bands",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Hamstring_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "soccer-support",
+    "name": "Soccer Support",
+    "summary": "General lower-body strength, trunk control, and movement capacity for recreational soccer.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "sports support",
+      "conditioning"
+    ],
+    "bodyRegions": [
+      "abdominals",
+      "glutes",
+      "quadriceps",
+      "hamstrings",
+      "adductors",
+      "abductors"
+    ],
+    "sports": [
+      "soccer"
+    ],
+    "equipment": [
+      "body only"
+    ],
+    "format": "circuit",
+    "rounds": 4,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Hip_Circles_prone",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Walking_Lunge",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Side_Leg_Raises",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Rear_Leg_Raises",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Plank",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Adductor_Groin",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "basketball-support",
+    "name": "Basketball Support",
+    "summary": "General full-body strength and conditioning for recreational basketball.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "sports support",
+      "conditioning"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "abdominals",
+      "glutes",
+      "quadriceps",
+      "calves"
+    ],
+    "sports": [
+      "basketball"
+    ],
+    "equipment": [
+      "body only"
+    ],
+    "format": "interval",
+    "rounds": 4,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 40,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Bodyweight_Walking_Lunge",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 40,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Push-Up_Wide",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 40,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Plank",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 40,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Standing_Gastrocnemius_Calf_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "tennis-and-pickleball-support",
+    "name": "Tennis & Pickleball Support",
+    "summary": "General rotational, shoulder, and leg fitness for recreational racquet sports.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "sports support",
+      "strength"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "forearms",
+      "abdominals",
+      "glutes",
+      "quadriceps",
+      "abductors"
+    ],
+    "sports": [
+      "tennis",
+      "pickleball"
+    ],
+    "equipment": [
+      "body only",
+      "bands"
+    ],
+    "format": "circuit",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Torso_Rotation",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "External_Rotation_with_Band",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Crossover_Reverse_Lunge",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Side_Leg_Raises",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Shoulder_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "swimming-dryland-support",
+    "name": "Swimming Dryland Support",
+    "summary": "General shoulder, back, and trunk strength away from the pool.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "sports support",
+      "strength"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "traps",
+      "lats",
+      "middle back",
+      "abdominals"
+    ],
+    "sports": [
+      "swimming"
+    ],
+    "equipment": [
+      "bands",
+      "body only"
+    ],
+    "format": "circuit",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Band_Pull_Apart",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "External_Rotation_with_Band",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Plank",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Superman",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Shoulder_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "hiking-support",
+    "name": "Hiking Support",
+    "summary": "General leg, hip, calf, and trunk strength for recreational hiking.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 30,
+    "goals": [
+      "sports support",
+      "endurance"
+    ],
+    "bodyRegions": [
+      "abdominals",
+      "glutes",
+      "quadriceps",
+      "hamstrings",
+      "calves"
+    ],
+    "sports": [
+      "hiking"
+    ],
+    "equipment": [
+      "body only",
+      "bands"
+    ],
+    "format": "circuit",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Hip_Circles_prone",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Bodyweight_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Bodyweight_Walking_Lunge",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Calf_Raises_-_With_Bands",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Plank",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "8-10",
+        "durationSeconds": null,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Standing_Hamstring_and_Calf_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "golf-support",
+    "name": "Golf Support",
+    "summary": "General rotational, hip, and back fitness for recreational golf.",
+    "difficulty": "intermediate",
+    "estimatedDurationMinutes": 25,
+    "goals": [
+      "sports support",
+      "mobility"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "middle back",
+      "abdominals",
+      "lower back",
+      "glutes"
+    ],
+    "sports": [
+      "golf"
+    ],
+    "equipment": [
+      "body only",
+      "bands"
+    ],
+    "format": "circuit",
+    "rounds": 3,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Torso_Rotation",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Band_Pull_Apart",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Single_Leg_Glute_Bridge",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dead_Bug",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "10-12",
+        "durationSeconds": null,
+        "restSeconds": 45,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "volleyball-support",
+    "name": "Volleyball Support",
+    "summary": "A demanding general strength session for recreational volleyball.",
+    "difficulty": "advanced",
+    "estimatedDurationMinutes": 35,
+    "goals": [
+      "sports support",
+      "strength"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "chest",
+      "triceps",
+      "abdominals",
+      "glutes",
+      "quadriceps",
+      "calves"
+    ],
+    "sports": [
+      "volleyball"
+    ],
+    "equipment": [
+      "body only",
+      "dumbbell"
+    ],
+    "format": "circuit",
+    "rounds": 4,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Dumbbell_Squat",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dumbbell_Shoulder_Press",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Push-Up_Wide",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Calf_Raise_On_A_Dumbbell",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Shoulder_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "martial-arts-support",
+    "name": "Martial Arts Support",
+    "summary": "A demanding general strength and mobility session for recreational martial arts.",
+    "difficulty": "advanced",
+    "estimatedDurationMinutes": 35,
+    "goals": [
+      "sports support",
+      "strength",
+      "mobility"
+    ],
+    "bodyRegions": [
+      "shoulders",
+      "abdominals",
+      "glutes",
+      "quadriceps",
+      "hamstrings",
+      "adductors",
+      "abductors"
+    ],
+    "sports": [
+      "martial arts"
+    ],
+    "equipment": [
+      "body only",
+      "kettlebells"
+    ],
+    "format": "circuit",
+    "rounds": 4,
+    "wellness": false,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Hip_Circles_prone",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Lunge_Pass_Through",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Plank",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Side_Leg_Raises",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Alternating_Kettlebell_Press",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": "12-15",
+        "durationSeconds": null,
+        "restSeconds": 60,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Adductor_Groin",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 45,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "neck-and-shoulder-reset",
+    "name": "Neck & Shoulder Reset",
+    "summary": "A gentle neck and shoulder mobility sequence for general education.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 12,
+    "goals": [
+      "mobility",
+      "recovery"
+    ],
+    "bodyRegions": [
+      "neck",
+      "shoulders",
+      "traps"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "mobility_flow",
+    "rounds": 1,
+    "wellness": true,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Chin_To_Chest_Stretch",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Side_Neck_Stretch",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Shoulder_Stretch",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Isometric_Neck_Exercise_-_Sides",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "wrist-and-forearm-mobility",
+    "name": "Wrist & Forearm Mobility",
+    "summary": "A light wrist and forearm sequence for general movement breaks.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 10,
+    "goals": [
+      "mobility",
+      "recovery"
+    ],
+    "bodyRegions": [
+      "biceps",
+      "triceps",
+      "forearms"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only",
+      "dumbbell"
+    ],
+    "format": "mobility_flow",
+    "rounds": 1,
+    "wellness": true,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Seated_Dumbbell_Palms-Down_Wrist_Curl",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Alternate_Hammer_Curl",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Triceps_Stretch",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Shoulder_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "upper-back-mobility",
+    "name": "Upper Back Mobility",
+    "summary": "A gentle upper-back and shoulder mobility flow.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 15,
+    "goals": [
+      "mobility",
+      "recovery"
+    ],
+    "bodyRegions": [
+      "neck",
+      "shoulders",
+      "traps",
+      "lats",
+      "middle back"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only",
+      "bands"
+    ],
+    "format": "mobility_flow",
+    "rounds": 1,
+    "wellness": true,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Chin_To_Chest_Stretch",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Band_Pull_Apart",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Cat_Stretch",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Shoulder_Stretch",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "gentle-lower-back-mobility",
+    "name": "Gentle Lower Back Mobility",
+    "summary": "A gentle trunk and hip mobility flow for general education.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 15,
+    "goals": [
+      "mobility",
+      "recovery"
+    ],
+    "bodyRegions": [
+      "abdominals",
+      "lower back",
+      "glutes",
+      "hamstrings"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "mobility_flow",
+    "rounds": 1,
+    "wellness": true,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Cat_Stretch",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "One_Knee_To_Chest",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Pelvic_Tilt_Into_Bridge",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dead_Bug",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "90_90_Hamstring",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "hip-mobility",
+    "name": "Hip Mobility",
+    "summary": "A controlled mobility flow for the hips and surrounding muscles.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 15,
+    "goals": [
+      "mobility",
+      "recovery"
+    ],
+    "bodyRegions": [
+      "glutes",
+      "quadriceps",
+      "hamstrings",
+      "adductors",
+      "abductors"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "mobility_flow",
+    "rounds": 1,
+    "wellness": true,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Hip_Circles_prone",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Kneeling_Hip_Flexor",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Crossover_Reverse_Lunge",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Adductor_Groin",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "One_Knee_To_Chest",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Lying_Glute",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "hamstring-and-calf-flexibility",
+    "name": "Hamstring & Calf Flexibility",
+    "summary": "A gentle sequence for the backs of the legs and calves.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 15,
+    "goals": [
+      "mobility",
+      "recovery",
+      "flexibility"
+    ],
+    "bodyRegions": [
+      "hamstrings",
+      "calves",
+      "glutes"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "mobility_flow",
+    "rounds": 1,
+    "wellness": true,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Front_Leg_Raises",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "90_90_Hamstring",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Seated_Floor_Hamstring_Stretch",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Seated_Calf_Stretch",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Standing_Gastrocnemius_Calf_Stretch",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Lying_Glute",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "ankle-mobility",
+    "name": "Ankle Mobility",
+    "summary": "A gentle lower-leg and ankle movement sequence.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 10,
+    "goals": [
+      "mobility",
+      "recovery"
+    ],
+    "bodyRegions": [
+      "calves",
+      "quadriceps",
+      "hamstrings"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "mobility_flow",
+    "rounds": 1,
+    "wellness": true,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Front_Leg_Raises",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Rear_Leg_Raises",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Seated_Calf_Stretch",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Calf_Stretch_Hands_Against_Wall",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Standing_Gastrocnemius_Calf_Stretch",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Standing_Hamstring_and_Calf_Stretch",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  },
+  {
+    "slug": "full-body-recovery-flow",
+    "name": "Full-Body Recovery Flow",
+    "summary": "A calm full-body mobility sequence for easy movement days.",
+    "difficulty": "beginner",
+    "estimatedDurationMinutes": 20,
+    "goals": [
+      "mobility",
+      "recovery"
+    ],
+    "bodyRegions": [
+      "neck",
+      "shoulders",
+      "chest",
+      "middle back",
+      "lower back",
+      "glutes",
+      "hamstrings",
+      "calves"
+    ],
+    "sports": [],
+    "equipment": [
+      "body only"
+    ],
+    "format": "mobility_flow",
+    "rounds": 1,
+    "wellness": true,
+    "catalogVersion": "2026.1",
+    "attribution": "Vitality Vista / Enma Santos",
+    "license": "CC BY 4.0",
+    "exercises": [
+      {
+        "sourceId": "Chin_To_Chest_Stretch",
+        "phase": "warmup",
+        "order": 1,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Move comfortably and prepare for the session."
+      },
+      {
+        "sourceId": "Arm_Circles",
+        "phase": "work",
+        "order": 2,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Dynamic_Chest_Stretch",
+        "phase": "work",
+        "order": 3,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Cat_Stretch",
+        "phase": "work",
+        "order": 4,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "90_90_Hamstring",
+        "phase": "work",
+        "order": 5,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 30,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Use controlled form and choose your own appropriate resistance."
+      },
+      {
+        "sourceId": "Childs_Pose",
+        "phase": "cooldown",
+        "order": 6,
+        "sets": null,
+        "reps": null,
+        "durationSeconds": 60,
+        "restSeconds": 15,
+        "sideGuidance": "Use both sides where the movement is unilateral.",
+        "notes": "Finish with easy, controlled breathing."
+      }
+    ]
+  }
+]

@@ -10,5 +10,8 @@ export interface WorkoutLogSchema {
     log_date: Date | string; // Corresponds to TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
     duration_minutes: number | null; // Corresponds to INTEGER (nullable)
     notes: string | null;     // Corresponds to TEXT (nullable)
+    routine_slug: string | null;
+    routine_version: string | null;
+    routine_name_snapshot: string | null;
     created_at: Date | string; // Corresponds to TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
   }

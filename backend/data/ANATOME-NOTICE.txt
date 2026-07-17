@@ -1,0 +1,30 @@
+Vitality Vista exercise dataset and media notice
+================================================
+
+The exercise records in this directory are a pinned transformation of the
+Anatome dataset:
+
+  https://github.com/Rippy1911/anatome
+  Revision: f117b127dc82fa0c9a8e7e21c7df41ad43154dac
+
+Anatome code is licensed under Apache-2.0. Exercise metadata, reference JPGs,
+and derived GIFs are CC0-1.0 public-domain material originally sourced from:
+
+  https://github.com/yuhonas/free-exercise-db
+
+Anatome's NOTICE identifies the project as:
+
+  Anatome - Muscle Group Image Generator API
+  Copyright 2026 NextSolutions - https://nextsolutions.studio
+
+The backend repository stores exercise metadata and media route references,
+not the binary JPG/GIF files. The Cloudflare exercise-media project downloads
+the pinned CC0 GIF bundle during deployment. Static JPG requests are proxied
+from a pinned free-exercise-db revision.
+
+License and terms references:
+
+  https://github.com/Rippy1911/anatome/blob/main/LICENSE
+  https://github.com/Rippy1911/anatome/blob/main/NOTICE
+  https://github.com/Rippy1911/anatome/blob/main/TERMS.md
+  https://creativecommons.org/publicdomain/zero/1.0/

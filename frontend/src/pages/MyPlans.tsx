@@ -278,7 +278,7 @@ const MyPlans: React.FC = () => {
   };
   
   const handleNavigateToCreatePlan = () => {
-    navigate('/exercises', { state: { openCreatePlanModal: true } });
+    navigate('/workouts/exercises/plan-builder', { state: { openCreatePlanModal: true } });
   };
 
   const workoutNavigation = (
@@ -291,7 +291,7 @@ const MyPlans: React.FC = () => {
       <Button
         variant="outlined"
         startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/exercises')}
+        onClick={() => navigate('/workouts/exercises')}
       >
         Exercise Library
       </Button>
@@ -358,7 +358,7 @@ const MyPlans: React.FC = () => {
             <Button variant="contained" onClick={handleNavigateToCreatePlan}>
               Create Your First Plan
             </Button>
-            <Button variant="outlined" onClick={() => navigate('/exercises')}>
+            <Button variant="outlined" onClick={() => navigate('/workouts/exercises')}>
               Browse Exercises
             </Button>
           </Stack>

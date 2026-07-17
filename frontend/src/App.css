@@ -1,1 +1,123 @@
 /* Add any app-specific CSS here */
+/* Workouts catalog and original interactive body map */
+.vv-workouts-hub {
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 40px);
+}
+
+.vv-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  gap: 18px;
+}
+
+.vv-routine-card,
+.vv-exercise-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border-radius: 18px !important;
+}
+
+.vv-catalog-loading {
+  display: flex;
+  min-height: 220px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.vv-body-map-frame {
+  max-width: 760px;
+  margin-inline: auto;
+  padding: 16px;
+  border: 1px solid rgba(72, 98, 79, 0.2);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(239, 247, 240, 0.75), rgba(255, 255, 255, 0.94));
+}
+
+.vv-body-map-frame svg {
+  display: block;
+  width: 100%;
+  max-height: 680px;
+  color: #526158;
+}
+
+.vv-body-outline {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+}
+
+.vv-body-outline text {
+  fill: #33483a;
+  stroke: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.vv-body-hotspot {
+  cursor: pointer;
+  outline: none;
+}
+
+.vv-body-hotspot rect {
+  fill: rgba(60, 135, 89, 0.12);
+  stroke: rgba(45, 111, 69, 0.28);
+  stroke-width: 1.5;
+  transition: fill 150ms ease, stroke 150ms ease, stroke-width 150ms ease;
+}
+
+.vv-body-hotspot.is-previewed rect,
+.vv-body-hotspot:focus-visible rect {
+  fill: rgba(39, 131, 77, 0.34);
+  stroke: #176638;
+  stroke-width: 4;
+}
+
+.vv-body-hotspot.is-selected rect {
+  fill: rgba(17, 114, 60, 0.66);
+  stroke: #0b572b;
+  stroke-width: 4;
+}
+
+.vv-body-map-active-label {
+  fill: #174c2b;
+  font-size: 16px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.vv-routine-movement {
+  display: flex;
+  overflow: hidden;
+  border-radius: 18px !important;
+}
+
+.vv-routine-movement-media {
+  width: min(280px, 35%);
+  flex: 0 0 auto;
+}
+
+.vv-developer-page {
+  width: min(1050px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: clamp(32px, 7vw, 80px) 0;
+}
+
+@media (max-width: 700px) {
+  .vv-workouts-hub {
+    padding: 18px 14px 90px;
+  }
+
+  .vv-routine-movement {
+    flex-direction: column;
+  }
+
+  .vv-routine-movement-media {
+    width: 100%;
+  }
+}

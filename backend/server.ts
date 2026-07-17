@@ -53,11 +53,16 @@ import waterRouter from "./routes/water.ts";
 import goalsRouter from "./routes/goals.ts";
 import exercisesRouter from "./routes/exercises.ts";
 import healthDataRouter from "./routes/healthData.ts";
+import publicCatalogRouter, { publicCatalogCorsMiddleware } from "./routes/publicCatalog.ts";
 
 // Initialize the app
 const app = new Application();
 // Access environment variables for Deno deployment
 const port = parseInt((globalThis as any).Deno?.env.get("PORT") || "8000");
+
+// Public catalog CORS runs before the private-origin allowlist so read-only
+// preflight requests from any origin are handled by the public policy.
+app.use(publicCatalogCorsMiddleware);
 
 // Basic middleware with improved CORS configuration
 app.use(oakCors({
@@ -89,6 +94,10 @@ app.use(async (ctx: Context, next: () => Promise<unknown>) => {
 // --- Set up API Routing ---
 
 const apiRouter = new Router({ prefix: "/api" });
+
+// Public, read-only catalog. The router applies its own wildcard read CORS,
+// caching, ETags, and best-effort per-instance rate limiting.
+apiRouter.use(publicCatalogRouter.routes(), publicCatalogRouter.allowedMethods());
 
 // Mount Auth routes
 apiRouter.use(authRouter.routes());

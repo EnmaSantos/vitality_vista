@@ -44,6 +44,10 @@ export interface WorkoutPlan {
   created_at: string;
   updated_at: string;
   notes?: string;
+  source_routine_slug?: string;
+  source_routine_version?: string;
+  session_format?: 'straight_sets' | 'circuit' | 'interval' | 'mobility_flow';
+  rounds?: number;
 }
 
 export interface PlanExercise {
@@ -56,6 +60,8 @@ export interface PlanExercise {
   reps?: string;
   weight_kg?: number;
   duration_minutes?: number;
+  duration_seconds?: number;
+  phase?: 'warmup' | 'work' | 'cooldown';
   rest_period_seconds?: number;
   notes?: string;
 }
@@ -107,6 +113,9 @@ export interface WorkoutLog {
   workout_date: string;
   duration_seconds?: number;
   notes?: string;
+  routine_slug?: string;
+  routine_version?: string;
+  routine_name_snapshot?: string;
 }
 
 export interface LogExerciseDetail {
@@ -125,7 +134,11 @@ export interface CreateWorkoutLogPayload {
     plan_id?: number;
     workout_date: string; // YYYY-MM-DD
     duration_seconds?: number;
+    duration_minutes?: number;
     notes?: string;
+    routine_slug?: string;
+    routine_version?: string;
+    routine_name_snapshot?: string;
 }
 
 export interface LogExerciseDetailPayload {
@@ -342,6 +355,16 @@ export const createWorkoutLog = async (
       return { success: false, error: "Your session has expired. Please log in again." };
     }
     return { success: false, error: "Network error" };
+  }
+};
+
+export const cloneRoutineToPlan = async (slug: string, token: string | null): Promise<ApiResponse<WorkoutPlan>> => {
+  if (!token) return { success: false, error: 'Sign in to add this routine to My Plans.' };
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}/workout-plans/from-routine/${encodeURIComponent(slug)}`, { method: 'POST' });
+    return await response.json();
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unable to add routine to My Plans.' };
   }
 };
 

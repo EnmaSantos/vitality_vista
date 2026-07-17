@@ -45,6 +45,9 @@ export interface ExerciseDatasetMetadata {
   mediaIncluded: boolean;
   mediaAvailable: boolean;
   mediaLicense: string;
+  mediaBaseUrl: string;
+  mediaBaseUrlEnvironmentVariable: string;
+  workerLicense: string;
   exerciseCount: number;
 }
 
@@ -56,8 +59,46 @@ export interface ExerciseMeta {
   source: ExerciseDatasetMetadata;
 }
 
-const exercises = exerciseData as Exercise[];
-const source = datasetMetadata as ExerciseDatasetMetadata;
+const DEFAULT_MEDIA_BASE_URL =
+  "https://vitality-exercise-media.enmasantos.workers.dev";
+
+function configuredMediaBaseUrl(): string {
+  let configured: string | undefined;
+  try {
+    configured = Deno.env.get("EXERCISE_MEDIA_BASE_URL");
+  } catch {
+    // Unit tests intentionally run without environment-variable permission.
+  }
+
+  if (!configured) return DEFAULT_MEDIA_BASE_URL;
+
+  try {
+    const parsed = new URL(configured);
+    return parsed.protocol === "https:" || parsed.protocol === "http:"
+      ? parsed.toString().replace(/\/$/, "")
+      : DEFAULT_MEDIA_BASE_URL;
+  } catch {
+    return DEFAULT_MEDIA_BASE_URL;
+  }
+}
+
+export function resolveExerciseMediaUrl(
+  mediaPath: string,
+  baseUrl = configuredMediaBaseUrl(),
+): string {
+  return new URL(mediaPath, `${baseUrl.replace(/\/$/, "")}/`).toString();
+}
+
+const mediaBaseUrl = configuredMediaBaseUrl();
+const exercises = (exerciseData as Exercise[]).map((exercise) => ({
+  ...exercise,
+  imageUrl: resolveExerciseMediaUrl(exercise.imageUrl, mediaBaseUrl),
+  gifUrl: resolveExerciseMediaUrl(exercise.gifUrl, mediaBaseUrl),
+}));
+const source = {
+  ...(datasetMetadata as ExerciseDatasetMetadata),
+  mediaBaseUrl,
+};
 const exercisesById = new Map<string, Exercise>();
 
 for (const exercise of exercises) {

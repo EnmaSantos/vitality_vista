@@ -1,0 +1,1554 @@
+[
+  {
+    "sourceId": "Arm_Circles",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "upper-body movement"
+      ],
+      "sportTags": [
+        "basketball",
+        "golf",
+        "pickleball",
+        "swimming",
+        "tennis",
+        "volleyball"
+      ],
+      "wellnessRegions": [
+        "shoulders",
+        "traps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Bodyweight_Squat",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "squat"
+      ],
+      "sportTags": [
+        "basketball",
+        "cycling",
+        "hiking",
+        "running"
+      ],
+      "wellnessRegions": [
+        "glutes",
+        "quadriceps",
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Incline_Push-Up",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "chest",
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Butt_Lift_Bridge",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "glutes",
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Dead_Bug",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "brace"
+      ],
+      "sportTags": [
+        "cycling",
+        "golf"
+      ],
+      "wellnessRegions": [
+        "abdominals"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Childs_Pose",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "trunk control"
+      ],
+      "sportTags": [
+        "golf"
+      ],
+      "wellnessRegions": [
+        "middle back",
+        "lower back",
+        "glutes"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Incline_Push-Up_Medium",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "chest",
+        "triceps",
+        "abdominals"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Plank",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "brace"
+      ],
+      "sportTags": [
+        "basketball",
+        "hiking",
+        "martial arts",
+        "soccer",
+        "swimming"
+      ],
+      "wellnessRegions": [
+        "abdominals"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Seated_Floor_Hamstring_Stretch",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Front_Leg_Raises",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [
+        "running"
+      ],
+      "wellnessRegions": [
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Dynamic_Chest_Stretch",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "chest",
+        "middle back"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Bodyweight_Walking_Lunge",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "squat"
+      ],
+      "sportTags": [
+        "basketball",
+        "hiking",
+        "running",
+        "soccer"
+      ],
+      "wellnessRegions": [
+        "glutes",
+        "quadriceps",
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Push-Up_Wide",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [
+        "basketball",
+        "volleyball"
+      ],
+      "wellnessRegions": [
+        "shoulders",
+        "chest",
+        "triceps",
+        "abdominals"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Single_Leg_Glute_Bridge",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [
+        "cycling",
+        "golf",
+        "running"
+      ],
+      "wellnessRegions": [
+        "glutes",
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Decline_Push-Up",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "chest",
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Body_Tricep_Press",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Side_Bridge",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "brace"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "abdominals"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Hamstring_Stretch",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [
+        "cycling"
+      ],
+      "wellnessRegions": [
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Bodyweight_Mid_Row",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "pull"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "biceps",
+        "lats",
+        "middle back"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Chin_To_Chest_Stretch",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "mobility"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "neck",
+        "traps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Cat_Stretch",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "trunk control"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "traps",
+        "middle back",
+        "lower back"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "One_Knee_To_Chest",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "lower back",
+        "glutes",
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "90_90_Hamstring",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Rear_Leg_Raises",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "squat"
+      ],
+      "sportTags": [
+        "soccer"
+      ],
+      "wellnessRegions": [
+        "quadriceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Standing_Hamstring_and_Calf_Stretch",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [
+        "hiking",
+        "running"
+      ],
+      "wellnessRegions": [
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Superman",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "trunk control"
+      ],
+      "sportTags": [
+        "swimming"
+      ],
+      "wellnessRegions": [
+        "lower back",
+        "glutes",
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Shoulder_Stretch",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "upper-body movement"
+      ],
+      "sportTags": [
+        "pickleball",
+        "swimming",
+        "tennis",
+        "volleyball"
+      ],
+      "wellnessRegions": [
+        "shoulders"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Hip_Circles_prone",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "hip movement"
+      ],
+      "sportTags": [
+        "hiking",
+        "martial arts",
+        "running",
+        "soccer"
+      ],
+      "wellnessRegions": [
+        "adductors",
+        "abductors"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Side_Leg_Raises",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "hip movement"
+      ],
+      "sportTags": [
+        "martial arts",
+        "pickleball",
+        "soccer",
+        "tennis"
+      ],
+      "wellnessRegions": [
+        "adductors"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Dumbbell_Squat",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "squat"
+      ],
+      "sportTags": [
+        "volleyball"
+      ],
+      "wellnessRegions": [
+        "lower back",
+        "glutes",
+        "quadriceps",
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Dumbbell_Bench_Press",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "chest",
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Bent_Over_Two-Dumbbell_Row",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "pull"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "biceps",
+        "lats",
+        "middle back"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Stiff-Legged_Dumbbell_Deadlift",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "lower back",
+        "glutes",
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Dumbbell_Shoulder_Press",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "upper-body movement"
+      ],
+      "sportTags": [
+        "volleyball"
+      ],
+      "wellnessRegions": [
+        "shoulders",
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Dumbbell_Alternate_Bicep_Curl",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "pull"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "biceps",
+        "forearms"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Dumbbell_Lunges",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "squat"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "glutes",
+        "quadriceps",
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Standing_Dumbbell_Calf_Raise",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "ankle movement"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Arnold_Dumbbell_Press",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "upper-body movement"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Decline_Dumbbell_Bench_Press",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "chest",
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Standing_Dumbbell_Triceps_Extension",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Dumbbell_Incline_Row",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "pull"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "biceps",
+        "forearms",
+        "lats",
+        "middle back"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Reverse_Flyes",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "upper-body movement"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Alternate_Hammer_Curl",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "pull"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "biceps",
+        "forearms"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "One-Arm_Kettlebell_Swings",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "lower back",
+        "glutes",
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Alternating_Kettlebell_Row",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "pull"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "biceps",
+        "lats",
+        "middle back"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Alternating_Kettlebell_Press",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "upper-body movement"
+      ],
+      "sportTags": [
+        "martial arts"
+      ],
+      "wellnessRegions": [
+        "shoulders",
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Lunge_Pass_Through",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [
+        "martial arts"
+      ],
+      "wellnessRegions": [
+        "glutes",
+        "quadriceps",
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Band_Pull_Apart",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "upper-body movement"
+      ],
+      "sportTags": [
+        "golf",
+        "swimming"
+      ],
+      "wellnessRegions": [
+        "shoulders",
+        "traps",
+        "middle back"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Hip_Extension_with_Bands",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "glutes",
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Band_Hip_Adductions",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "hip movement"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "adductors"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Calf_Raises_-_With_Bands",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "ankle movement"
+      ],
+      "sportTags": [
+        "cycling",
+        "hiking"
+      ],
+      "wellnessRegions": [
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Barbell_Squat",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "squat"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "lower back",
+        "glutes",
+        "quadriceps",
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Barbell_Bench_Press_-_Medium_Grip",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "chest",
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Bent_Over_Barbell_Row",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "pull"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "biceps",
+        "lats",
+        "middle back"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Romanian_Deadlift",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "lower back",
+        "glutes",
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Cable_Chest_Press",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "chest",
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Wide-Grip_Lat_Pulldown",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "pull"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "biceps",
+        "lats",
+        "middle back"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Cable_Deadlifts",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "squat"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "forearms",
+        "lower back",
+        "glutes",
+        "quadriceps",
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Cable_Rope_Overhead_Triceps_Extension",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Ball_Leg_Curl",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "glutes",
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Exercise_Ball_Crunch",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "brace"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "abdominals"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Physioball_Hip_Bridge",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "glutes",
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Chest_Stretch_on_Stability_Ball",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "chest"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Push-Ups_-_Close_Triceps_Position",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders",
+        "chest",
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Dumbbell_Flyes",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "chest"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Dumbbell_One-Arm_Triceps_Extension",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "triceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Dumbbell_Bicep_Curl",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "pull"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "biceps",
+        "forearms"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Side_Lateral_Raise",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "upper-body movement"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "shoulders"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "External_Rotation_with_Band",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "upper-body movement"
+      ],
+      "sportTags": [
+        "pickleball",
+        "swimming",
+        "tennis"
+      ],
+      "wellnessRegions": [
+        "shoulders"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "grip"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "forearms"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Triceps_Stretch",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "push"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "triceps",
+        "lats"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "All_Fours_Quad_Stretch",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "squat"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "quadriceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Dumbbell_Step_Ups",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "squat"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "glutes",
+        "quadriceps",
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Kneeling_Hip_Flexor",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "squat"
+      ],
+      "sportTags": [
+        "cycling"
+      ],
+      "wellnessRegions": [
+        "quadriceps"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Barbell_Deadlift",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "trunk control"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "forearms",
+        "traps",
+        "lats",
+        "middle back",
+        "lower back",
+        "glutes",
+        "quadriceps",
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Glute_Kickback",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "glutes",
+        "hamstrings"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Crossover_Reverse_Lunge",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "trunk control"
+      ],
+      "sportTags": [
+        "pickleball",
+        "tennis"
+      ],
+      "wellnessRegions": [
+        "abdominals",
+        "lower back",
+        "glutes",
+        "quadriceps",
+        "hamstrings",
+        "abductors"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Lying_Glute",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "hip hinge"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "glutes",
+        "abductors"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Seated_Calf_Stretch",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "ankle movement"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "lower back",
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Standing_Gastrocnemius_Calf_Stretch",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "ankle movement"
+      ],
+      "sportTags": [
+        "basketball"
+      ],
+      "wellnessRegions": [
+        "hamstrings",
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Scapular_Pull-Up",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "pull"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "traps",
+        "lats",
+        "middle back"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Adductor_Groin",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "hip movement"
+      ],
+      "sportTags": [
+        "martial arts",
+        "soccer"
+      ],
+      "wellnessRegions": [
+        "adductors"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Torso_Rotation",
+    "recommendation": {
+      "difficulty": "intermediate",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "brace"
+      ],
+      "sportTags": [
+        "golf",
+        "pickleball",
+        "tennis"
+      ],
+      "wellnessRegions": [
+        "abdominals"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Calf_Raise_On_A_Dumbbell",
+    "recommendation": {
+      "difficulty": "advanced",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "ankle movement"
+      ],
+      "sportTags": [
+        "volleyball"
+      ],
+      "wellnessRegions": [
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Side_Neck_Stretch",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "mobility"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "neck"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Isometric_Neck_Exercise_-_Sides",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "mobility"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "neck"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Seated_Dumbbell_Palms-Down_Wrist_Curl",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "moderate",
+      "movementPatterns": [
+        "grip"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "forearms"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Pelvic_Tilt_Into_Bridge",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "trunk control"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "lower back"
+      ],
+      "routineEligibility": true
+    }
+  },
+  {
+    "sourceId": "Calf_Stretch_Hands_Against_Wall",
+    "recommendation": {
+      "difficulty": "beginner",
+      "impactLevel": "low",
+      "movementPatterns": [
+        "ankle movement"
+      ],
+      "sportTags": [],
+      "wellnessRegions": [
+        "calves"
+      ],
+      "routineEligibility": true
+    }
+  }
+]

@@ -48,11 +48,14 @@ export interface ExerciseMeta {
     mediaIncluded: boolean;
     mediaAvailable?: boolean;
     mediaLicense?: string;
+    mediaBaseUrl?: string;
+    mediaBaseUrlEnvironmentVariable?: string;
+    workerLicense?: string;
     exerciseCount: number;
   };
 }
 
-const CACHE_KEY = "vitality_exercises_cache_dataset_v3";
+const CACHE_KEY = "vitality_exercises_cache_anatome_v1";
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 const EXERCISES_URL = `${API_BASE_URL}/exercises`;

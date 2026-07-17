@@ -12,6 +12,9 @@ export interface WorkoutLog {
   notes: string | null;
   created_at: string;
   plan_name?: string;
+  routine_slug?: string;
+  routine_version?: string;
+  routine_name_snapshot?: string;
 }
 
 export interface LogExerciseDetail {

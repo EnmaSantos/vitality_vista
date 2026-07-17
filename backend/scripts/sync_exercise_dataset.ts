@@ -1,19 +1,18 @@
-const DEFAULT_REVISION = "7455efae41b330c265e7cd4b78dfa848e7ce5ebd";
-const REPOSITORY_URL = "https://github.com/hasaneyldrm/exercises-dataset";
+const DEFAULT_REVISION = "f117b127dc82fa0c9a8e7e21c7df41ad43154dac";
+const REPOSITORY_URL = "https://github.com/Rippy1911/anatome";
+const DEFAULT_MEDIA_BASE_URL =
+  "https://vitality-exercise-media.enmasantos.workers.dev";
+const GIF_PLAYBACK_VERSION = "4";
 
 interface SourceExercise {
-  id: string;
+  ext_id: string;
   name: string;
-  category: string;
-  body_part: string;
-  equipment: string;
-  instruction_steps?: { en?: string[] };
-  instructions?: { en?: string };
-  muscle_group: string;
-  secondary_muscles: string[];
-  target: string;
-  image: string;
-  gif_url: string;
+  category?: string;
+  equipment?: string;
+  primaryMuscles?: string[];
+  secondaryMuscles?: string[];
+  instructions?: string[];
+  images?: string[];
 }
 
 interface ExerciseDatasetRecord {
@@ -38,85 +37,95 @@ function requireText(value: unknown, field: string, sourceId: string): string {
   return value.trim();
 }
 
-function splitInstructions(instructions: string): string[] {
-  return instructions
-    .split(/(?<=[.!?])\s+(?=[A-Z0-9])/)
-    .map((step) => step.trim())
-    .filter(Boolean);
+function optionalText(value: unknown, fallback: string): string {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
 }
 
-function buildMediaUrl(
-  path: string,
-  expectedDirectory: "images" | "videos",
-  expectedExtension: ".jpg" | ".gif",
-  sourceId: string,
-  revision: string,
-): string {
-  const normalizedPath = requireText(
-    path,
-    `${expectedDirectory} media path`,
-    sourceId,
-  )
+function normalizedTextArray(
+  value: unknown,
+  _field: string,
+  _sourceId: string,
+): string[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((item) =>
+    typeof item === "string" && item.trim() ? [item.trim()] : []
+  );
+}
+
+function unique(values: string[]): string[] {
+  return [...new Set(values)];
+}
+
+function requireImagePath(source: SourceExercise, sourceId: string): string {
+  const imagePath = requireText(source.images?.[0], "reference image", sourceId)
     .replaceAll("\\", "/");
-  const expectedPrefix = `${expectedDirectory}/`;
 
   if (
-    !normalizedPath.startsWith(expectedPrefix) ||
-    !normalizedPath.toLowerCase().endsWith(expectedExtension) ||
-    normalizedPath.includes("..")
+    imagePath.startsWith("/") ||
+    imagePath.includes("..") ||
+    imagePath.includes("//") ||
+    !imagePath.toLowerCase().endsWith(".jpg") ||
+    !/^[A-Za-z0-9\-_. /]+$/.test(imagePath)
   ) {
-    throw new Error(
-      `Exercise ${sourceId} has an invalid ${expectedDirectory} media path`,
-    );
+    throw new Error(`Exercise ${sourceId} has an invalid reference image path`);
   }
 
-  return `https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/${revision}/${normalizedPath}`;
+  return imagePath;
 }
 
 function normalizeExercise(
   source: SourceExercise,
-  revision: string,
+  id: number,
 ): ExerciseDatasetRecord {
-  const sourceId = requireText(source.id, "id", "unknown");
-  if (!/^\d+$/.test(sourceId)) {
-    throw new Error(`Exercise ${sourceId} does not have a numeric source ID`);
+  const sourceId = requireText(source.ext_id, "ext_id", "unknown");
+  if (!/^[A-Za-z0-9_-]+$/.test(sourceId)) {
+    throw new Error(`Exercise ${sourceId} has an unsupported ext_id`);
   }
 
-  const numericId = Number(sourceId);
-  if (!Number.isSafeInteger(numericId) || numericId <= 0) {
-    throw new Error(`Exercise ${sourceId} has an unsupported source ID`);
+  const primaryMuscles = normalizedTextArray(
+    source.primaryMuscles,
+    "primary muscle",
+    sourceId,
+  );
+  if (primaryMuscles.length === 0) {
+    throw new Error(`Exercise ${sourceId} has no primary muscle`);
   }
 
-  const providedSteps = source.instruction_steps?.en;
-  const instructions = Array.isArray(providedSteps)
-    ? providedSteps.map((step) =>
-      requireText(step, "instruction step", sourceId)
-    )
-    : splitInstructions(
-      requireText(source.instructions?.en, "English instructions", sourceId),
-    );
-
-  if (instructions.length === 0) {
-    throw new Error(`Exercise ${sourceId} has no English instruction steps`);
-  }
+  const secondaryMuscles = normalizedTextArray(
+    source.secondaryMuscles,
+    "secondary muscle",
+    sourceId,
+  );
+  const instructions = normalizedTextArray(
+    source.instructions,
+    "instruction",
+    sourceId,
+  );
+  const target = primaryMuscles[0];
+  const imagePath = requireImagePath(source, sourceId);
 
   return {
-    id: numericId,
+    id,
     sourceId,
     name: requireText(source.name, "name", sourceId),
-    category: requireText(source.category, "category", sourceId),
-    bodyPart: requireText(source.body_part, "body part", sourceId),
-    equipment: requireText(source.equipment, "equipment", sourceId),
-    target: requireText(source.target, "target", sourceId),
-    muscleGroup: requireText(source.muscle_group, "muscle group", sourceId),
-    secondaryMuscles: Array.isArray(source.secondary_muscles)
-      ? source.secondary_muscles.map((muscle) =>
-        requireText(muscle, "secondary muscle", sourceId)
-      )
-      : [],
-    instructions,
-    imageUrl: buildMediaUrl(source.image, "images", ".jpg", sourceId, revision),
-    gifUrl: buildMediaUrl(source.gif_url, "videos", ".gif", sourceId, revision),
+    category: optionalText(source.category, "strength"),
+    bodyPart: target,
+    equipment: optionalText(source.equipment, "body only"),
+    target,
+    muscleGroup: target,
+    secondaryMuscles: unique([
+      ...primaryMuscles.slice(1),
+      ...secondaryMuscles,
+    ]),
+    instructions: instructions.length > 0
+      ? instructions
+      : [
+        "Use the movement demonstration as a visual guide and perform the exercise with controlled form.",
+      ],
+    imageUrl: `/exerciseImage?path=${encodeURIComponent(imagePath)}`,
+    gifUrl:
+      `/exerciseGif?id=${encodeURIComponent(sourceId)}&v=${GIF_PLAYBACK_VERSION}`,
   };
 }
 
@@ -128,29 +137,33 @@ if (!/^[a-f0-9]{40}$/i.test(revision)) {
 }
 
 const sourceUrl =
-  `https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/${revision}/data/exercises.json`;
+  `https://raw.githubusercontent.com/Rippy1911/anatome/${revision}/api/data/exercises.json`;
 const response = await fetch(sourceUrl);
 if (!response.ok) {
   throw new Error(
-    `Failed to download exercises dataset: ${response.status} ${response.statusText}`,
+    `Failed to download Anatome exercises: ${response.status} ${response.statusText}`,
   );
 }
 
 const sourceData = await response.json();
 if (!Array.isArray(sourceData)) {
-  throw new Error("The upstream exercises dataset is not a JSON array");
+  throw new Error("The upstream Anatome dataset is not a JSON array");
 }
 
-const exercises = (sourceData as SourceExercise[])
-  .map((exercise) => normalizeExercise(exercise, revision))
-  .sort((left, right) => left.id - right.id);
+const sortedSource = (sourceData as SourceExercise[]).toSorted((left, right) =>
+  left.name.localeCompare(right.name, "en-US") ||
+  left.ext_id.localeCompare(right.ext_id, "en-US")
+);
+const exercises = sortedSource.map((exercise, index) =>
+  normalizeExercise(exercise, index + 1)
+);
 
-const ids = new Set<number>();
+const sourceIds = new Set<string>();
 for (const exercise of exercises) {
-  if (ids.has(exercise.id)) {
-    throw new Error(`Duplicate exercise ID ${exercise.id}`);
+  if (sourceIds.has(exercise.sourceId)) {
+    throw new Error(`Duplicate Anatome ext_id ${exercise.sourceId}`);
   }
-  ids.add(exercise.id);
+  sourceIds.add(exercise.sourceId);
 }
 
 const dataDirectory = new URL("../data/", import.meta.url);
@@ -166,10 +179,13 @@ await Deno.writeTextFile(
       {
         repository: REPOSITORY_URL,
         revision,
-        license: "Educational and non-commercial use only",
+        license: "CC0-1.0",
         mediaIncluded: false,
         mediaAvailable: true,
-        mediaLicense: "Educational and non-commercial use only",
+        mediaLicense: "CC0-1.0",
+        mediaBaseUrl: DEFAULT_MEDIA_BASE_URL,
+        mediaBaseUrlEnvironmentVariable: "EXERCISE_MEDIA_BASE_URL",
+        workerLicense: "Apache-2.0",
         exerciseCount: exercises.length,
       },
       null,
@@ -178,7 +194,7 @@ await Deno.writeTextFile(
   }\n`,
 );
 
-console.log(`Wrote ${exercises.length} exercises from ${revision}`);
+console.log(`Wrote ${exercises.length} Anatome exercises from ${revision}`);
 console.log(
-  "Media files were not bundled; records contain pinned upstream URLs for educational and non-commercial use.",
+  "Media URLs are resolved through EXERCISE_MEDIA_BASE_URL, with the Vitality Cloudflare Worker as the fallback.",
 );
