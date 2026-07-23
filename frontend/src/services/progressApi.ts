@@ -1,6 +1,7 @@
 // frontend/src/services/progressApi.ts
 
 import { API_BASE_URL } from '../config';
+import { formatExerciseName } from '../utils/formatExerciseName';
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -57,6 +58,16 @@ export async function getExerciseProgress(token: string): Promise<ApiResponse> {
 
     if (!result.success) {
       throw new Error(result.error || result.message || 'An unexpected error occurred');
+    }
+
+    if (Array.isArray(result.data?.stats)) {
+      result.data = {
+        ...result.data,
+        stats: result.data.stats.map((stat: { exercise_name: string }) => ({
+          ...stat,
+          exercise_name: formatExerciseName(stat.exercise_name),
+        })),
+      };
     }
 
     return result;

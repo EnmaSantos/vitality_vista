@@ -2,6 +2,7 @@
 
 // API Base URL - Updated to be consistent with other API services
 import { API_BASE_URL } from '../config';
+import { formatExerciseName } from '../utils/formatExerciseName';
 
 // A wrapper for fetch that includes authentication and error handling
 const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
@@ -43,6 +44,10 @@ export interface WorkoutPlan {
   created_at: string;
   updated_at: string;
   notes?: string;
+  source_routine_slug?: string;
+  source_routine_version?: string;
+  session_format?: 'straight_sets' | 'circuit' | 'interval' | 'mobility_flow';
+  rounds?: number;
 }
 
 export interface PlanExercise {
@@ -55,6 +60,8 @@ export interface PlanExercise {
   reps?: string;
   weight_kg?: number;
   duration_minutes?: number;
+  duration_seconds?: number;
+  phase?: 'warmup' | 'work' | 'cooldown';
   rest_period_seconds?: number;
   notes?: string;
 }
@@ -106,6 +113,9 @@ export interface WorkoutLog {
   workout_date: string;
   duration_seconds?: number;
   notes?: string;
+  routine_slug?: string;
+  routine_version?: string;
+  routine_name_snapshot?: string;
 }
 
 export interface LogExerciseDetail {
@@ -124,7 +134,11 @@ export interface CreateWorkoutLogPayload {
     plan_id?: number;
     workout_date: string; // YYYY-MM-DD
     duration_seconds?: number;
+    duration_minutes?: number;
     notes?: string;
+    routine_slug?: string;
+    routine_version?: string;
+    routine_name_snapshot?: string;
 }
 
 export interface LogExerciseDetailPayload {
@@ -161,9 +175,19 @@ export const addExerciseToPlan = async (planId: number, exerciseData: AddExercis
   try {
     const response = await fetchWithAuth(`${API_BASE_URL}/workout-plans/${planId}/exercises`, {
       method: 'POST',
-      body: JSON.stringify(exerciseData),
+      body: JSON.stringify({
+        ...exerciseData,
+        exercise_name: formatExerciseName(exerciseData.exercise_name),
+      }),
     });
-    return await response.json();
+    const result: ApiResponse<PlanExercise> = await response.json();
+    if (result.data) {
+      result.data = {
+        ...result.data,
+        exercise_name: formatExerciseName(result.data.exercise_name),
+      };
+    }
+    return result;
   } catch (error) {
     console.error("Error adding exercise to plan:", error);
     if (error instanceof Error && error.message === "Token expired") {
@@ -191,7 +215,14 @@ export const getPlanExercises = async (planId: number, token: string | null): Pr
   if (!token) return { success: false, error: "No token found for fetching plan exercises" };
   try {
     const response = await fetchWithAuth(`${API_BASE_URL}/workout-plans/${planId}/exercises`);
-    return await response.json();
+    const result: ApiResponse<PlanExercise[]> = await response.json();
+    if (result.data) {
+      result.data = result.data.map((exercise) => ({
+        ...exercise,
+        exercise_name: formatExerciseName(exercise.exercise_name),
+      }));
+    }
+    return result;
   } catch (error) {
     console.error("Error fetching plan exercises:", error);
     if (error instanceof Error && error.message === "Token expired") {
@@ -327,6 +358,36 @@ export const createWorkoutLog = async (
   }
 };
 
+export const cloneRoutineToPlan = async (slug: string, token: string | null): Promise<ApiResponse<WorkoutPlan>> => {
+  if (!token) return { success: false, error: 'Sign in to add this routine to My Plans.' };
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}/workout-plans/from-routine/${encodeURIComponent(slug)}`, { method: 'POST' });
+    return await response.json();
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unable to add routine to My Plans.' };
+  }
+};
+
+export const deleteWorkoutLog = async (
+  logId: number,
+  token: string | null,
+): Promise<ApiResponse<null>> => {
+  if (!token) return { success: false, error: "No token provided." };
+
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}/workout-logs/${logId}`, {
+      method: 'DELETE',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Error cancelling workout:", error);
+    if (error instanceof Error && error.message === "Token expired") {
+      return { success: false, error: "Your session has expired. Please log in again." };
+    }
+    return { success: false, error: error instanceof Error ? error.message : "Network error" };
+  }
+};
+
 export const logExerciseDetails = async (
   logId: number,
   exerciseData: LogExerciseDetailPayload,
@@ -336,9 +397,19 @@ export const logExerciseDetails = async (
   try {
     const response = await fetchWithAuth(`${API_BASE_URL}/workout-logs/${logId}/exercises`, {
       method: 'POST',
-      body: JSON.stringify(exerciseData),
+      body: JSON.stringify({
+        ...exerciseData,
+        exercise_name: formatExerciseName(exerciseData.exercise_name),
+      }),
     });
-    return await response.json();
+    const result: ApiResponse<LogExerciseDetail> = await response.json();
+    if (result.data) {
+      result.data = {
+        ...result.data,
+        exercise_name: formatExerciseName(result.data.exercise_name),
+      };
+    }
+    return result;
   } catch (error) {
     console.error("Error logging exercise details:", error);
     if (error instanceof Error && error.message === "Token expired") {

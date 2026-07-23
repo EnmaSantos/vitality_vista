@@ -1,0 +1,20 @@
+{
+  "name": "vitality-exercise-media",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:assets": "node scripts/prepare-assets.mjs",
+    "check": "tsc --noEmit && vitest run",
+    "dev": "npm run prepare:assets && wrangler dev",
+    "deploy": "npm run prepare:assets && wrangler deploy",
+    "deploy:dry-run": "npm run prepare:assets && wrangler deploy --dry-run"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20260716.1",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10",
+    "wrangler": "4.111.0"
+  }
+}
+

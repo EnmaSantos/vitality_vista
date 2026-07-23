@@ -1,5 +1,6 @@
 // API Base URL - Updated to be consistent with other API services
 import { API_BASE_URL } from '../config';
+import { formatExerciseName } from '../utils/formatExerciseName';
 
 // Interfaces
 export interface WorkoutLog {
@@ -11,6 +12,9 @@ export interface WorkoutLog {
   notes: string | null;
   created_at: string;
   plan_name?: string;
+  routine_slug?: string;
+  routine_version?: string;
+  routine_name_snapshot?: string;
 }
 
 export interface LogExerciseDetail {
@@ -140,7 +144,10 @@ export async function logExerciseDetail(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify(exerciseData),
+      body: JSON.stringify({
+        ...exerciseData,
+        exercise_name: formatExerciseName(exerciseData.exercise_name),
+      }),
     });
 
     const result: ApiResponse<LogExerciseDetail> = await response.json();
@@ -154,7 +161,10 @@ export async function logExerciseDetail(
       throw new Error('No data returned from log exercise detail API');
     }
 
-    return result.data;
+    return {
+      ...result.data,
+      exercise_name: formatExerciseName(result.data.exercise_name),
+    };
   } catch (error) {
     console.error('Error logging exercise detail:', error);
     throw error;
@@ -204,7 +214,10 @@ export async function getWorkoutLogDetails(logId: number, token: string): Promis
       throw new Error(result.error || result.message || 'Failed to fetch workout log details');
     }
 
-    return result.data || [];
+    return (result.data || []).map((detail) => ({
+      ...detail,
+      exercise_name: formatExerciseName(detail.exercise_name),
+    }));
   } catch (error) {
     console.error('Error fetching workout log details:', error);
     throw error;

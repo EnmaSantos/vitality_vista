@@ -7,6 +7,7 @@ import {
   getUserWorkoutPlansHandler,
   addExerciseToPlanHandler,
   createWorkoutLogHandler,
+  deleteWorkoutLogHandler,
   getUserWorkoutLogsHandler,
   logExerciseDetailsHandler,
   getPlanExercisesHandler,
@@ -16,6 +17,7 @@ import {
   getWorkoutLogDetailsHandler,
   updateWorkoutLogHandler,
   updateWorkoutPlanHandler,
+  cloneRoutineToPlanHandler,
 } from "../controllers/workoutController.ts";
 // Import the authentication middleware to protect these routes
 import { authMiddleware } from "../middleware/authMiddleware.ts";
@@ -32,6 +34,10 @@ workoutRouter.post("/workout-plans", authMiddleware, createWorkoutPlanHandler);
 // GET /api/workout-plans
 // Gets all workout plans belonging to the authenticated user.
 workoutRouter.get("/workout-plans", authMiddleware, getUserWorkoutPlansHandler);
+
+// POST /api/workout-plans/from-routine/:slug
+// Atomically clones a public routine into an editable user plan.
+workoutRouter.post("/workout-plans/from-routine/:slug", authMiddleware, cloneRoutineToPlanHandler);
 
 // POST /api/workout-plans/:planId/exercises
 // Adds an exercise to a specific workout plan for the authenticated user.
@@ -61,6 +67,10 @@ workoutRouter.put("/workout-plans/:planId/exercises/:planExerciseId", authMiddle
 // POST /api/workout-logs
 // Creates a new workout log (actual workout session)
 workoutRouter.post("/workout-logs", authMiddleware, createWorkoutLogHandler);
+
+// DELETE /api/workout-logs/:logId
+// Cancels an incomplete workout session owned by the authenticated user.
+workoutRouter.delete("/workout-logs/:logId", authMiddleware, deleteWorkoutLogHandler);
 
 // GET /api/workout-logs
 // Gets all workout logs for the authenticated user

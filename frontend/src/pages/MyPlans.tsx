@@ -13,42 +13,16 @@ import {
   updateWorkoutPlan,
   UpdateWorkoutPlanPayload,
 } from '../api/workoutApi';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, Button, List, ListItem, ListItemText, IconButton, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Stack } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Alert, Typography, Button, List, ListItem, ListItemText, IconButton, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Stack } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import HistoryIcon from '@mui/icons-material/History';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import LogWorkoutModal from '../components/LogWorkoutModal';
-
-// Placeholder for ExerciseDetail until exercisesApi.ts is created/fixed
-// This interface should ideally match the Exercise type expected by LogWorkoutModal
-interface ExerciseForModal {
-  id: number;
-  name: string;
-  description: string;
-  category: string; // Changed from number to string
-  equipment: string; // Changed from number[] to string
-  language: number; // Changed from optional to required
-  muscles: number[]; // Changed from optional to required
-  muscles_secondary: number[]; // Changed from optional to required
-  force: string; // Changed from string | null to string
-  level: string; // Changed from string | null to string
-  mechanic: string; // Changed from string | null to string
-  primaryMuscles: string[]; // Changed from optional to required
-  secondaryMuscles: string[]; // Changed from optional to required
-  creation_date: string; // Changed from optional to required
-  uuid: string; // Changed from optional to required
-  variations: number; // Changed from optional to required
-  license_author: string; // Changed from optional to required
-  license: number; // Changed from optional to required
-  // Added based on new linter errors
-  instructions: string[]; // Changed from string to string[]
-  images: string[]; // Changed from { image: string; is_main: boolean; }[] to string[]
-  calories_per_hour: number; // Changed from optional to required
-  duration_minutes: number; // Changed from optional to required
-  total_calories: number; // Changed from optional to required
-}
+import { ExerciseSummary } from '../services/exerciseApi';
 
 const MyPlans: React.FC = () => {
   const { token } = useAuth();
@@ -62,8 +36,7 @@ const MyPlans: React.FC = () => {
 
   // State for LogWorkoutModal
   const [logModalOpen, setLogModalOpen] = useState(false);
-  const [selectedExerciseForLog, setSelectedExerciseForLog] = useState<ExerciseForModal | null>(null);
-  const [currentPlanIdForLog, setCurrentPlanIdForLog] = useState<number | null>(null);
+  const [selectedExerciseForLog, setSelectedExerciseForLog] = useState<ExerciseSummary | null>(null);
 
   // State for delete confirmation
   const [deletePlanModalOpen, setDeletePlanModalOpen] = useState(false);
@@ -99,8 +72,9 @@ const MyPlans: React.FC = () => {
       setError('An unexpected error occurred while fetching plans.');
       console.error(err);
       setPlans([]); // Ensure plans is empty on error
+    } finally {
+      setLoadingPlans(false);
     }
-    setLoadingPlans(false);
   }, [token]);
 
   useEffect(() => {
@@ -136,35 +110,19 @@ const MyPlans: React.FC = () => {
     setLoadingExercises(prev => ({ ...prev, [planId]: false }));
   };
 
-  const handleLogWorkout = (exercise: PlanExercise, planId: number) => {
-    const exerciseDetailForModal: ExerciseForModal = {
-        id: exercise.exercise_id, 
-        name: exercise.exercise_name,
-        description: exercise.notes || 'Exercise from plan',
-        category: 'Unknown Category', // Changed to a placeholder string
-        equipment: 'various',
-        language: 2,
-        muscles: [],
-        muscles_secondary: [],
-        force: 'unknown',
-        level: 'any',
-        mechanic: 'unknown',
-        primaryMuscles: [], 
-        secondaryMuscles: [],
-        creation_date: new Date().toISOString().split('T')[0],
-        uuid: 'placeholder-uuid-' + exercise.exercise_id,
-        variations: 0,
-        license_author: 'Placeholder Author',
-        license: 1,
-        // Added based on new linter errors
-        instructions: ["Perform as per plan."],
-        images: [], // Set to an empty array of strings
-        calories_per_hour: 0, 
-        duration_minutes: exercise.duration_minutes || 0,
-        total_calories: 0,
+  const handleLogWorkout = (exercise: PlanExercise) => {
+    const exerciseDetailForModal: ExerciseSummary = {
+      id: exercise.exercise_id,
+      sourceId: String(exercise.exercise_id),
+      name: exercise.exercise_name,
+      category: 'planned exercise',
+      bodyPart: 'not available',
+      equipment: 'various',
+      target: 'not available',
+      muscleGroup: 'not available',
+      secondaryMuscles: [],
     };
     setSelectedExerciseForLog(exerciseDetailForModal);
-    setCurrentPlanIdForLog(planId);
     setLogModalOpen(true);
   };
 
@@ -320,45 +278,103 @@ const MyPlans: React.FC = () => {
   };
   
   const handleNavigateToCreatePlan = () => {
-    navigate('/exercises', { state: { openCreatePlanModal: true } });
+    navigate('/workouts/exercises/plan-builder', { state: { openCreatePlanModal: true } });
   };
+
+  const workoutNavigation = (
+    <Stack
+      direction={{ xs: 'column', sm: 'row' }}
+      spacing={1}
+      justifyContent="space-between"
+      sx={{ mb: 3 }}
+    >
+      <Button
+        variant="outlined"
+        startIcon={<ArrowBackIcon />}
+        onClick={() => navigate('/workouts/exercises')}
+      >
+        Exercise Library
+      </Button>
+      <Button
+        startIcon={<HistoryIcon />}
+        onClick={() => navigate('/workout-history')}
+      >
+        Workout History
+      </Button>
+    </Stack>
+  );
   
   if (loadingPlans) {
-    return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
+    return (
+      <Box sx={{ maxWidth: 800, mx: 'auto', px: 2, py: 5 }}>
+        {workoutNavigation}
+        <Typography variant="h4" component="h1" gutterBottom>
+          My Workout Plans
+        </Typography>
+        <Box role="status" aria-live="polite" sx={{ mt: 5, textAlign: 'center' }}>
+          <CircularProgress size={32} />
+          <Typography color="text.secondary" sx={{ mt: 2 }}>
+            Loading your workout plans...
+          </Typography>
+        </Box>
+      </Box>
+    );
   }
 
   if (error) {
-    return <Typography color="error" sx={{ textAlign: 'center', mt: 4 }}>Error: {error}</Typography>;
+    return (
+      <Box sx={{ maxWidth: 720, mx: 'auto', px: 2, py: 5 }}>
+        {workoutNavigation}
+        <Typography variant="h4" component="h1" gutterBottom>
+          My Workout Plans
+        </Typography>
+        <Alert
+          severity="error"
+          action={(
+            <Button color="inherit" size="small" onClick={fetchUserPlans}>
+              Try again
+            </Button>
+          )}
+        >
+          {error}
+        </Alert>
+      </Box>
+    );
   }
 
   if (plans.length === 0) {
     return (
-      <Box sx={{ textAlign: 'center', mt: 4 }}>
-        <Typography variant="h6">No workout plans created yet.</Typography>
-        <Typography variant="subtitle1" sx={{ mb: 2, color: 'text.secondary' }}>
-          Let's create your first one!
+      <Box sx={{ maxWidth: 720, mx: 'auto', px: 2, py: 5, textAlign: 'center' }}>
+        {workoutNavigation}
+        <Typography variant="h4" component="h1" gutterBottom>
+          My Workout Plans
         </Typography>
-        <Button variant="contained" sx={{ mt: 2 }} onClick={handleNavigateToCreatePlan}>
-          Create Your First Plan
-        </Button>
+        <Box sx={{ mt: 4, p: { xs: 3, sm: 5 }, border: 1, borderColor: 'divider', borderRadius: 3 }}>
+          <Typography variant="h6">No workout plans yet</Typography>
+          <Typography sx={{ mt: 1, mb: 3, color: 'text.secondary' }}>
+            Build your first plan from the exercise library, then return here to start it.
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="center">
+            <Button variant="contained" onClick={handleNavigateToCreatePlan}>
+              Create Your First Plan
+            </Button>
+            <Button variant="outlined" onClick={() => navigate('/workouts/exercises')}>
+              Browse Exercises
+            </Button>
+          </Stack>
+        </Box>
       </Box>
     );
   }
 
   return (
     <Box sx={{ maxWidth: 800, margin: 'auto', padding: 2 }}>
+      {workoutNavigation}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
         <Typography variant="h4" gutterBottom sx={{ textAlign: 'left', flexGrow: 1 }}>
             My Workout Plans
         </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button 
-              variant="outlined" 
-              onClick={() => navigate('/workout-history')}
-              sx={{ color: '#606c38ff', borderColor: '#606c38ff', '&:hover': { bgcolor: 'rgba(96,108,56,0.05)' } }}
-          >
-              View History
-          </Button>
           <Button 
               variant="contained" 
               color="primary" 
@@ -434,7 +450,7 @@ const MyPlans: React.FC = () => {
                                     <Button 
                                         variant="outlined" 
                                         size="small"
-                                        onClick={() => handleLogWorkout(exercise, plan.plan_id)}
+                                        onClick={() => handleLogWorkout(exercise)}
                                         sx={{ mr: 0.5 }}
                                     >
                                         Log
@@ -479,7 +495,6 @@ const MyPlans: React.FC = () => {
           onClose={() => setLogModalOpen(false)}
           exercise={selectedExerciseForLog}
           token={token}
-          // planId={currentPlanIdForLog} // Pass if needed
         />
       )}
 
@@ -629,4 +644,4 @@ const MyPlans: React.FC = () => {
   );
 };
 
-export default MyPlans; 
+export default MyPlans;

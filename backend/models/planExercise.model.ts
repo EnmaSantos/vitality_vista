@@ -13,6 +13,8 @@ export interface PlanExerciseSchema {
     reps: string | null;      // Corresponds to VARCHAR(50) (nullable)
     weight_kg: number | null; // Corresponds to NUMERIC(6, 2) (nullable)
     duration_minutes: number | null; // Corresponds to INTEGER (nullable)
+    duration_seconds: number | null;
+    phase: "warmup" | "work" | "cooldown";
     rest_period_seconds: number | null; // Corresponds to INTEGER (nullable)
     notes: string | null;     // Corresponds to TEXT (nullable)
   }

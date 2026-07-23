@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/Rippy1911/anatome",
+  "revision": "f117b127dc82fa0c9a8e7e21c7df41ad43154dac",
+  "license": "CC0-1.0",
+  "mediaIncluded": false,
+  "mediaAvailable": true,
+  "mediaLicense": "CC0-1.0",
+  "mediaBaseUrl": "https://vitality-exercise-media.enmasantos.workers.dev",
+  "mediaBaseUrlEnvironmentVariable": "EXERCISE_MEDIA_BASE_URL",
+  "workerLicense": "Apache-2.0",
+  "exerciseCount": 873
+}

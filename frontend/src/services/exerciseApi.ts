@@ -1,30 +1,29 @@
 import { API_BASE_URL } from "../config";
+import { formatExerciseName } from "../utils/formatExerciseName";
 
-export interface Exercise {
-  name: string;
-  force: string | null;
-  level: string;
-  mechanic: string | null;
-  equipment: string | null;
-  primaryMuscles: string[];
-  secondaryMuscles: string[];
-  instructions: string[];
-  category: string;
-  images: string[];
+export interface ExerciseSummary {
   id: number;
-  calories_per_hour: number | null;
-  duration_minutes: number | null;
-  total_calories: number | null;
+  sourceId: string;
+  name: string;
+  category: string;
+  bodyPart: string;
+  equipment: string;
+  target: string;
+  muscleGroup: string;
+  secondaryMuscles: string[];
+  imageUrl?: string;
+  gifUrl?: string;
 }
 
-export type ExerciseSummary = Omit<Exercise, "instructions">;
+export interface Exercise extends ExerciseSummary {
+  instructions: string[];
+}
 
 export interface ExerciseQueryParams {
   page?: number;
   limit?: number;
   q?: string;
   category?: string;
-  level?: string;
   equipment?: string;
   muscle?: string;
 }
@@ -39,13 +38,24 @@ export interface PaginatedExercisesResponse {
 
 export interface ExerciseMeta {
   categories: string[];
-  levels: string[];
   equipment: string[];
   muscles: string[];
   totalCount: number;
+  source: {
+    repository: string;
+    revision: string;
+    license: string;
+    mediaIncluded: boolean;
+    mediaAvailable?: boolean;
+    mediaLicense?: string;
+    mediaBaseUrl?: string;
+    mediaBaseUrlEnvironmentVariable?: string;
+    workerLicense?: string;
+    exerciseCount: number;
+  };
 }
 
-const CACHE_KEY = "vitality_exercises_cache";
+const CACHE_KEY = "vitality_exercises_cache_anatome_v1";
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 const EXERCISES_URL = `${API_BASE_URL}/exercises`;
@@ -84,18 +94,28 @@ async function fetchJson<T>(url: string, operationName: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+function withFormattedName<T extends ExerciseSummary>(exercise: T): T {
+  return {
+    ...exercise,
+    name: formatExerciseName(exercise.name),
+  };
+}
+
 export async function getExercises(params: ExerciseQueryParams = {}): Promise<PaginatedExercisesResponse> {
   const url = buildUrl(EXERCISES_URL, {
     page: params.page,
     limit: params.limit,
     q: params.q,
     category: params.category,
-    level: params.level,
     equipment: params.equipment,
     muscle: params.muscle,
   });
 
-  return fetchJson<PaginatedExercisesResponse>(url, "Fetching exercises");
+  const response = await fetchJson<PaginatedExercisesResponse>(url, "Fetching exercises");
+  return {
+    ...response,
+    items: response.items.map(withFormattedName),
+  };
 }
 
 export async function getExerciseMeta(): Promise<ExerciseMeta> {
@@ -117,7 +137,7 @@ export async function getAllExercises(): Promise<Exercise[]> {
       // Check if cache is still valid
       if (Date.now() - parsed.timestamp < CACHE_DURATION) {
         console.log("Using cached exercises data");
-        return parsed.data as Exercise[];
+        return (parsed.data as Exercise[]).map(withFormattedName);
       }
     } catch (e) {
       console.warn("Error parsing exercises cache, refreshing...", e);
@@ -125,8 +145,9 @@ export async function getAllExercises(): Promise<Exercise[]> {
     }
   }
 
-  console.log(`getAllExercises - Fetching all exercises from: ${EXERCISES_URL}`);
-  const data = await fetchJson<Exercise[]>(EXERCISES_URL, "Fetching all exercises");
+  console.log(`getAllExercises - Fetching all exercises from: ${EXERCISES_URL}/all`);
+  const data = (await fetchJson<Exercise[]>(`${EXERCISES_URL}/all`, "Fetching all exercises"))
+    .map(withFormattedName);
 
   // 2. Save to cache
   try {
@@ -138,7 +159,7 @@ export async function getAllExercises(): Promise<Exercise[]> {
     console.warn("Failed to save exercises to cache (likely quota exceeded):", e);
   }
 
-  return data as Exercise[];
+  return data;
 }
 
 /**
@@ -149,7 +170,8 @@ export async function getAllExercises(): Promise<Exercise[]> {
 export async function getExerciseById(id: string | number): Promise<Exercise> {
   const url = buildUrl(`${EXERCISES_URL}/${id}`);
   console.log(`Fetching exercise by ID: ${url}`);
-  return fetchJson<Exercise>(url, `Fetching exercise ${id}`);
+  const exercise = await fetchJson<Exercise>(url, `Fetching exercise ${id}`);
+  return withFormattedName(exercise);
 }
 
 /**

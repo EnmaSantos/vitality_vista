@@ -141,7 +141,7 @@ export const themePalette = {
 const routeThemes: Array<{ matches: string[]; theme: PageTheme }> = [
   { matches: ['/', '/dashboard'], theme: themePalette.dashboard },
   { matches: ['/food-log'], theme: themePalette.foodLog },
-  { matches: ['/exercises', '/my-plans', '/workout-history', '/workout/session'], theme: themePalette.workouts },
+  { matches: ['/workouts', '/exercises', '/my-plans', '/workout-history', '/workout/session'], theme: themePalette.workouts },
   { matches: ['/recipes'], theme: themePalette.recipes },
   { matches: ['/progress'], theme: themePalette.progress },
   { matches: ['/profile'], theme: { ...themePalette.progress, name: 'Profile & settings' } },

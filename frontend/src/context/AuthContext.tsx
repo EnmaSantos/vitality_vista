@@ -147,19 +147,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // --- Logout Function (Implemented) ---
-  const logout = async (): Promise<void> => {
+  // Clear the browser session immediately; server-side cookie cleanup is best-effort.
+  const logout = (): void => {
     console.log("AuthProvider: Logging out.");
-    try {
-      await authApi.logout(); // It's okay if this fails, we still log out locally.
-      console.log("AuthProvider: API logout successful.");
-    } catch (error) {
-      console.error("AuthProvider: API logout call failed, but proceeding with local logout.", error);
-    } finally {
-      // Clear state and localStorage regardless of API call outcome
-      clearAuthData();
-      console.log("AuthProvider: Local state and storage cleared.");
-    }
+    clearAuthData();
+    console.log("AuthProvider: Local state and storage cleared.");
+
+    void authApi.logout()
+      .then(() => console.log("AuthProvider: API logout successful."))
+      .catch((error) => {
+        console.error("AuthProvider: API logout call failed after local logout.", error);
+      });
   };
 
   // --- Added: Register Function ---

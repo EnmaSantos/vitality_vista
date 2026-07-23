@@ -58,7 +58,7 @@ const Navbar: React.FC = () => {
   const handleLogout = () => {
     handleProfileMenuClose();
     logout();
-    navigate('/landing');
+    navigate('/landing', { replace: true });
   };
 
   // Active route styling

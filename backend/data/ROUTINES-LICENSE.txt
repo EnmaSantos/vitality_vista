@@ -1,0 +1,16 @@
+Vitality Vista Routine Catalog and Body Map License
+
+Copyright 2026 Vitality Vista / Enma Santos
+
+The original routine catalog in routines.json, the curated mappings in
+body-regions.json and exercise-recommendations.json, and the original Vitality
+Vista body-map artwork are licensed under the Creative Commons Attribution 4.0
+International License (CC BY 4.0):
+
+https://creativecommons.org/licenses/by/4.0/
+
+Attribution: Vitality Vista / Enma Santos
+
+This license does not alter the license of the application source code or the
+separately sourced exercise catalog and media. Exercise source provenance is
+recorded in routines.metadata.json and exercises.metadata.json.

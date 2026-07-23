@@ -8,8 +8,10 @@ export interface WorkoutPlanSchema {
     user_id: string;        // Corresponds to UUID NOT NULL REFERENCES users(id)
     name: string;           // Corresponds to VARCHAR(255) NOT NULL
     description: string | null; // Corresponds to TEXT (nullable)
+    source_routine_slug: string | null;
+    source_routine_version: string | null;
+    session_format: "straight_sets" | "circuit" | "interval" | "mobility_flow";
+    rounds: number;
     created_at: Date | string; // Corresponds to TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     updated_at: Date | string; // Corresponds to TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
   }
-
-  

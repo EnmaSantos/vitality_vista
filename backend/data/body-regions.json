@@ -1,0 +1,104 @@
+[
+  {
+    "id": "neck",
+    "label": "Neck",
+    "view": "front",
+    "description": "Neck"
+  },
+  {
+    "id": "shoulders",
+    "label": "Shoulders",
+    "view": "front",
+    "description": "Shoulders"
+  },
+  {
+    "id": "chest",
+    "label": "Chest",
+    "view": "front",
+    "description": "Chest"
+  },
+  {
+    "id": "biceps",
+    "label": "Biceps",
+    "view": "front",
+    "description": "Biceps"
+  },
+  {
+    "id": "triceps",
+    "label": "Triceps",
+    "view": "back",
+    "description": "Triceps"
+  },
+  {
+    "id": "forearms",
+    "label": "Forearms",
+    "view": "front",
+    "description": "Forearms"
+  },
+  {
+    "id": "abdominals",
+    "label": "Abdominals",
+    "view": "front",
+    "description": "Abdominals"
+  },
+  {
+    "id": "traps",
+    "label": "Traps",
+    "view": "back",
+    "description": "Traps"
+  },
+  {
+    "id": "lats",
+    "label": "Lats",
+    "view": "back",
+    "description": "Lats"
+  },
+  {
+    "id": "middle back",
+    "label": "Middle Back",
+    "view": "back",
+    "description": "Middle back"
+  },
+  {
+    "id": "lower back",
+    "label": "Lower Back",
+    "view": "back",
+    "description": "Lower back"
+  },
+  {
+    "id": "glutes",
+    "label": "Glutes",
+    "view": "back",
+    "description": "Glutes"
+  },
+  {
+    "id": "quadriceps",
+    "label": "Quadriceps",
+    "view": "front",
+    "description": "Quadriceps"
+  },
+  {
+    "id": "hamstrings",
+    "label": "Hamstrings",
+    "view": "back",
+    "description": "Hamstrings"
+  },
+  {
+    "id": "calves",
+    "label": "Calves",
+    "view": "back",
+    "description": "Calves"
+  },
+  {
+    "id": "adductors",
+    "label": "Adductors",
+    "view": "front",
+    "description": "Inner thighs"
+  },
+  {
+    "id": "abductors",
+    "label": "Abductors",
+    "view": "front",
+    "description": "Outer hips"
+  }
+]

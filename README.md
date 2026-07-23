@@ -80,6 +80,8 @@ The landing page and this README now focus on actual app capabilities instead of
 - PostgreSQL
 - JWT authentication
 - FatSecret API integration
+- A pinned local snapshot of the CC0 Anatome exercise dataset
+- A Cloudflare Worker for static exercise images and animated movement guides
 
 ## Project Structure
 
@@ -87,12 +89,15 @@ The landing page and this README now focus on actual app capabilities instead of
 .
 |-- backend
 |   |-- controllers
+|   |-- data
 |   |-- middleware
 |   |-- models
 |   |-- routes
 |   |-- scripts
 |   |-- services
 |   `-- server.ts
+|-- cloudflare
+|   `-- exercise-media
 |-- frontend
 |   |-- public
 |   |   `-- screenshots
@@ -165,7 +170,40 @@ GITHUB_CLIENT_ID=your-github-oauth-app-client-id
 GITHUB_CLIENT_SECRET=your-github-oauth-app-client-secret
 FATSECRET_CLIENT_ID=replace-with-fatsecret-client-id
 FATSECRET_CLIENT_SECRET=replace-with-fatsecret-client-secret
+EXERCISE_MEDIA_BASE_URL=https://vitality-exercise-media.enmasantos.workers.dev
 ```
+
+### Exercise Dataset
+
+Exercise browsing is served locally by the backend from a normalized snapshot of
+[`Rippy1911/anatome`](https://github.com/Rippy1911/anatome), so searches and
+details do not depend on a third-party exercise API. The snapshot contains 873
+exercises with instruction steps, categories, equipment, and muscle data.
+
+To refresh the snapshot from a reviewed upstream commit, pass its full commit SHA:
+
+```bash
+cd backend
+deno run --allow-net=raw.githubusercontent.com --allow-write=data scripts/sync_exercise_dataset.ts <commit-sha>
+```
+
+Exercise metadata, JPGs, and derived GIFs are CC0-1.0 public-domain material
+originating from `yuhonas/free-exercise-db`. Anatome's Worker code is
+Apache-2.0. The retained notice is at `backend/data/ANATOME-NOTICE.txt`.
+
+For production, deploy the media-only Worker and point the backend at its origin:
+
+```bash
+cd cloudflare/exercise-media
+npm install
+npm run check
+npm run deploy
+```
+
+The deploy preparation script downloads and validates the 873 GIFs from the
+pinned Anatome commit. After deployment, set `EXERCISE_MEDIA_BASE_URL` to the
+Worker URL and redeploy the backend. Static exercise cards use the JPG route;
+hovered/selected cards and active workouts use the GIF route.
 
 ### GitHub Login
 
@@ -189,7 +227,12 @@ override `DEMO_EMAIL` and `DEMO_PASSWORD` in `.env` if desired.
 - `/login` - sign in
 - `/signup` - create account
 - `/dashboard` - daily health overview
-- `/exercises` - exercise browsing and plan creation
+- `/workouts` - interactive body discovery and the training hub
+- `/workouts/routines` - 50 original single-session routines
+- `/workouts/sports` - explicitly curated recreational sports-support recommendations
+- `/workouts/exercises` - public-catalog exercise browsing (`/exercises` redirects here)
+- `/workouts/exercises/plan-builder` - custom exercise plan creation
+- `/developers/api` - public API documentation generated from the OpenAPI contract
 - `/my-plans` - saved workout plans
 - `/workout-history` - completed workouts
 - `/food-log` - food and water logging
@@ -202,6 +245,9 @@ override `DEMO_EMAIL` and `DEMO_PASSWORD` in `.env` if desired.
 
 - `/api/auth` - registration, login, logout, token verification, password reset
 - `/api/workout-plans` - workout plan and exercise management
+- `/api/exercises` - local exercise search, filtering, metadata, and details
+- `/api/v1` - unauthenticated, versioned read API for exercises, routines, body regions, sports, metadata, and OpenAPI
+- `/api/workout-plans/from-routine/:slug` - authenticated routine-to-plan cloning
 - `/api/food-logs` - food log CRUD
 - `/api/water-logs` - hydration logging
 - `/api/goals` - daily goals
@@ -221,6 +267,9 @@ Implemented:
 - Water logging
 - Daily goals
 - Exercise browsing and workout plan management
+- An original CC BY 4.0 catalog of 50 routines and original accessible front/back body-map artwork
+- Direct routine sessions with straight-set, circuit, interval, and mobility-flow ordering
+- Public cached catalog API with ETags, read CORS, and per-instance rate limiting
 - Workout sessions and history
 - Recipe discovery
 - Progress charts
@@ -234,6 +283,10 @@ Planned or still evolving:
 - Recipe saving and meal planning
 - Additional device or wearable integrations beyond Apple Health and RENPHO
 - More complete database setup documentation
+
+## Routine Catalog Licensing
+
+The original routine catalog, curated body-region mappings, and original body-map artwork are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) with attribution to **Vitality Vista / Enma Santos**. This does not change the license of the rest of the repository. The 873-exercise catalog and exercise media are separately sourced from the pinned Anatome snapshot under CC0; complete machine-readable provenance is returned by `GET /api/v1/meta` and stored in `backend/data/routines.metadata.json`.
 
 ## Developer
 

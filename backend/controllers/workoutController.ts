@@ -6,6 +6,7 @@ import { WorkoutPlanSchema } from "../models/workoutPlan.model.ts"; // Import th
 import { PlanExerciseSchema } from "../models/planExercise.model.ts"; // Import the plan exercise model
 import { WorkoutLogSchema } from "../models/workoutLog.model.ts"; // Import the workout log model
 import { LogExerciseDetailSchema } from "../models/logExerciseDetail.model.ts"; // Import the log exercise detail model
+import { getRoutineBySlug } from "../services/routineCatalogService.ts";
 
 // MET (Metabolic Equivalent of Task) values for exercise calorie calculation
 const MET_VALUES = {
@@ -75,6 +76,8 @@ interface AddExerciseToPlanRequest {
   reps?: string;
   weight_kg?: number;
   duration_minutes?: number;
+  duration_seconds?: number;
+  phase?: "warmup" | "work" | "cooldown";
   rest_period_seconds?: number;
   notes?: string;
 }
@@ -137,7 +140,8 @@ export async function createWorkoutPlanHandler(ctx: RouterContext<any, any>) {
     const insertQuery = `
       INSERT INTO workout_plans (user_id, name, description)
       VALUES ($1, $2, $3)
-      RETURNING plan_id, user_id, name, description, created_at, updated_at
+      RETURNING plan_id, user_id, name, description, source_routine_slug,
+                source_routine_version, session_format, rounds, created_at, updated_at
     `;
 
     const result = await dbClient.queryObject<WorkoutPlanSchema>(
@@ -255,7 +259,8 @@ export async function updateWorkoutPlanHandler(ctx: RouterContext<any, any>) {
       UPDATE workout_plans
       SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
       WHERE plan_id = $${valueCount}
-      RETURNING plan_id, user_id, name, description, created_at, updated_at
+      RETURNING plan_id, user_id, name, description, source_routine_slug,
+                source_routine_version, session_format, rounds, created_at, updated_at
     `;
 
     const updateResult = await dbClient.queryObject<WorkoutPlanSchema>(updateQuery, updateValues);
@@ -296,7 +301,8 @@ export async function getUserWorkoutPlansHandler(ctx: RouterContext<any, any>) {
 
     // 2. Fetch workout plans
     const selectQuery = `
-      SELECT plan_id, user_id, name, description, created_at, updated_at
+      SELECT plan_id, user_id, name, description, source_routine_slug,
+             source_routine_version, session_format, rounds, created_at, updated_at
       FROM workout_plans
       WHERE user_id = $1
       ORDER BY updated_at DESC
@@ -400,11 +406,11 @@ export async function addExerciseToPlanHandler(ctx: RouterContext<any, any>) {
     const insertQuery = `
       INSERT INTO plan_exercises (
         plan_id, exercise_id, exercise_name, order_in_plan,
-        sets, reps, weight_kg, duration_minutes, rest_period_seconds, notes
+        sets, reps, weight_kg, duration_minutes, duration_seconds, phase, rest_period_seconds, notes
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING plan_exercise_id, plan_id, exercise_id, exercise_name, order_in_plan,
-                sets, reps, weight_kg, duration_minutes, rest_period_seconds, notes
+                sets, reps, weight_kg, duration_minutes, duration_seconds, phase, rest_period_seconds, notes
     `;
 
     const result = await dbClient.queryObject<PlanExerciseSchema>(insertQuery, [
@@ -415,8 +421,10 @@ export async function addExerciseToPlanHandler(ctx: RouterContext<any, any>) {
       payload.sets || null,
       payload.reps || null,
       payload.weight_kg || null,
-      payload.duration_minutes || null,
-      payload.rest_period_seconds || null,
+      payload.duration_minutes ?? null,
+      payload.duration_seconds ?? null,
+      payload.phase ?? "work",
+      payload.rest_period_seconds ?? null,
       payload.notes?.trim() || null,
     ]);
 
@@ -480,18 +488,36 @@ export async function createWorkoutLogHandler(ctx: RouterContext<any, any>) {
       plan_id?: number;
       duration_minutes?: number;
       notes?: string;
+      routine_slug?: string;
+      routine_version?: string;
+      routine_name_snapshot?: string;
     };
+
+    const currentRoutine = payload.routine_slug ? getRoutineBySlug(payload.routine_slug) : undefined;
+    const routineSlug = payload.routine_slug?.trim() || null;
+    const routineVersion = (payload.routine_version?.trim() || currentRoutine?.catalogVersion || null);
+    const routineNameSnapshot = (payload.routine_name_snapshot?.trim() || currentRoutine?.name || null);
+    if (routineSlug && (!routineVersion || !routineNameSnapshot)) {
+      ctx.response.status = 400;
+      response.error = "Routine version and name snapshot are required for routine sessions";
+      ctx.response.body = response;
+      return;
+    }
 
     // 3. Create workout log
     const insertQuery = `
-      INSERT INTO workout_logs (user_id, plan_id, duration_minutes, notes)
-      VALUES ($1, $2, $3, $4)
-      RETURNING log_id, user_id, plan_id, log_date, duration_minutes, notes, created_at
+      INSERT INTO workout_logs (
+        user_id, plan_id, duration_minutes, notes,
+        routine_slug, routine_version, routine_name_snapshot
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING log_id, user_id, plan_id, log_date, duration_minutes, notes, created_at,
+                routine_slug, routine_version, routine_name_snapshot
     `;
 
     const result = await dbClient.queryObject<WorkoutLogSchema>(
       insertQuery,
-      [userId, payload.plan_id || null, payload.duration_minutes || null, payload.notes?.trim() || null]
+      [userId, payload.plan_id ?? null, payload.duration_minutes ?? null, payload.notes?.trim() || null, routineSlug, routineVersion, routineNameSnapshot]
     );
 
     const newLog = result.rows[0];
@@ -514,6 +540,68 @@ export async function createWorkoutLogHandler(ctx: RouterContext<any, any>) {
     response.success = false;
     response.error = error instanceof Error ? error.message : "Unknown error occurred";
     
+    ctx.response.status = 500;
+    ctx.response.body = response;
+  }
+}
+
+/**
+ * Cancels a workout session and removes its incomplete workout log.
+ */
+export async function deleteWorkoutLogHandler(ctx: RouterContext<any, any>) {
+  const response: ApiResponse<null> = { success: false };
+
+  try {
+    const userId = ctx.state.userId as string;
+    if (!userId) {
+      ctx.response.status = 401;
+      response.error = "User not authenticated";
+      ctx.response.body = response;
+      return;
+    }
+
+    const logId = Number(ctx.params.logId);
+    if (!Number.isInteger(logId) || logId <= 0) {
+      ctx.response.status = 400;
+      response.error = "Invalid workout log ID";
+      ctx.response.body = response;
+      return;
+    }
+
+    const result = await dbClient.queryObject<{ log_id: number }>(
+      `DELETE FROM workout_logs
+       WHERE log_id = $1
+         AND user_id = $2
+         AND NOT EXISTS (
+           SELECT 1 FROM log_exercise_details
+           WHERE log_exercise_details.log_id = workout_logs.log_id
+         )
+       RETURNING log_id`,
+      [logId, userId],
+    );
+
+    if (result.rows.length === 0) {
+      const ownershipResult = await dbClient.queryObject<{ log_id: number }>(
+        "SELECT log_id FROM workout_logs WHERE log_id = $1 AND user_id = $2",
+        [logId, userId],
+      );
+      const completedWorkout = ownershipResult.rows.length > 0;
+      ctx.response.status = completedWorkout ? 409 : 404;
+      response.error = completedWorkout
+        ? "Completed workouts cannot be cancelled"
+        : "Workout log not found or access denied";
+      ctx.response.body = response;
+      return;
+    }
+
+    response.success = true;
+    response.data = null;
+    response.message = "Workout cancelled";
+    ctx.response.status = 200;
+    ctx.response.body = response;
+  } catch (error) {
+    console.error("Error in deleteWorkoutLogHandler:", error);
+    response.error = error instanceof Error ? error.message : "Unknown error occurred";
     ctx.response.status = 500;
     ctx.response.body = response;
   }
@@ -720,7 +808,8 @@ export async function getUserWorkoutLogsHandler(ctx: RouterContext<any, any>) {
       selectQuery = `
         SELECT wl.log_id, wl.user_id, wl.plan_id, wl.log_date, 
                wl.duration_minutes, wl.notes, wl.created_at,
-               wp.name as plan_name
+               wl.routine_slug, wl.routine_version, wl.routine_name_snapshot,
+               COALESCE(wp.name, wl.routine_name_snapshot) as plan_name
         FROM workout_logs wl
         LEFT JOIN workout_plans wp ON wl.plan_id = wp.plan_id
         WHERE wl.user_id = $1 AND DATE(wl.log_date) = $2
@@ -732,7 +821,8 @@ export async function getUserWorkoutLogsHandler(ctx: RouterContext<any, any>) {
       selectQuery = `
         SELECT wl.log_id, wl.user_id, wl.plan_id, wl.log_date, 
                wl.duration_minutes, wl.notes, wl.created_at,
-               wp.name as plan_name
+               wl.routine_slug, wl.routine_version, wl.routine_name_snapshot,
+               COALESCE(wp.name, wl.routine_name_snapshot) as plan_name
         FROM workout_logs wl
         LEFT JOIN workout_plans wp ON wl.plan_id = wp.plan_id
         WHERE wl.user_id = $1
@@ -1190,6 +1280,82 @@ export async function updateWorkoutLogHandler(ctx: RouterContext<any, any>) {
     response.success = false;
     response.error = error instanceof Error ? error.message : "Unknown error occurred";
     
+    ctx.response.status = 500;
+    ctx.response.body = response;
+  }
+}
+
+/**
+ * Atomically clones an original catalog routine into an editable user plan.
+ */
+export async function cloneRoutineToPlanHandler(ctx: RouterContext<any, any>) {
+  const response: ApiResponse<WorkoutPlanSchema> = { success: false };
+  const userId = ctx.state.userId as string;
+  if (!userId) {
+    ctx.response.status = 401;
+    response.error = "User not authenticated";
+    ctx.response.body = response;
+    return;
+  }
+
+  const routine = getRoutineBySlug(ctx.params.slug);
+  if (!routine) {
+    ctx.response.status = 404;
+    response.error = "Routine not found";
+    ctx.response.body = response;
+    return;
+  }
+
+  await ensureConnection();
+  const transaction = dbClient.createTransaction(`clone_routine_${crypto.randomUUID().replaceAll("-", "")}`);
+  try {
+    await transaction.begin();
+    const planResult = await transaction.queryObject<WorkoutPlanSchema>(`
+      INSERT INTO workout_plans (
+        user_id, name, description, source_routine_slug, source_routine_version,
+        session_format, rounds
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING plan_id, user_id, name, description, source_routine_slug,
+                source_routine_version, session_format, rounds, created_at, updated_at
+    `, [userId, routine.name, routine.summary, routine.slug, routine.catalogVersion, routine.format, routine.rounds]);
+    const plan = planResult.rows[0];
+    if (!plan) throw new Error("Failed to create plan from routine");
+
+    for (const item of routine.exercises) {
+      await transaction.queryObject(`
+        INSERT INTO plan_exercises (
+          plan_id, exercise_id, exercise_name, order_in_plan, sets, reps,
+          weight_kg, duration_minutes, duration_seconds, phase,
+          rest_period_seconds, notes
+        ) VALUES ($1, $2, $3, $4, $5, $6, NULL, $7, $8, $9, $10, $11)
+      `, [
+        plan.plan_id,
+        item.exercise.id,
+        item.exercise.name,
+        item.order,
+        item.sets,
+        item.reps,
+        item.durationSeconds === null ? null : Math.max(1, Math.ceil(item.durationSeconds / 60)),
+        item.durationSeconds,
+        item.phase,
+        item.restSeconds,
+        `${item.sideGuidance} ${item.notes}`,
+      ]);
+    }
+    await transaction.commit();
+    response.success = true;
+    response.data = plan;
+    response.message = "Routine added to My Plans";
+    ctx.response.status = 201;
+    ctx.response.body = response;
+  } catch (error) {
+    try {
+      await transaction.rollback();
+    } catch (rollbackError) {
+      console.error("Routine clone rollback failed:", rollbackError);
+    }
+    response.error = error instanceof Error ? error.message : "Failed to clone routine";
     ctx.response.status = 500;
     ctx.response.body = response;
   }

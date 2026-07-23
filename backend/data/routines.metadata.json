@@ -1,0 +1,16 @@
+{
+  "catalogVersion": "2026.1",
+  "publishedAt": "2026-07-17",
+  "routineCount": 50,
+  "attribution": "Vitality Vista / Enma Santos",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "provenance": "Original Vitality Vista routine programming and body-region mapping authored for this project. Exercise metadata and media are sourced separately from the Anatome / Free Exercise DB CC0 collection.",
+  "exerciseSource": {
+    "name": "Anatome / Free Exercise DB",
+    "repository": "https://github.com/Rippy1911/anatome",
+    "license": "CC0 1.0 Universal"
+  },
+  "wellnessNotice": "These routines are general education, not medical care. Stop if a movement causes sharp or worsening discomfort. For injuries or persistent symptoms, seek qualified care.",
+  "sportsNotice": "Sports routines provide general fitness support and are not sport coaching or injury prevention."
+}
