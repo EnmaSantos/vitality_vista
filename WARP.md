@@ -164,10 +164,10 @@ Backend requires these environment variables:
 - Enhanced nutrition tracking
 
 ### Deployment
-- Backend: Deployed on Deno Deploy
+- Backend: Deployed on the new Deno Deploy platform at `console.deno.com`; use the root `deno.jsonc` runtime configuration and `deno deploy`, not Deploy Classic or `deployctl`
 - Frontend: Deployed on Vercel  
 - CORS configured for production domains
-- Environment variables managed through deployment platforms
+- Backend environment variables managed in the new Deno Deploy app's Production environment
 
 ## Code Patterns to Follow
 

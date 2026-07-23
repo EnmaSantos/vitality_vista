@@ -7,8 +7,6 @@
     "seed": "deno run --allow-net --allow-env --allow-read scripts/seed.ts"
   },
   "deploy": {
-    "org": "enmasantos",
-    "app": "vitality-vista",
     "runtime": {
       "type": "dynamic",
       "entrypoint": "./server.ts"

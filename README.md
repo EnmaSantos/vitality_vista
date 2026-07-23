@@ -155,6 +155,26 @@ deno task start
 
 The backend defaults to `http://localhost:8000/api`.
 
+### Deno Deploy
+
+The backend is configured for the new Deno Deploy platform at
+[`console.deno.com`](https://console.deno.com/). Deploy Classic projects are not
+transferred automatically, so create a new organization and app, connect this
+repository, and use the repository root as the app directory. The root
+[`deno.jsonc`](deno.jsonc) configures the dynamic runtime to start
+`backend/server.ts`.
+
+Set the backend variables from `backend/.env.example` in the new app's
+Production environment, then deploy from the repository root with the new CLI:
+
+```bash
+deno deploy --org <new-organization-slug> --app <new-app-slug> --prod
+```
+
+Use `deno deploy` instead of the retired `deployctl` command. Configure the
+custom domain on the new app and update DNS after the first successful
+deployment.
+
 Migrations are applied in filename order and recorded in the `schema_migrations`
 table. Re-running `deno task migrate` is safe: previously applied versions are
 skipped. To undo a schema change, add a new forward migration that reverses it;

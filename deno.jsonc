@@ -1,8 +1,9 @@
 {
   "deploy": {
-    "org": "enmasantos",
-    "app": "vitality-vista"
+    "runtime": {
+      "type": "dynamic",
+      "cwd": "./backend",
+      "entrypoint": "./server.ts"
+    }
   }
 }
-
-
