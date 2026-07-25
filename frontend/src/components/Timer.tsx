@@ -77,11 +77,16 @@ const Timer: React.FC<TimerProps> = ({ duration, onFinish }) => {
           </Typography>
         </Box>
       </Box>
-      <Fab color="primary" aria-label="toggle timer" onClick={toggleTimer} sx={{ mt: 2 }}>
+      <Fab
+        color="primary"
+        aria-label={isActive ? 'Pause timer' : 'Start timer'}
+        onClick={toggleTimer}
+        sx={{ mt: 2 }}
+      >
         {isActive ? <PauseIcon /> : <PlayArrowIcon />}
       </Fab>
     </Box>
   );
 };
 
-export default Timer; 
+export default Timer;
