@@ -28,67 +28,203 @@
   gap: 12px;
 }
 
-.vv-body-map-frame {
-  max-width: 760px;
-  margin-inline: auto;
-  padding: 16px;
-  border: 1px solid rgba(72, 98, 79, 0.2);
-  border-radius: 24px;
-  background: linear-gradient(180deg, rgba(239, 247, 240, 0.75), rgba(255, 255, 255, 0.94));
+/* The illustration and muscle paths share one coordinate system at every size. */
+.vv-body-map {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 288px;
+  gap: 28px;
+  align-items: center;
 }
 
-.vv-body-map-frame svg {
+.vv-body-map-frame {
+  min-width: 0;
+  padding: 20px 16px 0;
+  border: 1px solid #dbe5dd;
+  border-radius: 24px;
+  background: radial-gradient(ellipse at 50% 40%, #fff 15%, #f1f6f2 100%);
+}
+
+.vv-body-figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.vv-body-figure {
+  min-width: 0;
+  margin: 0;
+  text-align: center;
+}
+
+.vv-body-figure figcaption {
+  display: inline-block;
+  margin-bottom: 8px;
+  border-radius: 20px;
+  padding: 4px 14px;
+  background: #e7eee8;
+  color: #475f50;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.vv-body-figure svg {
   display: block;
   width: 100%;
-  max-height: 680px;
-  color: #526158;
+  max-height: 520px;
+  isolation: isolate;
 }
 
-.vv-body-outline {
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2.5;
+.vv-body-figure image {
+  pointer-events: none;
 }
 
-.vv-body-outline text {
-  fill: #33483a;
-  stroke: none;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.vv-body-hotspot {
+.vv-body-muscle {
   cursor: pointer;
   outline: none;
 }
 
-.vv-body-hotspot rect {
-  fill: rgba(60, 135, 89, 0.12);
-  stroke: rgba(45, 111, 69, 0.28);
+.vv-body-muscle path {
+  fill: var(--muscle-color);
+  fill-opacity: 0.64;
+  stroke: transparent;
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+  mix-blend-mode: multiply;
+  transition: fill-opacity 150ms ease, stroke 150ms ease;
+}
+
+.has-active-region .vv-body-muscle path {
+  fill-opacity: 0.18;
+}
+
+.vv-body-muscle.is-previewed path,
+.vv-body-muscle.is-selected path {
+  fill-opacity: 0.88;
+  stroke: var(--muscle-color);
+}
+
+.vv-body-muscle:focus-visible path {
+  fill-opacity: 0.95;
+  stroke: #203f32;
   stroke-width: 1.5;
-  transition: fill 150ms ease, stroke 150ms ease, stroke-width 150ms ease;
 }
 
-.vv-body-hotspot.is-previewed rect,
-.vv-body-hotspot:focus-visible rect {
-  fill: rgba(39, 131, 77, 0.34);
-  stroke: #176638;
-  stroke-width: 4;
+.vv-body-map-caption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  margin-top: 12px;
+  padding: 10px 0;
+  border-top: 1px solid #dbe5dd;
+  color: #556b5c;
+  font-size: 13px;
 }
 
-.vv-body-hotspot.is-selected rect {
-  fill: rgba(17, 114, 60, 0.66);
-  stroke: #0b572b;
-  stroke-width: 4;
+.vv-body-map-caption strong { color: #234d34; }
+
+.vv-muscle-swatch {
+  display: inline-block;
+  flex: 0 0 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--muscle-color, #829d88);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 8%);
 }
 
-.vv-body-map-active-label {
-  fill: #174c2b;
-  font-size: 16px;
-  font-weight: 800;
-  text-transform: capitalize;
+.vv-body-region-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.vv-body-region-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid #dce5de;
+  border-radius: 10px;
+  background: #fff;
+  color: #435b4b;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.vv-body-region-button:hover,
+.vv-body-region-button[aria-pressed='true'] {
+  background: #eaf3ed;
+  border-color: #88af96;
+  color: #1e5736;
+}
+
+.vv-body-region-button:focus-visible,
+.vv-body-view-switch button:focus-visible {
+  outline: 2px solid #236842;
+  outline-offset: 3px;
+}
+
+.vv-body-region-check { margin-left: auto; }
+.vv-body-region-panel a { text-decoration: underline; text-underline-offset: 2px; }
+.vv-body-view-switch { display: none; }
+
+@media (max-width: 1100px) {
+  .vv-body-map { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .vv-body-region-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .vv-body-map-frame { padding: 12px 12px 0; border-radius: 18px; }
+  .vv-body-view-switch {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    width: fit-content;
+    margin: 0 auto 10px;
+    padding: 4px;
+    border-radius: 12px;
+    background: #e5ede7;
+  }
+  .vv-body-view-switch button {
+    min-height: 44px;
+    padding: 8px 24px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #526658;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .vv-body-view-switch button[aria-pressed='true'] {
+    background: #fff;
+    color: #215b38;
+    box-shadow: 0 1px 4px rgb(28 69 44 / 10%);
+  }
+  .vv-body-figures { grid-template-columns: minmax(0, 1fr); }
+  .vv-body-figure svg { height: 440px; }
+  .vv-body-figure figcaption { display: none; }
+  .vv-body-figures[data-mobile-view='front'] [data-view='back'],
+  .vv-body-figures[data-mobile-view='back'] [data-view='front'] { display: none; }
+  .vv-body-region-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vv-body-region-button { font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vv-body-muscle path, .vv-body-region-button { transition: none; }
 }
 
 .vv-routine-movement {

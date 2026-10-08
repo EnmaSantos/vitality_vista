@@ -63,7 +63,7 @@ function BodyDiscovery() {
     <Box>
       <Typography variant="h4" component="h2">Choose an area to train or mobilize</Typography>
       <Typography color="text.secondary" sx={{ mt: 1, mb: 3 }}>
-        Hover, focus, or tap an original Vitality Vista body region, then browse matching exercises or routines.
+        Select a muscle on the front or back of the body to find matching exercises and routines.
       </Typography>
       <BodyMap regions={regions} selectedRegion={selectedRegion} onSelect={updateSelection} />
 
